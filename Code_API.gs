@@ -776,6 +776,14 @@ function importSingleSheet(spreadsheetId, sheetName) {
   }
 }
 
+function normalizeTipoEvento(tipo) {
+  var t = String(tipo).trim().toUpperCase();
+  if (t.indexOf("PROV") !== -1 || t === "P" || t.startsWith("P-")) return "P";
+  if (t.indexOf("DESC") !== -1 || t === "D" || t.startsWith("D-")) return "D";
+  if (t.indexOf("BASE") !== -1 || t === "B" || t.startsWith("B-")) return "B";
+  return t;
+}
+
 function getRowKey(headers, rowValues) {
   var normHeaders = headers.map(function(h) { return String(h).trim().toUpperCase(); });
   
@@ -785,7 +793,7 @@ function getRowKey(headers, rowValues) {
   
   if (nomeDeIdx !== -1 && tipoDeIdx !== -1) {
     var nomeVal = String(rowValues[nomeDeIdx]).trim().toUpperCase();
-    var tipoVal = String(rowValues[tipoDeIdx]).trim().toUpperCase();
+    var tipoVal = normalizeTipoEvento(rowValues[tipoDeIdx]);
     if (nomeVal) {
       return nomeVal + "||" + tipoVal;
     }
@@ -898,6 +906,32 @@ function syncSingleSheet(spreadsheetId, sheetName) {
         mappedNames.push(pHeader + " -> " + companyHeaders[cIdx]);
       }
     });
+    
+    // Indexar chaves da origem para deleção (apenas para ZDEPARA_)
+    var isDePara = realSheetName.toUpperCase().indexOf("ZDEPARA_") !== -1;
+    var deletedCount = 0;
+    if (isDePara) {
+      var personalKeysMap = {};
+      for (var j = 1; j < personalValues.length; j++) {
+        var key = getRowKey(personalHeaders, personalValues[j]);
+        if (key) personalKeysMap[key] = true;
+      }
+      
+      // Deletar linhas obsoletas na planilha de destino (TOTVS) de trás para frente
+      for (var i = companyValues.length - 1; i >= 1; i--) {
+        var key = getRowKey(companyHeaders, companyValues[i]);
+        if (!key || !personalKeysMap[key]) {
+          companySheet.deleteRow(i + 1);
+          deletedCount++;
+        }
+      }
+      
+      // Recarregar os dados do destino se houve deleção
+      if (deletedCount > 0) {
+        companyRange = companySheet.getDataRange();
+        companyValues = companyRange.getValues();
+      }
+    }
     
     // Indexar linhas existentes na planilha destino usando chaves inteligentes
     var companyKeysMap = {};
