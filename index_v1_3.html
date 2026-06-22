@@ -1,0 +1,2503 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Portal De-Para - TOTVS RM v1.3</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary: #002233;
+      --bg-secondary: #002b3d;
+      --bg-card: #ffffff;
+      --bg-body: #f4f7f9;
+      --color-primary: #00DBFF;
+      --color-secondary: #A44DFF;
+      --color-text-dark: #1e293b;
+      --color-text-light: #ffffff;
+      --color-text-muted: #64748b;
+      --border-color: #e2e8f0;
+      
+      /* Row backgrounds based on state */
+      --row-provento: #f0fdf4;
+      --row-desconto: #fef2f2;
+      --row-base: #f8fafc;
+      --row-mismatch: #fdf2f8; /* Light Magenta */
+      --row-unmapped: #fff7ed; /* Light Orange */
+      --row-panalise: #fef9c3; /* Light Yellow */
+      
+      --success: #10b981;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --orange: #f97316;
+      --magenta: #db2777;
+      --grey: #64748b;
+      
+      --border-radius-sm: 8px;
+      --border-radius-md: 12px;
+      --border-radius-lg: 16px;
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Outfit', sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-body);
+      color: var(--color-text-dark);
+      display: flex;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Sidebar Styles */
+    .sidebar {
+      width: 260px;
+      background-color: var(--bg-primary);
+      color: var(--color-text-light);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      border-right: 1px solid rgba(255, 255, 255, 0.1);
+      height: 100vh;
+      transition: var(--transition);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .sidebar.collapsed {
+      width: 70px;
+    }
+
+    .sidebar-header {
+      padding: 20px 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      white-space: nowrap;
+      position: relative;
+      min-height: 70px;
+    }
+
+    /* Ajuste de padding quando recolhido para o sanduíche não sumir */
+    .sidebar.collapsed .sidebar-header {
+      padding: 20px 0;
+      justify-content: center;
+    }
+
+    .sidebar-logo {
+      width: 32px;
+      height: 32px;
+      object-fit: contain;
+      flex-shrink: 0;
+      transition: var(--transition);
+    }
+
+    .sidebar.collapsed .sidebar-logo {
+      display: none;
+    }
+
+    .sidebar-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      background: linear-gradient(135deg, #ffffff 0%, var(--color-primary) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      transition: opacity 0.2s ease;
+    }
+
+    .sidebar.collapsed .sidebar-title {
+      opacity: 0;
+      display: none;
+    }
+
+    .sidebar-toggle-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--color-text-light);
+      padding: 8px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition);
+      position: absolute;
+      right: 15px;
+      top: 18px;
+      z-index: 10;
+    }
+
+    .sidebar.collapsed .sidebar-toggle-btn {
+      position: relative;
+      right: auto;
+      top: auto;
+      margin: 0 auto;
+    }
+
+    .sidebar-toggle-btn:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+      color: var(--color-primary);
+    }
+
+    .sidebar-menu-wrapper {
+      flex-grow: 1;
+      padding: 24px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      overflow-y: auto;
+    }
+
+    .menu-category {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--color-text-muted);
+      margin: 15px 0 5px 12px;
+      transition: var(--transition);
+    }
+
+    .sidebar.collapsed .menu-category {
+      opacity: 0;
+      height: 0;
+      margin: 0;
+    }
+
+    .menu-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 14px;
+      color: rgba(255, 255, 255, 0.7);
+      text-decoration: none;
+      border-radius: var(--border-radius-sm);
+      font-weight: 500;
+      font-size: 0.95rem;
+      transition: var(--transition);
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .menu-item:hover, .menu-item.active {
+      color: var(--color-text-light);
+      background-color: rgba(255, 255, 255, 0.08);
+    }
+
+    .menu-item.active {
+      border-left: 4px solid var(--color-primary);
+      background-color: rgba(255, 255, 255, 0.05);
+      font-weight: 600;
+    }
+
+    .menu-item.disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .menu-item.disabled:hover {
+      background-color: transparent;
+      color: rgba(255, 255, 255, 0.5);
+    }
+
+    .menu-item-link-content {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .menu-item svg {
+      width: 22px;
+      height: 22px;
+      fill: currentColor;
+      flex-shrink: 0;
+    }
+
+    .menu-text {
+      transition: opacity 0.2s ease;
+    }
+
+    .sidebar.collapsed .menu-text {
+      opacity: 0;
+      display: none;
+    }
+
+    /* Submenu Tree Styles */
+    .submenu-list {
+      padding-left: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      transition: max-height 0.3s ease-out;
+      overflow: hidden;
+    }
+
+    .submenu-list.collapsed {
+      display: none;
+    }
+
+    .sidebar-footer {
+      padding: 20px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      white-space: nowrap;
+    }
+
+    .sidebar.collapsed .sidebar-footer {
+      text-align: center;
+      padding: 20px 0;
+    }
+
+    /* Main Content Area */
+    .main-container {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      height: 100vh;
+    }
+
+    header {
+      background-color: var(--bg-card);
+      padding: 16px 32px;
+      display: flex;
+      align-items: center;
+      border-bottom: 1px solid var(--border-color);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+      flex-shrink: 0;
+    }
+
+    .header-title-container {
+      flex-grow: 1;
+    }
+
+    .header-title-container h1 {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--bg-primary);
+    }
+
+    .header-title-container p {
+      font-size: 0.82rem;
+      color: var(--color-text-muted);
+    }
+
+    /* Connection and sync buttons */
+    .connection-buttons {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-right: 24px;
+    }
+
+    .btn-sync {
+      background-color: var(--color-secondary);
+      color: white;
+      border: 1px solid var(--color-secondary);
+      padding: 8px 16px;
+      border-radius: var(--border-radius-sm);
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: var(--transition);
+    }
+
+    .btn-sync:hover {
+      background-color: #8b3fd4;
+      border-color: #8b3fd4;
+      transform: translateY(-1px);
+    }
+
+    .btn-import {
+      background-color: white;
+      color: var(--bg-primary);
+      border: 1px solid var(--bg-primary);
+      padding: 8px 16px;
+      border-radius: var(--border-radius-sm);
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: var(--transition);
+    }
+
+    .btn-import:hover {
+      background-color: #e0f2fe;
+      transform: translateY(-1px);
+    }
+
+    .user-profile {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background-color: var(--color-secondary);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      border: 2px solid rgba(255, 255, 255, 0.8);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    .content-body {
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      flex-grow: 1;
+      overflow: hidden;
+    }
+
+    /* KPI Mini Dashboard */
+    .kpi-container {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 16px;
+      flex-shrink: 0;
+    }
+
+    .kpi-card {
+      background-color: var(--bg-card);
+      border-radius: var(--border-radius-md);
+      padding: 16px 20px;
+      border: 1px solid var(--border-color);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03);
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: var(--transition);
+      position: relative;
+    }
+
+    .kpi-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
+    }
+
+    .kpi-card.active-filter {
+      box-shadow: 0 0 0 2px var(--color-primary), 0 10px 15px -3px rgba(0, 0, 0, 0.08);
+    }
+
+    .kpi-text-area {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .kpi-label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--color-text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .kpi-value {
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin-top: 4px;
+    }
+
+    .kpi-icon-container {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #f8fafc;
+    }
+
+    /* KPI Colors */
+    .kpi-total .kpi-value { color: var(--bg-primary); }
+    .kpi-total .kpi-icon-container { background-color: #e0f2fe; color: #0284c7; }
+    
+    .kpi-mapped .kpi-value { color: var(--success); }
+    .kpi-mapped .kpi-icon-container { background-color: #d1fae5; color: #059669; }
+    
+    .kpi-unmapped .kpi-value { color: var(--orange); }
+    .kpi-unmapped .kpi-icon-container { background-color: #ffedd5; color: #ea580c; }
+    
+    .kpi-pending .kpi-value { color: var(--warning); }
+    .kpi-pending .kpi-icon-container { background-color: #fef3c7; color: #d97706; }
+
+    .kpi-divergence .kpi-value { color: var(--magenta); }
+    .kpi-divergence .kpi-icon-container { background-color: #fce7f3; color: var(--magenta); }
+
+    /* Beautiful Premium Alert / Warning Banners */
+    .warning-banner {
+      background: rgba(255, 251, 235, 0.9);
+      border: 1px solid rgba(245, 158, 11, 0.2);
+      border-left: 5px solid var(--warning);
+      border-radius: var(--border-radius-md);
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      font-size: 0.88rem;
+      color: #78350f;
+      margin-bottom: 5px;
+      flex-shrink: 0;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+    }
+
+    .warning-banner-text {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* Filters */
+    .filter-panel {
+      background-color: var(--bg-card);
+      padding: 12px 20px;
+      border-radius: var(--border-radius-md);
+      border: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-shrink: 0;
+    }
+
+    .filter-label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--color-text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+
+    .filter-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-grow: 1;
+      max-width: 600px;
+    }
+
+    .filter-select {
+      width: 180px;
+      padding: 8px 12px;
+      border-radius: var(--border-radius-sm);
+      border: 1px solid var(--border-color);
+      font-size: 0.85rem;
+      outline: none;
+      background-color: #fff;
+    }
+
+    .filter-value-container {
+      flex-grow: 1;
+      position: relative;
+    }
+
+    /* Master Table Card */
+    .table-card {
+      background-color: var(--bg-card);
+      border-radius: var(--border-radius-lg);
+      border: 1px solid var(--border-color);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03);
+      display: flex;
+      flex-direction: column;
+      flex-grow: 1;
+      overflow: hidden;
+    }
+
+    .table-header-bar {
+      padding: 16px 24px;
+      background-color: #fafbfc;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    .table-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--bg-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .scrollable-table-wrapper {
+      flex-grow: 1;
+      overflow-y: auto;
+      position: relative;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      table-layout: fixed;
+    }
+
+    th {
+      background-color: #f8fafc;
+      padding: 12px 16px;
+      font-weight: 600;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--color-text-muted);
+      border-bottom: 2px solid var(--border-color);
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      user-select: none;
+    }
+
+    th.sortable {
+      cursor: pointer;
+    }
+
+    th.sortable:hover {
+      background-color: #e2e8f0;
+      color: var(--bg-primary);
+    }
+
+    .sort-indicator {
+      margin-left: 4px;
+      font-size: 0.7rem;
+    }
+
+    td {
+      padding: 12px 16px;
+      font-size: 0.85rem;
+      border-bottom: 1px solid var(--border-color);
+      color: var(--color-text-dark);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      background-color: transparent !important;
+    }
+
+    /* Fixed Column Widths */
+    .col-empresa-orig { width: 95px; }
+    .col-codigo-orig  { width: 85px; }
+    .col-nome-orig    { width: 26%; }
+    
+    .col-tipo-orig    { 
+      width: 125px; 
+      text-align: center; 
+    }
+    th.col-tipo-orig  { text-align: center; }
+    
+    .col-coligada-rm  { width: 85px; }
+    .col-codigo-rm    { width: 140px; }
+    .col-nome-rm      { width: 30%; }
+    .col-acoes        { width: 90px; }
+
+    /* Row Background Colors */
+    tr.row-provento  { background-color: var(--row-provento) !important; }
+    tr.row-desconto  { background-color: var(--row-desconto) !important; }
+    tr.row-base      { background-color: var(--row-base) !important; }
+    tr.row-mismatch  { background-color: var(--row-mismatch) !important; }
+    tr.row-unmapped  { background-color: var(--row-unmapped) !important; }
+    tr.row-panalise  { background-color: var(--row-panalise) !important; }
+
+    /* Left highlight borders */
+    tr.row-item {
+      border-left: 4px solid transparent;
+    }
+    tr.row-provento { border-left-color: var(--success); }
+    tr.row-desconto { border-left-color: var(--danger); }
+    tr.row-base     { border-left-color: var(--grey); }
+    tr.row-mismatch { border-left-color: var(--magenta); }
+    tr.row-unmapped { border-left-color: var(--orange); }
+    tr.row-panalise { border-left-color: var(--warning); }
+
+    tr.row-item:hover {
+      filter: brightness(0.97);
+    }
+
+    tr.row-editing {
+      background-color: #f0f7ff !important;
+      border-left-color: var(--color-primary);
+      position: relative !important;
+      z-index: 100 !important;
+    }
+
+    tr.row-expanded {
+      filter: brightness(0.99);
+    }
+
+    /* Prevent clipping of autocompletes inside editing cells */
+    td.col-codigo-rm, tr.row-editing {
+      overflow: visible !important;
+      white-space: normal !important;
+      position: relative;
+    }
+
+    /* BLOCK CONTAINER TRICK FOR STACKING Autocomplete dropdown in tables */
+    .autocomplete-td-wrapper, .autocomplete-wrapper {
+      position: relative !important;
+      display: block;
+      width: 100%;
+      overflow: visible;
+      z-index: 1000 !important;
+    }
+
+    /* Badges */
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      margin: 0 auto;
+    }
+
+    .badge-prov { background-color: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; }
+    .badge-desc { background-color: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+    .badge-base { background-color: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
+
+    .badge-mapped { background-color: #d1fae5; color: #065f46; }
+    .badge-unmapped { background-color: #ffedd5; color: #ea580c; }
+    .badge-panalise { background-color: #fef3c7; color: #b45309; }
+    .badge-divergent { background-color: #fee2e2; color: #b91c1c; animation: pulse 2s infinite; }
+
+    /* Expanded Sub-row details */
+    .detail-subrow-content {
+      padding: 20px 24px;
+      background-color: #fafbfc;
+      border-bottom: 2px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .detail-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      width: 100%;
+    }
+
+    .detail-field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      position: relative;
+    }
+
+    .detail-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--color-text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .detail-value {
+      font-size: 0.85rem;
+      color: var(--color-text-dark);
+      background-color: white;
+      padding: 10px 14px;
+      border-radius: var(--border-radius-sm);
+      border: 1px solid var(--border-color);
+      min-height: 38px;
+      display: flex;
+      align-items: center;
+    }
+
+    .detail-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 14px;
+      border-top: 1px dashed var(--border-color);
+      width: 100%;
+    }
+
+    /* Buttons inside rows */
+    .row-btn {
+      padding: 8px 16px;
+      border-radius: var(--border-radius-sm);
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid var(--border-color);
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .row-btn-primary {
+      background-color: var(--bg-primary);
+      color: white;
+      border-color: var(--bg-primary);
+    }
+
+    .row-btn-primary:hover { opacity: 0.9; }
+
+    .row-btn-secondary {
+      background-color: white;
+      color: var(--color-text-dark);
+    }
+
+    .row-btn-secondary:hover { background-color: #e2e8f0; }
+
+    .row-btn-warning {
+      background-color: var(--color-secondary);
+      color: white;
+      border-color: var(--color-secondary);
+    }
+
+    .row-btn-warning:hover { opacity: 0.9; }
+
+    .action-icon-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--color-text-muted);
+      padding: 6px;
+      border-radius: 4px;
+      transition: var(--transition);
+    }
+
+    .action-icon-btn:hover {
+      background-color: #e2e8f0;
+      color: var(--bg-primary);
+    }
+
+    /* Autocomplete list */
+    .table-autocomplete-list {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      width: 320px;
+      background-color: white;
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius-sm);
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
+      max-height: 180px;
+      overflow-y: auto;
+      z-index: 999999 !important;
+      margin-top: 2px;
+      list-style: none;
+    }
+
+    .table-autocomplete-item {
+      padding: 8px 12px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    .table-autocomplete-item:hover {
+      background-color: #f1f5f9;
+    }
+
+    /* Modal / Backdrop overlay */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: rgba(0, 15, 30, 0.85); /* Darker blue backdrop */
+      backdrop-filter: blur(5px);
+      z-index: 10000 !important; /* Extremely high to cover Z-indexed inputs */
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-card {
+      background-color: white;
+      border-radius: var(--border-radius-lg);
+      width: 90%;
+      max-width: 550px;
+      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+      overflow: hidden;
+      animation: modalSlide 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 10001 !important;
+    }
+
+    @keyframes modalSlide {
+      from { transform: translateY(30px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .modal-header {
+      padding: 20px 24px;
+      background-color: var(--bg-primary);
+      color: white;
+      font-weight: 600;
+      font-size: 1.1rem;
+    }
+
+    .modal-body {
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      max-height: 60vh;
+      overflow-y: auto;
+    }
+
+    .modal-footer {
+      padding: 16px 24px;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      background-color: #fafbfc;
+    }
+
+    /* Loading Overlay */
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(255, 255, 255, 0.85);
+      z-index: 20000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 5px solid var(--border-color);
+      border-bottom-color: var(--color-primary);
+      border-radius: 50%;
+      animation: rotation 1s linear infinite;
+    }
+
+    @keyframes rotation {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .loading-text {
+      font-weight: 600;
+      color: var(--bg-primary);
+    }
+
+    /* TOAST */
+    .toast-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 99999;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      pointer-events: none;
+    }
+
+    .toast {
+      background-color: var(--bg-primary);
+      color: white;
+      padding: 14px 20px;
+      border-radius: var(--border-radius-sm);
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.15);
+      border-left: 4px solid var(--color-primary);
+      font-size: 0.88rem;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 280px;
+      max-width: 400px;
+      pointer-events: auto;
+      transform: translateX(120%);
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .toast.show {
+      transform: translateX(0);
+    }
+
+    .toast-success { border-left-color: var(--success); }
+    .toast-error { border-left-color: var(--danger); }
+    .toast-warning { border-left-color: var(--warning); }
+
+    .toast-icon {
+      flex-shrink: 0;
+      width: 20px;
+      height: 20px;
+    }
+
+    .input-field {
+      width: 100%;
+      padding: 8px 12px;
+      border-radius: var(--border-radius-sm);
+      border: 1px solid var(--border-color);
+      font-size: 0.85rem;
+      outline: none;
+      transition: var(--transition);
+      background-color: #fff;
+    }
+    
+    .input-field:focus {
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px rgba(0, 219, 255, 0.15);
+    }
+
+    .input-field:disabled {
+      background-color: #f1f5f9;
+      color: var(--color-text-muted);
+      cursor: not-allowed;
+    }
+
+    /* Footer styling */
+    footer {
+      background-color: var(--bg-primary);
+      color: rgba(255, 255, 255, 0.4);
+      padding: 10px 24px;
+      font-size: 0.72rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      flex-shrink: 0;
+    }
+
+    footer a {
+      color: var(--color-primary);
+      text-decoration: none;
+    }
+    
+    /* Wizard Setup Container */
+    .wizard-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      flex-grow: 1;
+      padding: 40px;
+      background-color: #fff;
+      border-radius: var(--border-radius-lg);
+      border: 1px solid var(--border-color);
+      box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+      max-width: 650px;
+      margin: 60px auto;
+      text-align: center;
+    }
+
+    .wizard-icon {
+      width: 64px;
+      height: 64px;
+      color: var(--color-secondary);
+      margin-bottom: 24px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- LOADING OVERLAY -->
+  <div id="loadingOverlay" class="loading-overlay">
+    <div class="spinner"></div>
+    <div class="loading-text" id="loadingText">Carregando dados da Planilha...</div>
+  </div>
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <!-- MODAL PARA CADASTRAR EVENTO RM INEXISTENTE -->
+  <div id="newRMEventModal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">Criar Novo Evento RM</div>
+      <div class="modal-body">
+        <p style="font-size: 0.9rem; color: var(--color-text-muted);">
+          Este evento não existe nos dados do RM. Ele será adicionado à tabela <strong>DADOS_RM_EVENTOS</strong> com o prefixo de identificação correspondente.
+        </p>
+        <div style="display: flex; flex-direction: column; gap: 6px;">
+          <label style="font-size: 0.85rem; font-weight: 600;">Descrição do Novo Evento RM</label>
+          <input type="text" id="modalDesc" class="input-field" placeholder="Ex: Adicional de Férias">
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 6px;">
+          <label style="font-size: 0.85rem; font-weight: 600;">Tipo de Evento</label>
+          <select id="modalTipo" class="input-field">
+            <option value="PROVENTO">PROVENTO</option>
+            <option value="DESCONTO">DESCONTO</option>
+            <option value="BASE DE CALCULO">BASE DE CALCULO</option>
+          </select>
+        </div>
+        <p style="font-size: 0.8rem; color: var(--orange); font-weight: 600;">
+          * O código será sequencial automático e o evento receberá o prefixo [INCLUSAO MANUAL] na descrição.
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button class="row-btn" style="background-color: #f1f5f9;" onclick="closeModal('newRMEventModal')">Cancelar</button>
+        <button class="row-btn row-btn-primary" onclick="submitNewRMEvent()">Salvar e Selecionar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL PARA DIAGNÓSTICO DE EVENTOS MANUAIS NÃO UTILIZADOS E GAPS -->
+  <div id="diagnosticsModal" class="modal-overlay">
+    <div class="modal-card" style="max-width: 650px;">
+      <div class="modal-header" id="diagnosticsModalTitle">Lista de Novos Eventos Criados Não Utilizados</div>
+      <div class="modal-body">
+        <div id="diagnosticsContentList" style="display: flex; flex-direction: column; gap: 12px;">
+          <!-- Carregado via JS -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="row-btn row-btn-primary" onclick="closeModal('diagnosticsModal')">Fechar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DE CONFIRMAÇÃO CUSTOMIZADO -->
+  <div id="customConfirmModal" class="modal-overlay" style="display: none; z-index: 10000;">
+    <div class="modal-card" style="max-width: 450px;">
+      <div class="modal-header" id="confirmTitle" style="font-size: 1.15rem;">Confirmação</div>
+      <div class="modal-body">
+        <p id="confirmMessage" style="font-size: 0.95rem; color: var(--color-text-dark); line-height: 1.5; text-align: center; margin: 12px 0;"></p>
+      </div>
+      <div class="modal-footer" style="justify-content: center; gap: 12px;">
+        <button class="row-btn" style="background-color: #f1f5f9; padding: 8px 20px;" id="confirmCancelBtn">Cancelar</button>
+        <button class="row-btn row-btn-primary" style="padding: 8px 20px;" id="confirmOkBtn">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DE PROGRESSO DA SINCRONIZAÇÃO -->
+  <div id="progressModal" class="modal-overlay" style="display: none; z-index: 11000;">
+    <div class="modal-card" style="max-width: 450px; text-align: center;">
+      <div class="modal-header" id="progressTitle">Sincronizando Dados</div>
+      <div class="modal-body" style="padding: 20px;">
+        <p id="progressLabel" style="font-size: 0.95rem; margin-bottom: 15px; color: var(--color-text-dark); font-weight: 500;">Iniciando...</p>
+        <div style="width: 100%; height: 16px; background-color: #e2e8f0; border-radius: 8px; overflow: hidden; margin-bottom: 10px;">
+          <div id="progressBarFill" style="width: 0%; height: 100%; background: linear-gradient(90deg, var(--color-primary), var(--color-secondary)); transition: width 0.3s ease;"></div>
+        </div>
+        <span id="progressPercentage" style="font-weight: 700; font-size: 1.15rem; color: var(--bg-primary);">0%</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <img src="https://midias-sites.totvs.com/marca/wp-content/uploads/2025/11/Vector-3.png.webp" class="sidebar-logo" alt="TOTVS">
+      <span class="sidebar-title">Portal De-Para</span>
+      <button class="sidebar-toggle-btn" onclick="toggleSidebar()" title="Recolher Menu">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+    </div>
+    
+    <div class="sidebar-menu-wrapper">
+      <div class="menu-category">Menu Mapeamentos</div>
+      
+      <!-- HIERARQUIA ZDEPARA -->
+      <div class="menu-item active" style="cursor: pointer;" onclick="toggleSubmenuTree()">
+        <div class="menu-item-link-content">
+          <!-- Ícone de Mapeamento / Setas de Sincronização ⇄ -->
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 14l4-4-4-4v3H5v2h14v3zM5 18v-3h14v-2H5v-3l-4 4 4 4z"/></svg>
+          <span class="menu-text">ZDEPARA</span>
+        </div>
+        <span class="menu-text sort-indicator" id="submenuTreeArrow" style="font-size:0.6rem; margin-right: 4px;">▼</span>
+      </div>
+      
+      <!-- SUB-ITENS HIERÁRQUICOS -->
+      <div id="submenuTreeList" class="submenu-list">
+        <a class="menu-item active" style="font-size: 0.85rem; padding: 8px 12px;">
+          <div class="menu-item-link-content">
+            <svg viewBox="0 0 24 24" style="width: 18px; height: 18px;"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+            <span class="menu-text">Eventos</span>
+          </div>
+        </a>
+        <a class="menu-item disabled" onclick="showSoonAlert('Coligada')" style="font-size: 0.85rem; padding: 8px 12px;">
+          <div class="menu-item-link-content">
+            <svg viewBox="0 0 24 24" style="width: 18px; height: 18px;"><path d="M12 7V3H2v18h20V7H12zM6 19H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4V9h2v2zm0-4H4V5h2v2zm4 12H8v-2h2v2zm0-4H8v-2h2v2zm0-4H8V9h2v2zm0-4H8V5h2v2zm10 12h-8v-2h2v-2h-2v-2h2v-2h-2V9h8v10zm-2-8h-2v2h2v-2zm0 4h-2v2h2v-2z"/></svg>
+            <span class="menu-text">Coligada</span>
+          </div>
+        </a>
+        <a class="menu-item disabled" onclick="showSoonAlert('Funções')" style="font-size: 0.85rem; padding: 8px 12px;">
+          <div class="menu-item-link-content">
+            <svg viewBox="0 0 24 24" style="width: 18px; height: 18px;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H7c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.04-.42 1.99-1.07 2.75z"/></svg>
+            <span class="menu-text">Funções</span>
+          </div>
+        </a>
+        <a class="menu-item disabled" onclick="showSoonAlert('Sindicatos')" style="font-size: 0.85rem; padding: 8px 12px;">
+          <div class="menu-item-link-content">
+            <svg viewBox="0 0 24 24" style="width: 18px; height: 18px;"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 8 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+            <span class="menu-text">Sindicatos</span>
+          </div>
+        </a>
+        <a class="menu-item disabled" onclick="showSoonAlert('Seções')" style="font-size: 0.85rem; padding: 8px 12px;">
+          <div class="menu-item-link-content">
+            <svg viewBox="0 0 24 24" style="width: 18px; height: 18px;"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H8V4h12v12z"/></svg>
+            <span class="menu-text">Seções</span>
+          </div>
+        </a>
+      </div>
+    </div>
+    
+    <div class="sidebar-footer">
+      <span style="font-size: 0.72rem; opacity: 0.5;">Versão 1.3.0</span>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTAINER -->
+  <div class="main-container">
+    <!-- WIZARD SETUP -->
+    <div id="wizardSetup" class="wizard-container" style="display: none;">
+      <svg class="wizard-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg>
+      <h2 style="font-weight: 700; color: var(--bg-primary); margin-bottom: 12px;">Assistente de Configuração do Portal</h2>
+      <p style="color: var(--color-text-muted); font-size: 0.92rem; margin-bottom: 24px;">
+        Esta planilha não possui as abas necessárias para o portal funcionar. <br>
+        Clique no botão abaixo para gerar automaticamente toda a estrutura de tabelas e configurações.
+      </p>
+      <button class="row-btn row-btn-primary" style="padding: 12px 24px; font-size: 0.9rem;" onclick="runAutoInstall()">Instalar Estrutura</button>
+    </div>
+
+    <!-- MAIN INTERFACE -->
+    <div id="mainInterface" style="display: flex; flex-direction: column; flex-grow: 1; overflow: hidden;">
+      <header>
+        <div class="header-title-container">
+          <h1 id="titleHeader">ZDEPARA_EVENTOS</h1>
+          <p>Mapeamento de eventos legados com validação sequencial e relatórios de auditoria</p>
+        </div>
+        
+        <!-- BOTÕES DE IMPORTAR E EXPORTAR -->
+        <div class="connection-buttons">
+          <button class="btn-import" onclick="triggerImport()" title="Importa as informações oficiais da TOTVS por cima da planilha de origem">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M4 16v-1a7 7 0 1114 0v1M12 2v10m-3-3l3 3 3-3"/></svg>
+            Importar da TOTVS
+          </button>
+          <button class="btn-sync" onclick="triggerExport()" title="Exporta os de-para locais para a planilha corporativa oficial">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M4 16v-1a7 7 0 1114 0v1M12 12V2m-3 3l3-3 3 3"/></svg>
+            Sincronizar com TOTVS
+          </button>
+        </div>
+
+        <div class="user-profile">
+          <div class="avatar">AD</div>
+          <div>
+            <p style="font-size: 0.85rem; font-weight: 600;">Administrador</p>
+            <p style="font-size: 0.72rem; color: var(--color-text-muted);">Acesso Portal</p>
+          </div>
+        </div>
+      </header>
+
+      <div class="content-body">
+        
+        <!-- WARNING BANNERS (ALERTAS GERAIS ESTILIZADOS) -->
+        <div id="gapWarningBanner" class="warning-banner" style="display: none;">
+          <div class="warning-banner-text">
+            <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="color: var(--warning);"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            <span>Há lacunas (gaps) identificadas na numeração de eventos criados pelo usuário na aba DADOS_RM_EVENTOS.</span>
+          </div>
+          <button class="row-btn" style="padding: 4px 12px; font-size: 0.75rem; background:#fff; border-color:#f59e0b; color:#d97706; border-radius:6px;" onclick="showGapsList()">Ver Gaps</button>
+        </div>
+
+        <div id="unusedCreatedWarningBanner" class="warning-banner" style="display: none; background-color: #fdf2f8; border-color: rgba(219, 39, 119, 0.2); border-left-color: var(--magenta); color: #85144b;">
+          <div class="warning-banner-text">
+            <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="color: var(--magenta);"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <span>Existem novos eventos criados pelo usuário que ainda não foram utilizados em nenhum vínculo de-para.</span>
+          </div>
+          <button class="row-btn" style="padding: 4px 12px; font-size: 0.75rem; background:#fff; border-color:var(--magenta); color:var(--magenta); border-radius:6px;" onclick="showUnusedCreatedList()">Ver Lista</button>
+        </div>
+
+        <div id="duplicateWarningBanner" class="warning-banner" style="display: none; background-color: #fdf2f2; border-color: rgba(239, 68, 68, 0.2); border-left-color: var(--danger); color: #991b1b;">
+          <div class="warning-banner-text">
+            <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="color: var(--danger);"><path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+            <span><strong>Erro Crítico:</strong> Existem códigos duplicados inseridos manualmente na aba de referência do RM (DADOS_RM_EVENTOS). Corrija as duplicidades.</span>
+          </div>
+          <button class="row-btn" style="padding: 4px 12px; font-size: 0.75rem; background:#fff; border-color:var(--danger); color:var(--danger); border-radius:6px;" onclick="showDuplicatesList()">Ver Lista</button>
+        </div>
+
+        <!-- KPI MINI DASHBOARD -->
+        <section class="kpi-container" id="kpiContainer">
+          <div class="kpi-card kpi-total" id="kpiCardTotal" onclick="toggleKpiFilter('all')">
+            <div class="kpi-text-area">
+              <div class="kpi-label">Total Eventos</div>
+              <div class="kpi-value" id="valTotal">0</div>
+            </div>
+            <div class="kpi-icon-container">
+              <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+            </div>
+          </div>
+          <div class="kpi-card kpi-mapped" id="kpiCardMapped" onclick="toggleKpiFilter('mapped')">
+            <div class="kpi-text-area">
+              <div class="kpi-label">Mapeados</div>
+              <div class="kpi-value" id="valMapped">0</div>
+            </div>
+            <div class="kpi-icon-container">
+              <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+            </div>
+          </div>
+          <div class="kpi-card kpi-unmapped" id="kpiCardUnmapped" onclick="toggleKpiFilter('unmapped')">
+            <div class="kpi-text-area">
+              <div class="kpi-label">Não Mapeados</div>
+              <div class="kpi-value" id="valUnmapped">0</div>
+            </div>
+            <div class="kpi-icon-container">
+              <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+            </div>
+          </div>
+          <div class="kpi-card kpi-pending" id="kpiCardPending" onclick="toggleKpiFilter('pending')">
+            <div class="kpi-text-area">
+              <div class="kpi-label">P/ Análise</div>
+              <div class="kpi-value" id="valPending">0</div>
+            </div>
+            <div class="kpi-icon-container">
+              <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M11 18h2v-2h-2v2zm1-16C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-14c-2.21 0-4 1.79-4 4h2c0-1.1.9-2 2-2s2 .9 2 2c0 2-3 1.75-3 5h2c0-2.25 3-2.5 3-5 0-2.21-1.79-4-4-4z"/></svg>
+            </div>
+          </div>
+          <!-- KPI CARD DE INCONSISTÊNCIAS (DIVERGÊNCIAS) RESTAURADO -->
+          <div class="kpi-card kpi-divergence" id="kpiCardDivergent" onclick="toggleKpiFilter('divergent')">
+            <div class="kpi-text-area">
+              <div class="kpi-label">Divergências</div>
+              <div class="kpi-value" id="valDivergent" style="color: var(--magenta);">0</div>
+            </div>
+            <div class="kpi-icon-container" style="background-color: #fce7f3; color: var(--magenta);">
+              <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+            </div>
+          </div>
+        </section>
+
+        <!-- FILTERS -->
+        <section class="filter-panel">
+          <div class="filter-label">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg>
+            Filtrar Dados:
+          </div>
+          <div class="filter-group">
+            <select id="filterTypeDropdown" class="filter-select" onchange="handleFilterTypeChange(this.value)">
+              <option value="global">Busca Geral</option>
+              <option value="empresaDe">Empresa Origem</option>
+              <option value="tipoEvento">Tipo Evento</option>
+              <option value="status">Status Mapeamento</option>
+              <option value="coligadaPara">Coligada RM</option>
+              <option value="codigoPara">Código RM</option>
+              <option value="nomeRm">Nome RM</option>
+              <option value="temObservacao">Com Observação?</option>
+            </select>
+            
+            <div class="filter-value-container" id="filterValueContainer">
+              <input type="text" id="filterValueInput" class="input-field" placeholder="Digite o termo para buscar..." oninput="applyFilters()">
+            </div>
+          </div>
+        </section>
+
+        <!-- MASTER TABLE CARD -->
+        <section class="table-card">
+          <div class="table-header-bar">
+            <div class="table-title">
+              <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+              Tabela De-Para Mapeamentos
+            </div>
+            <div style="font-size: 0.82rem; color: var(--color-text-muted);" id="tableCount">0 registros</div>
+          </div>
+
+          <div class="scrollable-table-wrapper" id="scrollableTableWrapper" onscroll="handleTableScroll()">
+            <table id="mainTable">
+              <thead>
+                <tr>
+                  <th class="sortable col-empresa-orig" onclick="toggleSort('empresaDe')">Emp. Origem<span class="sort-indicator" id="sort-empresaDe"></span></th>
+                  <th class="sortable col-codigo-orig" onclick="toggleSort('codigoDe')">Cód. Origem<span class="sort-indicator" id="sort-codigoDe"></span></th>
+                  <th class="sortable col-nome-orig" onclick="toggleSort('nomeDe')">Nome Origem<span class="sort-indicator" id="sort-nomeDe"></span></th>
+                  <th class="sortable col-tipo-orig" onclick="toggleSort('tipoEvento')">Tipo Evento<span class="sort-indicator" id="sort-tipoEvento"></span></th>
+                  <th class="sortable col-coligada-rm" onclick="toggleSort('coligadaPara')">Colig. RM<span class="sort-indicator" id="sort-coligadaPara"></span></th>
+                  <th class="sortable col-codigo-rm" onclick="toggleSort('codigoPara')">Cód. RM<span class="sort-indicator" id="sort-codigoPara"></span></th>
+                  <th class="sortable col-nome-rm" onclick="toggleSort('nomeRm')">Nome RM / Tipo RM<span class="sort-indicator" id="sort-nomeRm"></span></th>
+                  <th class="col-acoes">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="tableBody">
+                <!-- Rendered Dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+      </div>
+      
+      <!-- FOOTER -->
+      <footer>
+        <span id="footerConnectionInfo">Planilha Origem: Carregando... | Planilha Destino: Carregando...</span>
+        <span>Portal De-Para TOTVS RM v1.3</span>
+      </footer>
+    </div>
+  </div>
+
+  <script>
+    const SPREADSHEET_ID = "<?= spreadsheetId ?>";
+    let database = [];
+    let rmEvents = [];
+    let unusedCreatedEvents = [];
+    let diagnostics = { gaps: [], duplicates: [] };
+    let stats = {};
+    let filteredData = [];
+    let connectionInfo = {};
+    
+    let renderedCount = 40;
+    const renderChunkSize = 25;
+    
+    let editingRowNumber = null;
+    let expandedRowNumbers = new Set();
+    
+    let activeKpiFilter = 'all';
+    let sortColumn = 'rowNum';
+    let sortAscending = true;
+
+    window.onload = function() {
+      loadPortalData();
+      
+      document.addEventListener('click', function(e) {
+        if (!e.target.closest('.autocomplete-wrapper') && !e.target.closest('.autocomplete-td-wrapper')) {
+          closeAllAutocompletes();
+        }
+      });
+    };
+
+    function toggleSidebar() {
+      const sidebar = document.getElementById("sidebar");
+      sidebar.classList.toggle("collapsed");
+      
+      const btn = document.querySelector(".sidebar-toggle-btn svg");
+      if (sidebar.classList.contains("collapsed")) {
+        btn.innerHTML = `<path d="M4 6h16M4 12h16M4 18h16"/>`;
+      } else {
+        btn.innerHTML = `<path d="M15 19l-7-7 7-7"/>`;
+      }
+    }
+
+    function toggleSubmenuTree() {
+      const list = document.getElementById("submenuTreeList");
+      const arrow = document.getElementById("submenuTreeArrow");
+      list.classList.toggle("collapsed");
+      arrow.innerText = list.classList.contains("collapsed") ? "▶" : "▼";
+    }
+
+    function showToast(message, type = 'success') {
+      const container = document.getElementById("toastContainer");
+      const toast = document.createElement("div");
+      toast.className = `toast toast-${type}`;
+      
+      let iconSvg = '';
+      if (type === 'success') {
+        iconSvg = `<svg class="toast-icon" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>`;
+      } else if (type === 'error') {
+        iconSvg = `<svg class="toast-icon" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>`;
+      } else {
+        iconSvg = `<svg class="toast-icon" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>`;
+      }
+      
+      toast.innerHTML = `
+        ${iconSvg}
+        <span>${message}</span>
+      `;
+      container.appendChild(toast);
+      
+      setTimeout(() => toast.classList.add("show"), 10);
+      
+      setTimeout(() => {
+        toast.classList.remove("show");
+        setTimeout(() => toast.remove(), 300);
+      }, 4500);
+    }
+
+    function showSoonAlert(moduleName) {
+      showToast(`Módulo de mapeamento de ${moduleName} estará disponível nas próximas etapas do projeto!`, 'warning');
+    }
+
+    function loadPortalData() {
+      showLoading("Carregando base de dados...");
+      google.script.run
+        .withSuccessHandler(function(response) {
+          hideLoading();
+          
+          connectionInfo = response.connection;
+          updateFooter();
+
+          if (!response.status.valid) {
+            document.getElementById("mainInterface").style.display = "none";
+            document.getElementById("wizardSetup").style.display = "flex";
+            return;
+          }
+          
+          document.getElementById("mainInterface").style.display = "flex";
+          document.getElementById("wizardSetup").style.display = "none";
+          
+          database = response.data;
+          rmEvents = response.rmEvents;
+          unusedCreatedEvents = response.unusedCreatedEvents;
+          diagnostics = response.diagnostics;
+          stats = response.stats;
+          
+          renderWarnings();
+          updateDashboard();
+          applyFilters();
+        })
+        .withFailureHandler(function(err) {
+          hideLoading();
+          showToast("Erro ao conectar à planilha Google: " + err.message, 'error');
+        })
+        .getPortalData(SPREADSHEET_ID);
+    }
+
+    function showLoading(text) {
+      document.getElementById("loadingText").innerText = text;
+      document.getElementById("loadingOverlay").style.display = "flex";
+    }
+
+    function hideLoading() {
+      document.getElementById("loadingOverlay").style.display = "none";
+    }
+
+    function runAutoInstall() {
+      showLoading("Instalando tabelas e colunas...");
+      google.script.run
+        .withSuccessHandler(function(response) {
+          hideLoading();
+          if (response.success) {
+            showToast(response.message, 'success');
+            loadPortalData();
+          } else {
+            showToast(response.error, 'error');
+          }
+        })
+        .withFailureHandler(function(err) {
+          hideLoading();
+          showToast("Erro na instalação: " + err.message, 'error');
+        })
+        .autoInstallStructure(SPREADSHEET_ID);
+    }
+
+    function updateFooter() {
+      const footerElement = document.getElementById("footerConnectionInfo");
+      if (connectionInfo.isInstalled) {
+        footerElement.innerHTML = `Planilha Origem: <strong>${connectionInfo.originName}</strong> | Planilha Destino: <strong>${connectionInfo.destinationName}</strong> (Pasta: <em>${connectionInfo.destinationPath}</em>)`;
+      } else {
+        footerElement.innerText = "Portal De-Para - Aguardando Instalação...";
+      }
+    }
+
+    function renderWarnings() {
+      // 1. Mostrar/ocultar banner de gaps de criação manual
+      const gapBanner = document.getElementById("gapWarningBanner");
+      if (diagnostics.gaps && diagnostics.gaps.length > 0) {
+        gapBanner.style.display = "flex";
+      } else {
+        gapBanner.style.display = "none";
+      }
+
+      // 2. Mostrar/ocultar banner de novos criados não utilizados
+      const unusedBanner = document.getElementById("unusedCreatedWarningBanner");
+      if (unusedCreatedEvents && unusedCreatedEvents.length > 0) {
+        unusedBanner.style.display = "flex";
+      } else {
+        unusedBanner.style.display = "none";
+      }
+
+      // 3. Mostrar/ocultar banner de duplicidades
+      const dupBanner = document.getElementById("duplicateWarningBanner");
+      if (diagnostics.duplicates && diagnostics.duplicates.length > 0) {
+        dupBanner.style.display = "flex";
+      } else {
+        dupBanner.style.display = "none";
+      }
+    }
+
+    function showGapsList() {
+      const modal = document.getElementById("diagnosticsModal");
+      const title = document.getElementById("diagnosticsModalTitle");
+      const content = document.getElementById("diagnosticsContentList");
+      
+      title.innerText = "Lacunas (Gaps) Identificadas na Criação Manual";
+      content.innerHTML = `
+        <p style="font-size:0.9rem; color:var(--color-text-muted);">
+          A numeração manual abaixo foi pulada ou liberada na aba DADOS_RM_EVENTOS. Recomendamos revisar ou utilizar estes códigos no próximo cadastro manual:
+        </p>
+        <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:8px;">
+          ${diagnostics.gaps.map(g => `<span class="badge" style="background:#fffbeb; color:#d97706; border:1px solid #fde68a; font-family:monospace; font-size:0.85rem; padding:6px 12px;">${g}</span>`).join('')}
+        </div>
+      `;
+      modal.style.display = "flex";
+    }
+
+    function showDuplicatesList() {
+      const modal = document.getElementById("diagnosticsModal");
+      const title = document.getElementById("diagnosticsModalTitle");
+      const content = document.getElementById("diagnosticsContentList");
+      
+      title.innerText = "Códigos Manuais Duplicados no RM (DADOS_RM_EVENTOS)";
+      
+      if (!diagnostics.duplicates || diagnostics.duplicates.length === 0) {
+        content.innerHTML = `<p style="text-align:center; padding:20px; color:var(--color-text-muted);">Nenhuma duplicidade manual encontrada.</p>`;
+      } else {
+        let dupItems = [];
+        diagnostics.duplicates.forEach(code => {
+          const events = rmEvents.filter(ev => ev.codigo === code);
+          dupItems = dupItems.concat(events);
+        });
+        
+        let listHtml = dupItems.map(ev => `
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 14px; background:#fff5f5; border:1px solid #feb2b2; border-radius:6px; margin-bottom:8px;">
+            <div>
+              <span style="font-weight:600; font-family:monospace; font-size:0.9rem; margin-right:8px; color:#c53030;">${ev.codigo}</span>
+              <span style="font-size:0.88rem; color:#9b2c2c;">${ev.descricao}</span>
+              <span class="badge badge-base" style="font-size:0.65rem; margin-left:6px; background:#feb2b2; color:#9b2c2c;">${ev.tipo}</span>
+            </div>
+            ${ev.descricao.indexOf("[INCLUSAO MANUAL]") !== -1 ? `
+              <button class="row-btn" style="padding:4px 8px; font-size:0.75rem; background:#fee2e2; border-color:#fca5a5; color:#b91c1c;" onclick="deleteManualEvent('${ev.codigo}')">
+                Excluir
+              </button>
+            ` : `<span style="font-size:0.72rem; color:var(--color-text-muted);">Nativo (Não editável)</span>`}
+          </div>
+        `).join('');
+        
+        content.innerHTML = `
+          <p style="font-size:0.9rem; color:var(--color-text-muted); margin-bottom:12px;">
+            Os códigos manuais abaixo possuem mais de um cadastro na aba DADOS_RM_EVENTOS. Corrija-os excluindo o registro duplicado ou ajustando na planilha:
+          </p>
+          <div style="display:flex; flex-direction:column; gap:4px; max-height: 400px; overflow-y: auto; padding-right: 4px;">
+            ${listHtml}
+          </div>
+        `;
+      }
+      modal.style.display = "flex";
+    }
+
+    function showUnusedCreatedList() {
+      const modal = document.getElementById("diagnosticsModal");
+      const title = document.getElementById("diagnosticsModalTitle");
+      const content = document.getElementById("diagnosticsContentList");
+      
+      title.innerText = "Eventos Criados sem Vínculo (Inclusões Manuais Não Utilizadas)";
+      
+      if (unusedCreatedEvents.length === 0) {
+        content.innerHTML = `<p style="text-align:center; padding:20px; color:var(--color-text-muted);">Nenhum evento criado pelo usuário está sem vínculo.</p>`;
+      } else {
+        let listHtml = unusedCreatedEvents.map(ev => `
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 14px; background:#f8fafc; border:1px solid var(--border-color); border-radius:6px;">
+            <div>
+              <span style="font-weight:600; font-family:monospace; font-size:0.9rem; margin-right:8px;">${ev.codigo}</span>
+              <span style="font-size:0.88rem;">${ev.descricao}</span>
+              <span class="badge badge-base" style="font-size:0.65rem; margin-left:6px;">${ev.tipo}</span>
+            </div>
+            <button class="row-btn" style="padding:4px 8px; font-size:0.75rem; background:#fee2e2; border-color:#fca5a5; color:#b91c1c;" onclick="deleteManualEvent('${ev.codigo}')">
+              Excluir
+            </button>
+          </div>
+        `).join('');
+        
+        content.innerHTML = `
+          <p style="font-size:0.9rem; color:var(--color-text-muted); margin-bottom:8px;">
+            Estes eventos foram criados via portal, mas não foram associados a nenhum evento de origem em ZDEPARA_EVENTOS. Você pode excluí-los com segurança:
+          </p>
+          <div style="display:flex; flex-direction:column; gap:8px;">
+            ${listHtml}
+          </div>
+        `;
+      }
+      modal.style.display = "flex";
+    }
+
+    function showCustomConfirm(title, message, onConfirm) {
+      document.getElementById("confirmTitle").innerText = title;
+      document.getElementById("confirmMessage").innerText = message;
+      
+      const modal = document.getElementById("customConfirmModal");
+      const okBtn = document.getElementById("confirmOkBtn");
+      const cancelBtn = document.getElementById("confirmCancelBtn");
+      
+      modal.style.display = "flex";
+      
+      okBtn.onclick = function() {
+        modal.style.display = "none";
+        onConfirm();
+      };
+      
+      cancelBtn.onclick = function() {
+        modal.style.display = "none";
+      };
+    }
+
+    function deleteManualEvent(code) {
+      showCustomConfirm(
+        "Excluir Evento Manual",
+        `Tem certeza que deseja excluir o evento criado código ${code}?`,
+        function() {
+          closeModal('diagnosticsModal');
+          showLoading("Removendo evento manual...");
+          
+          google.script.run
+            .withSuccessHandler(function(response) {
+              hideLoading();
+              if (response.success) {
+                showToast(response.message, 'success');
+                loadPortalData();
+              } else {
+                showToast(response.error, 'error');
+              }
+            })
+            .withFailureHandler(function(err) {
+              hideLoading();
+              showToast("Erro na requisição: " + err.message, 'error');
+            })
+            .deleteUnusedCreatedEvent(SPREADSHEET_ID, code);
+        }
+      );
+    }
+
+    function showProgressModal(title) {
+      document.getElementById("progressTitle").innerText = title;
+      document.getElementById("progressBarFill").style.width = "0%";
+      document.getElementById("progressPercentage").innerText = "0%";
+      document.getElementById("progressLabel").innerText = "Iniciando...";
+      document.getElementById("progressModal").style.display = "flex";
+    }
+
+    function updateProgressModal(current, total, sheetName) {
+      const pct = Math.round((current / total) * 100);
+      document.getElementById("progressBarFill").style.width = pct + "%";
+      document.getElementById("progressPercentage").innerText = pct + "%";
+      document.getElementById("progressLabel").innerText = `Processando: ${sheetName} (${current} de ${total})`;
+    }
+
+    function closeProgressModal() {
+      document.getElementById("progressModal").style.display = "none";
+    }
+
+    function triggerImport() {
+      showCustomConfirm(
+        "Importar da TOTVS",
+        "Isso importará os dados da Planilha Oficial da TOTVS por cima da Planilha Origem atual. Continuar?",
+        function() {
+          const sheets = ["ZDEPARA_EVENTOS", "DADOS_RM_EVENTOS"];
+          showProgressModal("Importando Dados da TOTVS");
+          
+          let current = 0;
+          function importNext() {
+            if (current < sheets.length) {
+              const sheetName = sheets[current];
+              updateProgressModal(current + 1, sheets.length, sheetName);
+              
+              google.script.run
+                .withSuccessHandler(function(response) {
+                  if (response.success) {
+                    current++;
+                    importNext();
+                  } else {
+                    closeProgressModal();
+                    showToast(`Erro na aba ${sheetName}: ${response.error}`, 'error');
+                    loadPortalData();
+                  }
+                })
+                .withFailureHandler(function(err) {
+                  closeProgressModal();
+                  showToast(`Erro na requisição da aba ${sheetName}: ${err.message}`, 'error');
+                  loadPortalData();
+                })
+                .importSingleSheet(SPREADSHEET_ID, sheetName);
+            } else {
+              setTimeout(function() {
+                closeProgressModal();
+                showToast("Importação bilateral concluída com sucesso!", 'success');
+                loadPortalData();
+              }, 600);
+            }
+          }
+          importNext();
+        }
+      );
+    }
+
+    function triggerExport() {
+      showCustomConfirm(
+        "Sincronizar com a TOTVS",
+        "Deseja sincronizar e gravar a base atual na Planilha Oficial da Empresa da TOTVS?",
+        function() {
+          const sheets = ["ZDEPARA_EVENTOS", "DADOS_RM_EVENTOS"];
+          showProgressModal("Sincronizando com a TOTVS");
+          
+          let current = 0;
+          function syncNext() {
+            if (current < sheets.length) {
+              const sheetName = sheets[current];
+              updateProgressModal(current + 1, sheets.length, sheetName);
+              
+              google.script.run
+                .withSuccessHandler(function(response) {
+                  if (response.success) {
+                    current++;
+                    syncNext();
+                  } else {
+                    closeProgressModal();
+                    showToast(`Erro na aba ${sheetName}: ${response.error}`, 'error');
+                    loadPortalData();
+                  }
+                })
+                .withFailureHandler(function(err) {
+                  closeProgressModal();
+                  showToast(`Erro na requisição da aba ${sheetName}: ${err.message}`, 'error');
+                  loadPortalData();
+                })
+                .syncSingleSheet(SPREADSHEET_ID, sheetName);
+            } else {
+              setTimeout(function() {
+                closeProgressModal();
+                showToast("Sincronização bilateral concluída com sucesso!", 'success');
+                showToast("Verifique os logs de alteração na planilha oficial para auditar as mudanças.", 'warning');
+                loadPortalData();
+              }, 600);
+            }
+          }
+          syncNext();
+        }
+      );
+    }
+
+    function updateDashboard() {
+      document.getElementById("valTotal").innerText = stats.total;
+      document.getElementById("valMapped").innerText = stats.preenchidos;
+      document.getElementById("valUnmapped").innerText = stats.naoPreenchidos;
+      document.getElementById("valPending").innerText = stats.pAnalise;
+      document.getElementById("valDivergent").innerText = stats.divergencias;
+    }
+
+    function handleFilterTypeChange(type) {
+      const container = document.getElementById("filterValueContainer");
+      container.innerHTML = "";
+      
+      if (type === "global" || type === "coligadaPara" || type === "codigoPara" || type === "nomeRm") {
+        container.innerHTML = `<input type="text" id="filterValueInput" class="input-field" placeholder="Digite para filtrar..." oninput="applyFilters()">`;
+      } 
+      else if (type === "empresaDe") {
+        const uniqueEmpresas = [...new Set(database.map(i => i.empresaDe).filter(Boolean))].sort();
+        let options = uniqueEmpresas.map(e => `<option value="${e}">${e}</option>`).join('');
+        container.innerHTML = `
+          <select id="filterValueInput" class="filter-select" style="width:100%;" onchange="applyFilters()">
+            <option value="">Selecione a Empresa...</option>
+            ${options}
+          </select>`;
+      } 
+      else if (type === "tipoEvento") {
+        container.innerHTML = `
+          <select id="filterValueInput" class="filter-select" style="width:100%;" onchange="applyFilters()">
+            <option value="">Selecione o Tipo...</option>
+            <option value="P-PROVENTO">P-PROVENTO</option>
+            <option value="D-DESCONTO">D-DESCONTO</option>
+            <option value="B-BASE">B-BASE</option>
+          </select>`;
+      } 
+      else if (type === "status") {
+        container.innerHTML = `
+          <select id="filterValueInput" class="filter-select" style="width:100%;" onchange="applyFilters()">
+            <option value="">Selecione o Status...</option>
+            <option value="mapeado">Mapeado</option>
+            <option value="nao_mapeado">Não Mapeado</option>
+            <option value="p_analise">P/ Análise</option>
+          </select>`;
+      }
+      else if (type === "temObservacao") {
+        container.innerHTML = `
+          <select id="filterValueInput" class="filter-select" style="width:100%;" onchange="applyFilters()">
+            <option value="">Selecione...</option>
+            <option value="sim">Sim (Com Observação)</option>
+            <option value="nao">Não (Vazia)</option>
+          </select>`;
+      }
+      
+      applyFilters();
+    }
+
+    function applyFilters() {
+      const filterType = document.getElementById("filterTypeDropdown").value;
+      const filterValElement = document.getElementById("filterValueInput");
+      const filterVal = filterValElement ? filterValElement.value.trim().toLowerCase() : "";
+
+      filteredData = database.filter(item => {
+        let matchesKpi = true;
+        if (activeKpiFilter === 'mapped') matchesKpi = item.codigoPara && item.codigoPara !== "P/ ANALISE";
+        else if (activeKpiFilter === 'unmapped') matchesKpi = !item.codigoPara;
+        else if (activeKpiFilter === 'pending') matchesKpi = item.codigoPara === "P/ ANALISE";
+        else if (activeKpiFilter === 'divergent') {
+          matchesKpi = !!item.hasDivergencia;
+        }
+
+        if (!matchesKpi) return false;
+        if (!filterVal) return true;
+
+        if (filterType === "global") {
+          return item.empresaDe.toLowerCase().includes(filterVal) ||
+                 item.codigoDe.toLowerCase().includes(filterVal) ||
+                 item.nomeDe.toLowerCase().includes(filterVal) ||
+                 item.tipoEvento.toLowerCase().includes(filterVal) ||
+                 item.codigoPara.toLowerCase().includes(filterVal) ||
+                 item.nomeRm.toLowerCase().includes(filterVal);
+        }
+        
+        if (filterType === "status") {
+          if (filterVal === "mapeado") return item.codigoPara && item.codigoPara !== "P/ ANALISE";
+          if (filterVal === "nao_mapeado") return !item.codigoPara;
+          if (filterVal === "p_analise") return item.codigoPara === "P/ ANALISE";
+        }
+
+        if (filterType === "temObservacao") {
+          if (filterVal === "sim") return item.observacao && item.observacao.trim() !== "";
+          if (filterVal === "nao") return !item.observacao || item.observacao.trim() === "";
+        }
+        
+        return String(item[filterType]).toLowerCase().includes(filterVal);
+      });
+
+      sortData();
+      renderedCount = 40;
+      document.getElementById("scrollableTableWrapper").scrollTop = 0;
+      renderTableContent();
+    }
+
+    function toggleKpiFilter(filterType) {
+      document.querySelectorAll('.kpi-card').forEach(c => c.classList.remove('active-filter'));
+      
+      if (activeKpiFilter === filterType) {
+        activeKpiFilter = 'all';
+      } else {
+        activeKpiFilter = filterType;
+        if (filterType === 'mapped') document.getElementById('kpiCardMapped').classList.add('active-filter');
+        if (filterType === 'unmapped') document.getElementById('kpiCardUnmapped').classList.add('active-filter');
+        if (filterType === 'pending') document.getElementById('kpiCardPending').classList.add('active-filter');
+        if (filterType === 'divergent') document.getElementById('kpiCardDivergent').classList.add('active-filter');
+        if (filterType === 'all') document.getElementById('kpiCardTotal').classList.add('active-filter');
+      }
+      applyFilters();
+    }
+
+    function toggleSort(column) {
+      if (sortColumn === column) {
+        sortAscending = !sortAscending;
+      } else {
+        sortColumn = column;
+        sortAscending = true;
+      }
+      
+      document.querySelectorAll('.sort-indicator').forEach(ind => ind.innerText = '');
+      const indicator = document.getElementById("sort-" + column);
+      if (indicator) {
+        indicator.innerText = sortAscending ? " ▲" : " ▼";
+      }
+      
+      applyFilters();
+    }
+
+    function sortData() {
+      if (sortColumn === 'rowNum') {
+        filteredData.sort((a, b) => sortAscending ? a.rowNum - b.rowNum : b.rowNum - a.rowNum);
+        return;
+      }
+      
+      filteredData.sort((a, b) => {
+        let valA = String(a[sortColumn] || '').toLowerCase();
+        let valB = String(b[sortColumn] || '').toLowerCase();
+        
+        if (sortColumn === 'codigoDe' || sortColumn === 'empresaDe' || sortColumn === 'coligadaPara' || sortColumn === 'codigoPara') {
+          let numA = parseInt(valA, 10);
+          let numB = parseInt(valB, 10);
+          if (!isNaN(numA) && !isNaN(numB)) {
+            return sortAscending ? numA - numB : numB - numA;
+          }
+        }
+        
+        if (valA < valB) return sortAscending ? -1 : 1;
+        if (valA > valB) return sortAscending ? 1 : -1;
+        return 0;
+      });
+    }
+
+    function normalizeEventType(type) {
+      if (!type) return "";
+      type = type.toUpperCase().replace(/\s/g, "");
+      if (type.includes("PROV")) return "PROVENTO";
+      if (type.includes("DESC")) return "DESCONTO";
+      if (type.includes("BASE") || type.includes("CALC")) return "BASE";
+      return type;
+    }
+
+    function checkTypeCompatibility(legacyType, rmCode) {
+      if (!rmCode || rmCode === "NAO IMPORTAR" || rmCode === "P/ ANALISE") {
+        return { isMatch: true, rmType: "" };
+      }
+      
+      const rmEvent = rmEvents.find(e => e.codigo === rmCode);
+      if (!rmEvent) {
+        return { isMatch: true, rmType: "" };
+      }
+      
+      const rmType = rmEvent.tipo;
+      const normLegacy = normalizeEventType(legacyType);
+      const normRM = normalizeEventType(rmType);
+      
+      return { isMatch: (normLegacy === normRM), rmType: rmType };
+    }
+
+    function renderTableContent() {
+      const tbody = document.getElementById("tableBody");
+      tbody.innerHTML = "";
+      
+      const total = filteredData.length;
+      document.getElementById("tableCount").innerText = `${total} registros`;
+      
+      if (total === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--color-text-muted); padding: 32px;">Nenhum registro encontrado.</td></tr>`;
+        return;
+      }
+      
+      const itemsToRender = filteredData.slice(0, renderedCount);
+      
+      itemsToRender.forEach(item => {
+        const isEditing = editingRowNumber === item.rowNum;
+        const isExpanded = expandedRowNumbers.has(item.rowNum);
+        
+        const compatibility = checkTypeCompatibility(item.tipoEvento, item.codigoPara);
+        
+        let rowColorClass = "row-base";
+        let typeBadge = "badge-base";
+        if (item.tipoEvento === "P-PROVENTO") typeBadge = "badge-prov";
+        else if (item.tipoEvento === "D-DESCONTO") typeBadge = "badge-desc";
+        
+        if (!item.codigoPara) {
+          rowColorClass = "row-unmapped"; // Laranja Suave
+        } else if (item.codigoPara === "P/ ANALISE") {
+          rowColorClass = "row-panalise"; // Amarelo Suave
+        } else if (!compatibility.isMatch) {
+          rowColorClass = "row-mismatch"; // Magenta Suave
+        } else {
+          if (item.tipoEvento === "P-PROVENTO") rowColorClass = "row-provento";
+          else if (item.tipoEvento === "D-DESCONTO") rowColorClass = "row-desconto";
+        }
+        
+        let mapBadge = "badge-mapped";
+        let statusLabel = item.nomeRm || "MAPEADO";
+        
+        if (item.codigoPara === "P/ ANALISE") {
+          mapBadge = "badge-panalise";
+          statusLabel = "P/ ANÁLISE";
+        } else if (!item.codigoPara) {
+          mapBadge = "badge-unmapped";
+          statusLabel = "PENDENTE";
+        } else if (item.codigoPara === "NAO IMPORTAR") {
+          mapBadge = "badge-mapped";
+          statusLabel = "NÃO IMPORTAR";
+        } else if (!compatibility.isMatch) {
+          mapBadge = "badge-divergent";
+          statusLabel = "DIVERGÊNCIA";
+        }
+        
+        const tr = document.createElement("tr");
+        tr.className = `row-item ${rowColorClass} ${isEditing ? 'row-editing' : ''} ${isExpanded ? 'row-expanded' : ''}`;
+        
+        let rmCellContent = `<span class="badge ${mapBadge}">${statusLabel}</span>`;
+        if (item.codigoPara && item.codigoPara !== "NAO IMPORTAR" && item.codigoPara !== "P/ ANALISE") {
+          const rmTypeLabel = compatibility.rmType ? ` | Tipo: ${compatibility.rmType}` : '';
+          const matchWarning = !compatibility.isMatch ? ` <span style="color:var(--magenta); font-weight:700;" title="O tipo de evento RM não condiz com o tipo legado!">(DIVERGÊNCIA TIPO)</span>` : '';
+          rmCellContent = `
+            <div style="display:flex; flex-direction:column; gap:2px;">
+              <span style="font-weight:600;">${item.nomeRm}</span>
+              <span style="font-size:0.75rem; color:var(--color-text-muted);">${rmTypeLabel}${matchWarning}</span>
+            </div>
+          `;
+        }
+        
+        if (isEditing) {
+          tr.innerHTML = `
+            <td class="col-empresa-orig">${item.empresaDe}</td>
+            <td class="col-codigo-orig"><code>${item.codigoDe}</code></td>
+            <td class="col-nome-orig" title="${item.nomeDe}">${item.nomeDe}</td>
+            <td class="col-tipo-orig" style="text-align: center;"><span class="badge ${typeBadge}">${item.tipoEvento}</span></td>
+            
+            <td class="col-coligada-rm">${item.coligadaPara || "1"}</td>
+            
+            <td class="col-codigo-rm" style="overflow: visible;">
+              <div class="autocomplete-td-wrapper">
+                <input type="text" id="edit-codigoPara-${item.rowNum}" class="input-field" style="padding: 6px; font-size: 0.8rem;" value="${item.codigoPara}" autocomplete="off" oninput="handleCodRmInput(this.value, ${item.rowNum})">
+                <ul id="table-autocomplete-codigoPara-${item.rowNum}" class="table-autocomplete-list" style="display: none;"></ul>
+              </div>
+            </td>
+            
+            <td class="col-nome-rm">
+              <input type="text" id="edit-nomeRm-${item.rowNum}" class="input-field" style="padding: 6px; font-size: 0.8rem;" value="${item.nomeRm}" disabled>
+            </td>
+            
+            <td class="col-acoes">
+              <div class="action-icons">
+                <button class="action-icon-btn" onclick="saveRowEdition(${item.rowNum})" title="Salvar Alterações" style="color: var(--success);">
+                  <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
+                </button>
+                <button class="action-icon-btn" onclick="cancelRowEdition()" title="Cancelar" style="color: var(--danger);">
+                  <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+              </div>
+            </td>
+          `;
+        } else {
+          const arrowSymbol = isExpanded ? "▲" : "▼";
+          tr.innerHTML = `
+            <td class="col-empresa-orig" onclick="toggleRowExpansion(${item.rowNum})">${item.empresaDe}</td>
+            <td class="col-codigo-orig" onclick="toggleRowExpansion(${item.rowNum})"><code>${item.codigoDe}</code></td>
+            <td class="col-nome-orig" onclick="toggleRowExpansion(${item.rowNum})" title="${item.nomeDe}">${item.nomeDe}</td>
+            <td class="col-tipo-orig" style="text-align: center;" onclick="toggleRowExpansion(${item.rowNum})"><span class="badge ${typeBadge}">${item.tipoEvento}</span></td>
+            <td class="col-coligada-rm" onclick="toggleRowExpansion(${item.rowNum})">${item.coligadaPara || "-"}</td>
+            <td class="col-codigo-rm" onclick="toggleRowExpansion(${item.rowNum})"><code>${item.codigoPara || "-"}</code></td>
+            <td class="col-nome-rm" onclick="toggleRowExpansion(${item.rowNum})">${rmCellContent}</td>
+            <td class="col-acoes">
+              <div class="action-icons">
+                <button class="action-icon-btn" onclick="toggleRowExpansion(${item.rowNum})" title="Ver Detalhes">
+                  <span style="font-size: 0.8rem;">${arrowSymbol}</span>
+                </button>
+                <button class="action-icon-btn" onclick="startRowEdition(${item.rowNum})" title="Editar Mapeamento">
+                  <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                </button>
+              </div>
+            </td>
+          `;
+        }
+        
+        tbody.appendChild(tr);
+        
+        if (isExpanded || isEditing) {
+          const detailTr = document.createElement("tr");
+          detailTr.className = "row-expanded-detail";
+          
+          let contentHtml = "";
+          
+          if (isEditing) {
+            const duplicates = database.filter(i => 
+              i.nomeDe.toLowerCase() === item.nomeDe.toLowerCase() && 
+              i.tipoEvento === item.tipoEvento && 
+              i.rowNum !== item.rowNum
+            );
+            
+            const hasDuplicates = duplicates.length > 0;
+            const bulkFillText = hasDuplicates ? `Aplicar este mapeamento para outros ${duplicates.length} eventos semelhantes com mesmo Nome e Tipo?` : '';
+            
+            // Regra do código 0076: Campos adicionais sempre desabilitados pois preenchem sozinhos
+            const isFichaEnabled = "disabled";
+            
+            contentHtml = `
+              <td colspan="8">
+                <div class="detail-subrow-content">
+                  <div class="detail-grid">
+                    <div class="detail-field-group autocomplete-wrapper">
+                      <span class="detail-label">Ficha Mês 1 - Código</span>
+                      <input type="text" id="edit-ficha1-${item.rowNum}" class="input-field" value="${item.codigoParaFichaMes1}" ${isFichaEnabled} autocomplete="off" oninput="triggerTableAutocomplete(this.value, ${item.rowNum}, 'ficha1')">
+                      <ul id="table-autocomplete-ficha1-${item.rowNum}" class="table-autocomplete-list" style="display: none;"></ul>
+                    </div>
+                    <div class="detail-field-group">
+                      <span class="detail-label">Ficha Mês 1 - Nome RM</span>
+                      <input type="text" id="edit-nomeFicha1-${item.rowNum}" class="input-field" value="${item.nomeRmFichaMes1}" disabled>
+                    </div>
+                    
+                    <div class="detail-field-group autocomplete-wrapper">
+                      <span class="detail-label">Ficha Mês 2 - Código</span>
+                      <input type="text" id="edit-ficha2-${item.rowNum}" class="input-field" value="${item.codigoParaFichaMes2}" ${isFichaEnabled} autocomplete="off" oninput="triggerTableAutocomplete(this.value, ${item.rowNum}, 'ficha2')">
+                      <ul id="table-autocomplete-ficha2-${item.rowNum}" class="table-autocomplete-list" style="display: none;"></ul>
+                    </div>
+                    <div class="detail-field-group">
+                      <span class="detail-label">Ficha Mês 2 - Nome RM</span>
+                      <input type="text" id="edit-nomeFicha2-${item.rowNum}" class="input-field" value="${item.nomeRmFichaMes2}" disabled>
+                    </div>
+
+                    <div class="detail-field-group autocomplete-wrapper">
+                      <span class="detail-label">Verba Férias - Código</span>
+                      <input type="text" id="edit-ferias-${item.rowNum}" class="input-field" value="${item.codigoParaVerbasFerias}" ${isFichaEnabled} autocomplete="off" oninput="triggerTableAutocomplete(this.value, ${item.rowNum}, 'ferias')">
+                      <ul id="table-autocomplete-ferias-${item.rowNum}" class="table-autocomplete-list" style="display: none;"></ul>
+                    </div>
+                    <div class="detail-field-group">
+                      <span class="detail-label">Verba Férias - Nome RM</span>
+                      <input type="text" id="edit-nomeFerias-${item.rowNum}" class="input-field" value="${item.nomeRmVerbasFerias}" disabled>
+                    </div>
+                  </div>
+                  
+                  <div class="detail-grid" style="grid-template-columns: 2fr 1fr;">
+                    <div class="detail-field-group">
+                      <span class="detail-label">Observações</span>
+                      <input type="text" id="edit-obs-${item.rowNum}" class="input-field" value="${item.observacao}">
+                    </div>
+                    <div style="display:flex; align-items:center; gap: 8px; justify-content: flex-end; padding-top: 14px;">
+                      <button class="row-btn row-btn-warning" onclick="setRowAsPendingAnalysis(${item.rowNum})">P/ Análise</button>
+                      <button class="row-btn row-btn-secondary" onclick="setRowAsBaseCalculo(${item.rowNum})">Base Cálculo</button>
+                    </div>
+                  </div>
+                  
+                  <div class="detail-actions">
+                    <div style="display: ${hasDuplicates ? 'flex' : 'none'}; align-items: center; gap: 8px;">
+                      <input type="checkbox" id="edit-chkBulk-${item.rowNum}" style="width: 16px; height: 16px; cursor: pointer;">
+                      <label for="edit-chkBulk-${item.rowNum}" style="font-size: 0.8rem; color: #6d28d9; font-weight: 600;">${bulkFillText}</label>
+                    </div>
+                    <div style="display: flex; gap: 8px; margin-left: auto;">
+                      <button class="row-btn row-btn-secondary" onclick="cancelRowEdition()">Cancelar</button>
+                      <button class="row-btn row-btn-primary" onclick="saveRowEdition(${item.rowNum})">Salvar Linha</button>
+                    </div>
+                  </div>
+                </div>
+              </td>
+            `;
+          } else {
+            contentHtml = `
+              <td colspan="8">
+                <div class="detail-subrow-content">
+                  <div class="detail-grid">
+                    <div class="detail-field-group">
+                      <span class="detail-label">Ficha Mês 1</span>
+                      <div class="detail-value">${item.codigoParaFichaMes1 ? `${item.codigoParaFichaMes1} - ${item.nomeRmFichaMes1}` : '-'}</div>
+                    </div>
+                    <div class="detail-field-group">
+                      <span class="detail-label">Ficha Mês 2</span>
+                      <div class="detail-value">${item.codigoParaFichaMes2 ? `${item.codigoParaFichaMes2} - ${item.nomeRmFichaMes2}` : '-'}</div>
+                    </div>
+                    <div class="detail-field-group">
+                      <span class="detail-label">Verbas Férias</span>
+                      <div class="detail-value">${item.codigoParaVerbasFerias ? `${item.codigoParaVerbasFerias} - ${item.nomeRmVerbasFerias}` : '-'}</div>
+                    </div>
+                    <div class="detail-field-group">
+                      <span class="detail-label">Observações</span>
+                      <div class="detail-value" style="white-space: normal;">${item.observacao || '-'}</div>
+                    </div>
+                  </div>
+                </div>
+              </td>
+            `;
+          }
+          
+          detailTr.innerHTML = contentHtml;
+          tbody.appendChild(detailTr);
+        }
+      });
+    }
+
+    function handleTableScroll() {
+      const wrapper = document.getElementById("scrollableTableWrapper");
+      if (wrapper.scrollHeight - wrapper.scrollTop - wrapper.clientHeight < 50) {
+        if (renderedCount < filteredData.length) {
+          renderedCount += renderChunkSize;
+          renderTableContent();
+        }
+      }
+    }
+
+    function toggleRowExpansion(rowNum) {
+      if (editingRowNumber === rowNum) return;
+      
+      if (expandedRowNumbers.has(rowNum)) {
+        expandedRowNumbers.delete(rowNum);
+      } else {
+        expandedRowNumbers.add(rowNum);
+      }
+      renderTableContent();
+    }
+
+    function startRowEdition(rowNum) {
+      cancelRowEdition();
+      editingRowNumber = rowNum;
+      expandedRowNumbers.add(rowNum);
+      renderTableContent();
+    }
+
+    function cancelRowEdition() {
+      if (editingRowNumber !== null) {
+        expandedRowNumbers.delete(editingRowNumber);
+        editingRowNumber = null;
+        renderTableContent();
+      }
+    }
+
+    function setRowAsPendingAnalysis(rowNum) {
+      document.getElementById(`edit-codigoPara-${rowNum}`).value = "P/ ANALISE";
+      document.getElementById(`edit-nomeRm-${rowNum}`).value = "P/ ANALISE";
+      toggleFichaInputs(rowNum, "P/ ANALISE");
+    }
+
+    function setRowAsBaseCalculo(rowNum) {
+      document.getElementById(`edit-codigoPara-${rowNum}`).value = "NAO IMPORTAR";
+      document.getElementById(`edit-nomeRm-${rowNum}`).value = "NAO IMPORTAR";
+      toggleFichaInputs(rowNum, "NAO IMPORTAR");
+    }
+
+    // Regra condicional 0076 no input manual do código
+    function handleCodRmInput(val, rowNum) {
+      triggerTableAutocomplete(val, rowNum, 'codigoPara');
+      toggleFichaInputs(rowNum, val);
+    }
+
+    function toggleFichaInputs(rowNum, val) {
+      const f1 = document.getElementById(`edit-ficha1-${rowNum}`);
+      const f2 = document.getElementById(`edit-ficha2-${rowNum}`);
+      const fer = document.getElementById(`edit-ferias-${rowNum}`);
+      
+      if (!f1 || !f2 || !fer) return;
+
+      if (val === "0076") {
+        f1.disabled = true;
+        f2.disabled = true;
+        fer.disabled = true;
+        
+        // Auto preencher conforme regras
+        f1.value = "0076";
+        f2.value = "0077";
+        fer.value = "0040";
+        
+        // Carregar descrições correspondentes
+        updateFichaDescription(rowNum, "ficha1", "0076");
+        updateFichaDescription(rowNum, "ficha2", "0077");
+        updateFichaDescription(rowNum, "ferias", "0040");
+      } else if (val === "0041") {
+        f1.disabled = true;
+        f2.disabled = true;
+        fer.disabled = true;
+        
+        // Auto preencher conforme regras para 0041
+        f1.value = "0041";
+        f2.value = "0042";
+        fer.value = "0038";
+        
+        // Carregar descrições correspondentes
+        updateFichaDescription(rowNum, "ficha1", "0041");
+        updateFichaDescription(rowNum, "ficha2", "0042");
+        updateFichaDescription(rowNum, "ferias", "0038");
+      } else {
+        f1.disabled = true;
+        f2.disabled = true;
+        fer.disabled = true;
+        
+        f1.value = "";
+        f2.value = "";
+        fer.value = "";
+        
+        document.getElementById(`edit-nomeFicha1-${rowNum}`).value = "";
+        document.getElementById(`edit-nomeFicha2-${rowNum}`).value = "";
+        document.getElementById(`edit-nomeFerias-${rowNum}`).value = "";
+      }
+    }
+
+    function updateFichaDescription(rowNum, fieldType, code) {
+      const rmEvent = rmEvents.find(e => e.codigo === code);
+      const desc = rmEvent ? rmEvent.descricao : "";
+      
+      if (fieldType === "ficha1") {
+        document.getElementById(`edit-nomeFicha1-${rowNum}`).value = desc;
+      } else if (fieldType === "ficha2") {
+        document.getElementById(`edit-nomeFicha2-${rowNum}`).value = desc;
+      } else if (fieldType === "ferias") {
+        document.getElementById(`edit-nomeFerias-${rowNum}`).value = desc;
+      }
+    }
+
+    function triggerTableAutocomplete(val, rowNum, fieldType) {
+      const listId = `table-autocomplete-${fieldType}-${rowNum}`;
+      const listElement = document.getElementById(listId);
+      listElement.innerHTML = "";
+      
+      let labelInputId = `edit-nomeRm-${rowNum}`;
+      if (fieldType === "ficha1") labelInputId = `edit-nomeFicha1-${rowNum}`;
+      if (fieldType === "ficha2") labelInputId = `edit-nomeFicha2-${rowNum}`;
+      if (fieldType === "ferias") labelInputId = `edit-nomeFerias-${rowNum}`;
+      
+      if (val === "NAO IMPORTAR" || val === "P/ ANALISE") {
+        document.getElementById(labelInputId).value = val;
+        listElement.style.display = "none";
+        return;
+      }
+      
+      if (!val || val.length < 1) {
+        listElement.style.display = "none";
+        document.getElementById(labelInputId).value = "";
+        return;
+      }
+      
+      const term = val.toLowerCase();
+      const matches = rmEvents.filter(ev => 
+        ev.codigo.toLowerCase().includes(term) || 
+        ev.descricao.toLowerCase().includes(term)
+      ).slice(0, 8);
+      
+      if (matches.length === 0) {
+        const li = document.createElement("li");
+        li.className = "table-autocomplete-item";
+        li.innerHTML = `
+          <span style="font-size:0.75rem; color:var(--color-text-muted);">Não encontrado. </span>
+          <button type="button" class="row-btn" style="font-size:0.75rem; padding: 2px 6px;" onclick="openNewRMEventModalInRow(${rowNum}, '${fieldType}')">
+            Criar Evento RM
+          </button>
+        `;
+        listElement.appendChild(li);
+      } else {
+        matches.forEach(ev => {
+          const li = document.createElement("li");
+          li.className = "table-autocomplete-item";
+          li.innerText = `${ev.codigo} - ${ev.descricao} (${ev.tipo})`;
+          li.onclick = () => {
+            document.getElementById(`edit-${fieldType}-${rowNum}`).value = ev.codigo;
+            document.getElementById(labelInputId).value = ev.descricao;
+            listElement.style.display = "none";
+            
+            if (fieldType === "codigoPara") {
+              toggleFichaInputs(rowNum, ev.codigo);
+            }
+          };
+          listElement.appendChild(li);
+        });
+      }
+      
+      listElement.style.display = "block";
+    }
+
+    function closeAllAutocompletes() {
+      document.querySelectorAll('.table-autocomplete-list').forEach(list => {
+        list.style.display = "none";
+      });
+    }
+
+    let activeRowIdForNewEvent = null;
+    let activeFieldTypeForNewEvent = "";
+    
+    function openNewRMEventModalInRow(rowNum, fieldType) {
+      activeRowIdForNewEvent = rowNum;
+      activeFieldTypeForNewEvent = fieldType;
+      
+      const item = database.find(i => i.rowNum === rowNum);
+      document.getElementById("modalDesc").value = item ? item.nomeDe : "";
+      
+      if (item && item.tipoEvento === "D-DESCONTO") {
+        document.getElementById("modalTipo").value = "DESCONTO";
+      } else {
+        document.getElementById("modalTipo").value = "PROVENTO";
+      }
+      
+      closeAllAutocompletes();
+      document.getElementById("newRMEventModal").style.display = "flex";
+    }
+
+    function closeModal(modalId) {
+      document.getElementById(modalId).style.display = "none";
+    }
+
+    function submitNewRMEvent() {
+      const desc = document.getElementById("modalDesc").value.trim();
+      const tipo = document.getElementById("modalTipo").value;
+      
+      if (!desc) return;
+      
+      closeModal('newRMEventModal');
+      showLoading("Criando novo evento no RM...");
+      
+      google.script.run
+        .withSuccessHandler(function(response) {
+          hideLoading();
+          if (response.success) {
+            rmEvents.push({
+              codigo: response.code,
+              descricao: response.description,
+              tipo: response.type
+            });
+            
+            const fieldId = `edit-${activeFieldTypeForNewEvent}-${activeRowIdForNewEvent}`;
+            document.getElementById(fieldId).value = response.code;
+            
+            let labelId = `edit-nomeRm-${activeRowIdForNewEvent}`;
+            if (activeFieldTypeForNewEvent === "ficha1") labelId = `edit-nomeFicha1-${activeRowIdForNewEvent}`;
+            if (activeFieldTypeForNewEvent === "ficha2") labelId = `edit-nomeFicha2-${activeRowIdForNewEvent}`;
+            if (activeFieldTypeForNewEvent === "ferias") labelId = `edit-nomeFerias-${activeRowIdForNewEvent}`;
+            
+            document.getElementById(labelId).value = response.description;
+            
+            if (activeFieldTypeForNewEvent === "codigoPara") {
+              toggleFichaInputs(activeRowIdForNewEvent, response.code);
+            }
+            
+            showToast(`Evento '${response.description}' criado com sucesso!`, 'success');
+            
+            // Auto salvar a linha após a criação do evento (Melhoria UX 3)
+            saveRowEdition(activeRowIdForNewEvent);
+          } else {
+            showToast("Erro ao criar evento: " + response.error, 'error');
+          }
+        })
+        .withFailureHandler(function(err) {
+          hideLoading();
+          showToast("Erro de rede: " + err.message, 'error');
+        })
+        .createNewRMEvent(SPREADSHEET_ID, { nomeDe: desc, tipoEvento: tipo });
+    }
+
+    function saveRowEdition(rowNum) {
+      const item = database.find(i => i.rowNum === rowNum);
+      if (!item) return;
+      
+      const codigoPara = document.getElementById(`edit-codigoPara-${rowNum}`).value;
+      const codigoParaFichaMes1 = document.getElementById(`edit-ficha1-${rowNum}`).value;
+      const codigoParaFichaMes2 = document.getElementById(`edit-ficha2-${rowNum}`).value;
+      const codigoParaVerbasFerias = document.getElementById(`edit-ferias-${rowNum}`).value;
+      const observacao = document.getElementById(`edit-obs-${rowNum}`).value;
+      
+      const applyToAllMatches = document.getElementById(`edit-chkBulk-${rowNum}`)?.checked || false;
+      
+      const data = {
+        coligadaPara: item.coligadaPara,
+        codigoPara: codigoPara,
+        codigoParaFichaMes1: codigoParaFichaMes1,
+        codigoParaFichaMes2: codigoParaFichaMes2,
+        codigoParaVerbasFerias: codigoParaVerbasFerias,
+        observacao: observacao,
+        
+        nomeDe: item.nomeDe,
+        tipoEvento: item.tipoEvento
+      };
+
+      showLoading("Salvando mapeamento...");
+      
+      google.script.run
+        .withSuccessHandler(function(response) {
+          hideLoading();
+          if (response.success) {
+            editingRowNumber = null;
+            expandedRowNumbers.delete(rowNum);
+            
+            loadPortalData();
+            showToast(response.affectedRows > 1 
+              ? `Mapeamento salvo! Atualizados ${response.affectedRows} eventos com mesmo Nome e Tipo.` 
+              : "Mapeamento salvo com sucesso!", 'success');
+          }
+        })
+        .withFailureHandler(function(err) {
+          hideLoading();
+          showToast("Erro ao salvar linha: " + err.message, 'error');
+        })
+        .saveEventMapping(SPREADSHEET_ID, rowNum, data, applyToAllMatches);
+    }
+  </script>
+</body>
+</html>

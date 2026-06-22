@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>PoC Conexão TOTVS & GitHub Pages</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Outfit', sans-serif;
+      background-color: #f4f7f9;
+      color: #1e293b;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+    }
+    .poc-card {
+      background-color: #ffffff;
+      padding: 32px;
+      border-radius: 16px;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 500px;
+      text-align: center;
+    }
+    h2 {
+      color: #002233;
+      margin-bottom: 8px;
+    }
+    p.subtitle {
+      color: #64748b;
+      font-size: 0.9rem;
+      margin-bottom: 24px;
+    }
+    .form-group {
+      text-align: left;
+      margin-bottom: 16px;
+    }
+    label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #475569;
+      display: block;
+      margin-bottom: 6px;
+    }
+    input {
+      width: 100%;
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: 1px solid #cbd5e1;
+      font-size: 0.9rem;
+      outline: none;
+      box-sizing: border-box;
+      font-family: inherit;
+    }
+    input:focus {
+      border-color: #00DBFF;
+      box-shadow: 0 0 0 2px rgba(0, 219, 255, 0.2);
+    }
+    .btn {
+      width: 100%;
+      padding: 12px;
+      border-radius: 8px;
+      border: none;
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: all 0.3s;
+      font-family: inherit;
+    }
+    .btn-primary {
+      background-color: #002233;
+      color: #ffffff;
+    }
+    .btn-primary:hover {
+      background-color: #00DBFF;
+      color: #002233;
+    }
+    .btn-secondary {
+      background-color: #e2e8f0;
+      color: #475569;
+      margin-top: 16px;
+    }
+    .btn-secondary:hover {
+      background-color: #cbd5e1;
+    }
+    .status-box {
+      margin-top: 24px;
+      padding: 16px;
+      border-radius: 8px;
+      background-color: #f8fafc;
+      border: 1px solid #e2e8f0;
+      text-align: left;
+    }
+    .status-title {
+      font-weight: 700;
+      font-size: 0.85rem;
+      color: #64748b;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .status-value {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #0f172a;
+      word-break: break-all;
+    }
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      padding: 12px 24px;
+      background-color: #002233;
+      color: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      font-weight: 600;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="poc-card">
+    <h2>PoC Conexão Planilha TOTVS</h2>
+    <p class="subtitle">Validação de requisições CORS entre GitHub Pages e Google Apps Script</p>
+    
+    <div class="form-group">
+      <label for="webAppUrl">1. URL do Apps Script Publicado (Web App)</label>
+      <input type="text" id="webAppUrl" placeholder="Ex: https://script.google.com/macros/s/.../exec">
+    </div>
+
+    <div class="form-group">
+      <label for="spreadsheetId">2. ID da Planilha Google (TOTVS)</label>
+      <input type="text" id="spreadsheetId" placeholder="Ex: 1zEMXK--jTyXQKxFHpDbKaBtudXdi5urcAu7juaWJeuM">
+    </div>
+
+    <button class="btn btn-primary" onclick="readFromTotvs()">Ler Célula (A2/B2)</button>
+
+    <div class="status-box">
+      <div class="status-title">Nome da Planilha no Google Drive</div>
+      <div class="status-value" id="sheetNameDisplay">-</div>
+      
+      <div class="status-title" style="margin-top: 12px;">Valor Atual na Planilha (B2)</div>
+      <div class="status-value" id="valueDisplay">-</div>
+    </div>
+
+    <hr style="margin: 24px 0; border: none; border-top: 1px solid #e2e8f0;">
+
+    <div class="form-group">
+      <label for="newValue">Novo Valor para Gravar (Célula B2)</label>
+      <input type="text" id="newValue" placeholder="Digite uma nova mensagem para salvar...">
+    </div>
+
+    <button class="btn btn-secondary" onclick="writeToTotvs()">Gravar na Planilha</button>
+  </div>
+
+  <div id="toast" class="toast">Mensagem enviada</div>
+
+  <script>
+    // Carregar configurações anteriores do localStorage para poupar digitação do usuário
+    window.onload = function() {
+      if (localStorage.getItem("poc_webAppUrl")) {
+        document.getElementById("webAppUrl").value = localStorage.getItem("poc_webAppUrl");
+      }
+      if (localStorage.getItem("poc_spreadsheetId")) {
+        document.getElementById("spreadsheetId").value = localStorage.getItem("poc_spreadsheetId");
+      }
+    };
+
+    function saveConfig() {
+      localStorage.setItem("poc_webAppUrl", document.getElementById("webAppUrl").value.trim());
+      localStorage.setItem("poc_spreadsheetId", document.getElementById("spreadsheetId").value.trim());
+    }
+
+    function showToast(text, color = "#002233") {
+      const toast = document.getElementById("toast");
+      toast.innerText = text;
+      toast.style.backgroundColor = color;
+      toast.style.display = "block";
+      setTimeout(() => { toast.style.display = "none"; }, 3500);
+    }
+
+    function readFromTotvs() {
+      saveConfig();
+      const webAppUrl = document.getElementById("webAppUrl").value.trim();
+      const spreadsheetId = document.getElementById("spreadsheetId").value.trim();
+
+      if (!webAppUrl || !spreadsheetId) {
+        showToast("Preencha a URL da API e o ID da Planilha!", "#ef4444");
+        return;
+      }
+
+      document.getElementById("sheetNameDisplay").innerText = "Carregando...";
+      document.getElementById("valueDisplay").innerText = "Carregando...";
+
+      // Envia requisição GET para o Web App
+      const targetUrl = `${webAppUrl}?action=read&id=${spreadsheetId}`;
+
+      fetch(targetUrl)
+        .then(response => {
+          if (!response.ok) throw new Error("Erro de rede / CORS");
+          return response.json();
+        })
+        .then(data => {
+          if (data.success) {
+            document.getElementById("sheetNameDisplay").innerText = data.spreadsheetName;
+            document.getElementById("valueDisplay").innerText = `${data.chave}: ${data.valor}`;
+            showToast("Dados lidos com sucesso!", "#10b981");
+          } else {
+            document.getElementById("sheetNameDisplay").innerText = "Erro";
+            document.getElementById("valueDisplay").innerText = data.error;
+            showToast("Erro retornado pelo Apps Script", "#ef4444");
+          }
+        })
+        .catch(error => {
+          document.getElementById("sheetNameDisplay").innerText = "Falha de Conexão";
+          document.getElementById("valueDisplay").innerText = error.message;
+          showToast("Falha na chamada (CORS ou URL incorreta)", "#ef4444");
+        });
+    }
+
+    function writeToTotvs() {
+      saveConfig();
+      const webAppUrl = document.getElementById("webAppUrl").value.trim();
+      const spreadsheetId = document.getElementById("spreadsheetId").value.trim();
+      const newValue = document.getElementById("newValue").value.trim();
+
+      if (!webAppUrl || !spreadsheetId || !newValue) {
+        showToast("Preencha a API, ID da Planilha e o Novo Valor!", "#ef4444");
+        return;
+      }
+
+      showToast("Gravando dados...", "#64748b");
+
+      // Envia requisição POST para o Web App (Apps Script simula via parâmetros se POST puro der CORS redirection, 
+      // mas vamos enviar no padrão estruturado)
+      const payload = {
+        id: spreadsheetId,
+        action: "write",
+        valor: newValue
+      };
+
+      fetch(webAppUrl, {
+        method: "POST",
+        body: JSON.stringify(payload)
+      })
+      .then(response => {
+        if (!response.ok) throw new Error("Erro na rede ao gravar");
+        return response.json();
+      })
+      .then(data => {
+        if (data.success) {
+          showToast(data.message, "#10b981");
+          // Atualiza a leitura automaticamente
+          readFromTotvs();
+        } else {
+          showToast("Erro: " + data.error, "#ef4444");
+        }
+      })
+      .catch(error => {
+        showToast("Falha de rede/CORS ao gravar: " + error.message, "#ef4444");
+      });
+    }
+  </script>
+</body>
+</html>

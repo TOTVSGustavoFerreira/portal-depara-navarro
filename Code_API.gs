@@ -1,0 +1,977 @@
+/**
+ * Portal De-Para TOTVS - Backend API Version 1.3 (Google Apps Script)
+ * Adaptado para arquitetura de API REST com suporte a CORS (hospedagem externa no GitHub Pages)
+ * Desenvolvido por Antigravity
+ */
+
+// Permite requisições de outros domínios como o GitHub Pages
+function doGet(e) {
+  var id = (e && e.parameter && e.parameter.id) ? e.parameter.id : "";
+  var action = (e && e.parameter && e.parameter.action) ? e.parameter.action : "";
+  
+  if (!id) {
+    return createJsonResponse({ success: false, error: "ID da planilha nao fornecido (?id=...)" });
+  }
+  
+  try {
+    if (action === "getPortalData") {
+      var data = getPortalData(id);
+      return createJsonResponse(data);
+    } 
+    else if (action === "getConnectionInfo") {
+      var conn = getConnectionInfo(id);
+      return createJsonResponse(conn);
+    }
+    else if (action === "importSingleSheet") {
+      var sheetName = e.parameter.sheetName;
+      var res = importSingleSheet(id, sheetName);
+      return createJsonResponse(res);
+    }
+    else if (action === "syncSingleSheet") {
+      var sheetName = e.parameter.sheetName;
+      var res = syncSingleSheet(id, sheetName);
+      return createJsonResponse(res);
+    }
+    else if (action === "autoInstallStructure") {
+      var res = autoInstallStructure(id);
+      return createJsonResponse(res);
+    }
+    
+    return createJsonResponse({ success: false, error: "Acao GET desconhecida ou nao informada." });
+  } catch (err) {
+    return createJsonResponse({ success: false, error: "Erro de execucao (GET): " + err.message });
+  }
+}
+
+function doPost(e) {
+  var params;
+  try {
+    params = JSON.parse(e.postData.contents);
+  } catch (err) {
+    return createJsonResponse({ success: false, error: "JSON invalido no corpo do POST." });
+  }
+  
+  var id = params.id;
+  var action = params.action;
+  
+  if (!id) {
+    return createJsonResponse({ success: false, error: "ID da planilha nao fornecido no payload." });
+  }
+  
+  try {
+    if (action === "saveEventMapping") {
+      var res = saveEventMapping(id, params.rowNum, params.data, params.applyToAllMatches);
+      return createJsonResponse(res);
+    }
+    else if (action === "createNewRMEvent") {
+      var res = createNewRMEvent(id, params.eventData);
+      return createJsonResponse(res);
+    }
+    else if (action === "deleteUnusedCreatedEvent") {
+      var res = deleteUnusedCreatedEvent(id, params.code);
+      return createJsonResponse(res);
+    }
+    
+    return createJsonResponse({ success: false, error: "Acao POST desconhecida." });
+  } catch (err) {
+    return createJsonResponse({ success: false, error: "Erro de execucao (POST): " + err.message });
+  }
+}
+
+function createJsonResponse(data) {
+  var output = ContentService.createTextOutput(JSON.stringify(data))
+    .setMimeType(ContentService.MimeType.JSON);
+  return output;
+}
+
+// ==========================================
+// FUNÇÕES DE MANIPULAÇÃO DO GOOGLE SHEETS
+// ==========================================
+
+function getActiveSS(spreadsheetId) {
+  if (spreadsheetId && spreadsheetId !== "undefined" && spreadsheetId !== "null" && spreadsheetId !== "") {
+    try {
+      return SpreadsheetApp.openById(spreadsheetId);
+    } catch (e) {
+      Logger.log("Erro ao abrir planilha por ID (" + spreadsheetId + "): " + e.message);
+    }
+  }
+  try {
+    return SpreadsheetApp.getActiveSpreadsheet();
+  } catch (e) {
+    Logger.log("Nenhuma planilha ativa encontrada: " + e.message);
+    return null;
+  }
+}
+
+function getSheetDynamic(ss, name) {
+  if (!ss) return null;
+  var sheet = ss.getSheetByName(name);
+  if (sheet) return sheet;
+  
+  if (name.slice(-1).toUpperCase() !== "S") {
+    sheet = ss.getSheetByName(name + "S") || ss.getSheetByName(name + "s");
+    if (sheet) return sheet;
+  }
+  
+  if (name.slice(-1).toUpperCase() === "S") {
+    sheet = ss.getSheetByName(name.slice(0, -1));
+    if (sheet) return sheet;
+  }
+  
+  return null;
+}
+
+var SHEET_ZDEPARA = "ZDEPARA_EVENTOS";
+var SHEET_DADOS_RM = "DADOS_RM_EVENTOS";
+var SHEET_CONFIG = "CONFIG_CONEXAO";
+var SHEET_LOG = "LOG_SINCRONIZACAO";
+
+var DEFAULT_SHEETS_TO_SYNC = [
+  "ZDEPARA_COLIGADAS",
+  "ZDEPARA_FUNCOES",
+  "ZDEPARA_SINDICATOS",
+  "ZDEPARA_SECOES",
+  "ZDEPARA_EVENTOS",
+  "ZDEPARA_SITUACAO",
+  "DADOS_RM_MOTIVOS",
+  "DADOS_RM_SITUACAO",
+  "DADOS_RM_EVENTOS"
+];
+
+var EXPECTED_COLUMNS_DEPARA = [
+  "EMPRESA_DE",
+  "CODIGO_DE",
+  "NOME_DE",
+  "TIPO_EVENTO",
+  "COLIGADA_PARA",
+  "CODIGO_PARA",
+  "NOME_RM"
+];
+
+function getConnectionInfo(spreadsheetId) {
+  var ss = getActiveSS(spreadsheetId);
+  if (!ss) {
+    return { isInstalled: false, extraSheets: [] };
+  }
+  var sheetConfig = ss.getSheetByName(SHEET_CONFIG);
+  
+  var info = {
+    originName: ss.getName(),
+    destinationUrl: "",
+    destinationName: "Não conectada",
+    destinationPath: "Não disponível",
+    extraSheets: [],
+    isInstalled: false
+  };
+  
+  var sheetDepara = ss.getSheetByName(SHEET_ZDEPARA);
+  var sheetDadosRM = ss.getSheetByName(SHEET_DADOS_RM);
+  
+  if (sheetConfig && sheetDepara && sheetDadosRM) {
+    info.isInstalled = true;
+    var destUrl = sheetConfig.getRange("B1").getValue().toString().trim();
+    info.destinationUrl = destUrl;
+    
+    if (destUrl) {
+      var destId = extractSpreadsheetId(destUrl);
+      if (destId) {
+        try {
+          var destSS = SpreadsheetApp.openById(destId);
+          info.destinationName = destSS.getName();
+          info.destinationPath = getDriveFilePath(destId);
+        } catch (e) {
+          info.destinationName = "Erro de acesso (verifique compartilhamento)";
+        }
+      }
+    }
+    
+    var lastRow = sheetConfig.getLastRow();
+    if (lastRow >= 3) {
+      var values = sheetConfig.getRange(3, 1, lastRow - 2, 1).getValues();
+      values.forEach(function(row) {
+        var val = row[0].toString().trim();
+        if (val && DEFAULT_SHEETS_TO_SYNC.indexOf(val) === -1 && val !== SHEET_CONFIG && val !== SHEET_LOG) {
+          info.extraSheets.push(val);
+        }
+      });
+    }
+  }
+  
+  return info;
+}
+
+function extractSpreadsheetId(urlOrId) {
+  if (!urlOrId) return null;
+  if (urlOrId.indexOf("docs.google.com/spreadsheets") !== -1) {
+    var matches = urlOrId.match(/\/d\/([a-zA-Z0-9-_]+)/);
+    return matches ? matches[1] : null;
+  }
+  return urlOrId;
+}
+
+function getDriveFilePath(fileId) {
+  try {
+    var file = DriveApp.getFileById(fileId);
+    var parents = file.getParents();
+    var path = [];
+    while (parents.hasNext()) {
+      var folder = parents.next();
+      path.unshift(folder.getName());
+      parents = folder.getParents();
+    }
+    return path.length > 0 ? path.join(" > ") : "Raiz do Drive";
+  } catch (e) {
+    return "Drive Virtual (Acesso corporativo)";
+  }
+}
+
+function autoInstallStructure(spreadsheetId) {
+  var ss = getActiveSS(spreadsheetId);
+  if (!ss) {
+    return { success: false, error: "Planilha não encontrada." };
+  }
+  
+  try {
+    var sheetConfig = ss.getSheetByName(SHEET_CONFIG);
+    if (!sheetConfig) {
+      sheetConfig = ss.insertSheet(SHEET_CONFIG);
+      sheetConfig.getRange("A1").setValue("Link Planilha Destino (Empresa):").setFontWeight("bold");
+      sheetConfig.getRange("B1").setValue("https://docs.google.com/spreadsheets/d/1zEMXK--jTyXQKxFHpDbKaBtudXdi5urcAu7juaWJeuM/edit?usp=sharing");
+      sheetConfig.getRange("A2").setValue("Abas Extras Personalizadas a Sincronizar:").setFontWeight("bold");
+      sheetConfig.setColumnWidth(1, 280);
+      sheetConfig.setColumnWidth(2, 450);
+    } else {
+      var currentLink = sheetConfig.getRange("B1").getValue().toString().trim();
+      if (!currentLink) {
+        sheetConfig.getRange("B1").setValue("https://docs.google.com/spreadsheets/d/1zEMXK--jTyXQKxFHpDbKaBtudXdi5urcAu7juaWJeuM/edit?usp=sharing");
+      }
+    }
+    
+    DEFAULT_SHEETS_TO_SYNC.forEach(function(sheetName) {
+      var sheet = ss.getSheetByName(sheetName);
+      if (!sheet) {
+        sheet = ss.insertSheet(sheetName);
+        
+        if (sheetName === "ZDEPARA_EVENTOS") {
+          var deparaHeaders = [
+            "EMPRESA_DE", "CODIGO_DE", "NOME_DE", "TIPO_EVENTO", 
+            "COLIGADA_PARA", "CODIGO_PARA", "NOME_RM", 
+            "CODIGO_PARA_FICHA_MES1", "CODIGO_PARA_FICHA_MES2", "CODIGO_PARA_VERBAS_FERIAS",
+            "OBSERVACAO"
+          ];
+          sheet.getRange(1, 1, 1, deparaHeaders.length).setValues([deparaHeaders]).setFontWeight("bold").setBackground("#d9e1f2");
+          sheet.getRange("B2:B").setNumberFormat("@");
+          sheet.getRange("F2:F").setNumberFormat("@");
+          sheet.getRange("H2:J").setNumberFormat("@");
+        } else if (sheetName === "DADOS_RM_EVENTOS") {
+          var rmHeaders = ["CÓDIGO", "DESCRIÇÃO", "TIPO", "VALHORDIAREF", "NATE_ESOCIAL"];
+          sheet.getRange(1, 1, 1, rmHeaders.length).setValues([rmHeaders]).setFontWeight("bold").setBackground("#e2efda");
+          sheet.getRange("A2:A").setNumberFormat("@");
+        } else {
+          sheet.getRange("A1").setValue("CODIGO").setFontWeight("bold");
+          sheet.getRange("B1").setValue("DESCRICAO").setFontWeight("bold");
+        }
+      }
+    });
+    
+    var sheetLog = ss.getSheetByName(SHEET_LOG);
+    if (!sheetLog) {
+      sheetLog = ss.insertSheet(SHEET_LOG);
+      var logHeaders = ["DATA/HORA", "USUÁRIO", "TIPO AÇÃO", "DETALHES DO PROCESSO", "STATUS"];
+      sheetLog.getRange(1, 1, 1, logHeaders.length).setValues([logHeaders]).setFontWeight("bold").setBackground("#fff2cc");
+    }
+    
+    SpreadsheetApp.flush();
+    return { success: true, message: "Estrutura v1.3 instalada com sucesso!" };
+  } catch (e) {
+    return { success: false, error: "Erro ao instalar: " + e.message };
+  }
+}
+
+function getReferenceDiagnostics(rmEvents) {
+  var diag = { gaps: [], duplicates: [] };
+  
+  var manualCodes = rmEvents
+    .filter(function(e) { return e.descricao.indexOf("[INCLUSAO MANUAL]") !== -1; })
+    .map(function(e) { return parseInt(e.codigo, 10); })
+    .filter(function(code) { return !isNaN(code); })
+    .sort(function(a, b) { return a - b; });
+  
+  if (manualCodes.length > 1) {
+    for (var i = 0; i < manualCodes.length - 1; i++) {
+      var current = manualCodes[i];
+      var next = manualCodes[i + 1];
+      if (next - current > 1) {
+        for (var g = current + 1; g < next; g++) {
+          var gapStr = String(g);
+          while (gapStr.length < 4) { gapStr = "0" + gapStr; }
+          diag.gaps.push(gapStr);
+        }
+      }
+    }
+  }
+  
+  var occurrences = {};
+  rmEvents.forEach(function(e) {
+    if (e.descricao.indexOf("[INCLUSAO MANUAL]") !== -1) {
+      occurrences[e.codigo] = (occurrences[e.codigo] || 0) + 1;
+    }
+  });
+  
+  for (var code in occurrences) {
+    if (occurrences[code] > 1) {
+      diag.duplicates.push(code);
+    }
+  }
+  
+  return diag;
+}
+
+function checkAndCreateObservationColumn(sheetDepara) {
+  if (!sheetDepara) return;
+  var lastCol = sheetDepara.getLastColumn();
+  if (lastCol === 0) return;
+  var headers = sheetDepara.getRange(1, 1, 1, lastCol).getValues()[0];
+  var colIdx = headers.indexOf("OBSERVACAO");
+  
+  if (colIdx === -1) {
+    sheetDepara.getRange(1, lastCol + 1).setValue("OBSERVACAO").setFontWeight("bold");
+    SpreadsheetApp.flush();
+  }
+}
+
+function getPortalData(spreadsheetId) {
+  var connection = getConnectionInfo(spreadsheetId);
+  if (!connection.isInstalled) {
+    return { status: { valid: false, errors: ["A estrutura v1.3 nao esta instalada."] }, data: [], rmEvents: [], stats: {}, connection: connection };
+  }
+  
+  var ss = getActiveSS(spreadsheetId);
+  var sheetDepara = ss.getSheetByName(SHEET_ZDEPARA);
+  var sheetDadosRM = ss.getSheetByName(SHEET_DADOS_RM);
+  
+  checkAndCreateObservationColumn(sheetDepara);
+  
+  var headers = sheetDepara.getRange(1, 1, 1, sheetDepara.getLastColumn()).getValues()[0];
+  
+  var colIndexes = {};
+  headers.forEach(function(h, idx) {
+    if (!colIndexes[h]) colIndexes[h] = [];
+    colIndexes[h].push(idx);
+  });
+  
+  var lastRow = sheetDepara.getLastRow();
+  var rawData = [];
+  if (lastRow > 1) {
+    rawData = sheetDepara.getRange(2, 1, lastRow - 1, headers.length).getValues();
+  }
+  
+  var deparaData = rawData.map(function(row, rIdx) {
+    var rowNum = rIdx + 2;
+    var getValueByName = function(name, occurrenceIndex) {
+      occurrenceIndex = occurrenceIndex || 0;
+      var indexes = colIndexes[name];
+      if (indexes && indexes[occurrenceIndex] !== undefined) {
+        return row[indexes[occurrenceIndex]];
+      }
+      return "";
+    };
+    
+    return {
+      rowNum: rowNum,
+      empresaDe: String(getValueByName("EMPRESA_DE")),
+      codigoDe: String(getValueByName("CODIGO_DE")),
+      nomeDe: String(getValueByName("NOME_DE")),
+      tipoEvento: String(getValueByName("TIPO_EVENTO")),
+      coligadaPara: String(getValueByName("COLIGADA_PARA")),
+      codigoPara: String(getValueByName("CODIGO_PARA")),
+      nomeRm: String(getValueByName("NOME_RM", 0)),
+      codigoParaFichaMes1: String(getValueByName("CODIGO_PARA_FICHA_MES1")),
+      nomeRmFichaMes1: String(getValueByName("NOME_RM", 1)),
+      codigoParaFichaMes2: String(getValueByName("CODIGO_PARA_FICHA_MES2")),
+      nomeRmFichaMes2: String(getValueByName("NOME_RM", 2)),
+      codigoParaVerbasFerias: String(getValueByName("CODIGO_PARA_VERBAS_FERIAS")),
+      nomeRmVerbasFerias: String(getValueByName("NOME_RM", 3)),
+      observacao: String(getValueByName("OBSERVACAO"))
+    };
+  });
+  
+  var rmEvents = [];
+  var lastRowRM = sheetDadosRM.getLastRow();
+  if (lastRowRM > 1) {
+    var rawRM = sheetDadosRM.getRange(2, 1, lastRowRM - 1, 3).getValues();
+    rmEvents = rawRM.map(function(row) {
+      return {
+        codigo: String(row[0]),
+        descricao: String(row[1]),
+        tipo: String(row[2])
+      };
+    });
+  }
+  
+  var diagnostics = getReferenceDiagnostics(rmEvents);
+  
+  var total = deparaData.length;
+  var preenchidos = 0;
+  var naoPreenchidos = 0;
+  var pAnalise = 0;
+  
+  var keyMap = {};
+  var duplicateKeys = {};
+  
+  deparaData.forEach(function(item) {
+    var cod = item.codigoPara;
+    if (cod === "P/ ANALISE") pAnalise++;
+    else if (!cod) naoPreenchidos++;
+    else preenchidos++;
+    
+    if (item.nomeDe && item.tipoEvento && cod && cod !== "P/ ANALISE") {
+      var key = item.nomeDe.toLowerCase() + "|||" + item.tipoEvento;
+      if (!keyMap[key]) keyMap[key] = [];
+      if (keyMap[key].indexOf(cod) === -1) keyMap[key].push(cod);
+      if (keyMap[key].length > 1) duplicateKeys[key] = true;
+    }
+  });
+  
+  var divergenciasCount = 0;
+  deparaData.forEach(function(item) {
+    if (item.nomeDe && item.tipoEvento) {
+      var key = item.nomeDe.toLowerCase() + "|||" + item.tipoEvento;
+      if (duplicateKeys[key]) {
+        item.hasDivergencia = true;
+        divergenciasCount++;
+      }
+    }
+  });
+  
+  var utilizedCodes = new Set();
+  deparaData.forEach(function(item) {
+    if (item.codigoPara) utilizedCodes.add(item.codigoPara);
+    if (item.codigoParaFichaMes1) utilizedCodes.add(item.codigoParaFichaMes1);
+    if (item.codigoParaFichaMes2) utilizedCodes.add(item.codigoParaFichaMes2);
+    if (item.codigoParaVerbasFerias) utilizedCodes.add(item.codigoParaVerbasFerias);
+  });
+  
+  var unusedCreatedEvents = rmEvents.filter(function(ev) {
+    return ev.descricao.indexOf("[INCLUSAO MANUAL]") !== -1 && !utilizedCodes.has(ev.codigo);
+  });
+  
+  var stats = {
+    total: total,
+    preenchidos: preenchidos,
+    naoPreenchidos: naoPreenchidos,
+    pAnalise: pAnalise,
+    divergencias: divergenciasCount,
+    gapsCount: diagnostics.gaps.length,
+    duplicatesCount: diagnostics.duplicates.length,
+    unusedCreatedCount: unusedCreatedEvents.length
+  };
+  
+  return {
+    status: { valid: true, errors: [] },
+    data: deparaData,
+    rmEvents: rmEvents,
+    unusedCreatedEvents: unusedCreatedEvents,
+    diagnostics: diagnostics,
+    stats: stats,
+    connection: connection
+  };
+}
+
+function lookupEventDescription(code, eventsList) {
+  if (!code) return "";
+  for (var i = 0; i < eventsList.length; i++) {
+    if (eventsList[i].codigo === code) {
+      return eventsList[i].descricao;
+    }
+  }
+  return "";
+}
+
+function saveEventMapping(spreadsheetId, rowNum, data, applyToAllMatches) {
+  var ss = getActiveSS(spreadsheetId);
+  var sheetDepara = ss.getSheetByName(SHEET_ZDEPARA);
+  var sheetDadosRM = ss.getSheetByName(SHEET_DADOS_RM);
+  var headers = sheetDepara.getRange(1, 1, 1, sheetDepara.getLastColumn()).getValues()[0];
+  
+  var colIndexes = {};
+  headers.forEach(function(h, idx) {
+    if (!colIndexes[h]) colIndexes[h] = [];
+    colIndexes[h].push(idx);
+  });
+  
+  var getColIndex = function(name, occurrence) {
+    occurrence = occurrence || 0;
+    return (colIndexes[name] && colIndexes[name][occurrence] !== undefined) ? colIndexes[name][occurrence] + 1 : null;
+  };
+  
+  var rmEventsList = [];
+  var lastRowRM = sheetDadosRM.getLastRow();
+  if (lastRowRM > 1) {
+    var rawRM = sheetDadosRM.getRange(2, 1, lastRowRM - 1, 2).getValues();
+    rmEventsList = rawRM.map(function(row) {
+      return { codigo: String(row[0]), descricao: String(row[1]) };
+    });
+  }
+  
+  var saveRow = function(r) {
+    var colColigadaPara = getColIndex("COLIGADA_PARA");
+    if (colColigadaPara) {
+      if (data.coligadaPara === "" || data.coligadaPara === null || data.coligadaPara === undefined || data.coligadaPara === "-") {
+        sheetDepara.getRange(r, colColigadaPara).clearContent();
+      } else {
+        sheetDepara.getRange(r, colColigadaPara).setValue(data.coligadaPara);
+      }
+    }
+    
+    var setFieldStaticValue = function(codColName, nomeColName, occNum, codValue) {
+      var colCod = getColIndex(codColName);
+      var colNome = getColIndex(nomeColName, occNum);
+      
+      if (colCod) {
+        if (codValue === "" || codValue === null || codValue === undefined || codValue === "-") {
+          sheetDepara.getRange(r, colCod).clearContent();
+        } else {
+          sheetDepara.getRange(r, colCod).setNumberFormat("@").setValue(String(codValue));
+        }
+      }
+      
+      if (colNome) {
+        var descValue = lookupEventDescription(codValue, rmEventsList);
+        if (descValue === "" || descValue === null || descValue === undefined) {
+          sheetDepara.getRange(r, colNome).clearContent();
+        } else {
+          sheetDepara.getRange(r, colNome).setValue(descValue);
+        }
+      }
+    };
+    
+    setFieldStaticValue("CODIGO_PARA", "NOME_RM", 0, data.codigoPara);
+    setFieldStaticValue("CODIGO_PARA_FICHA_MES1", "NOME_RM", 1, data.codigoParaFichaMes1);
+    setFieldStaticValue("CODIGO_PARA_FICHA_MES2", "NOME_RM", 2, data.codigoParaFichaMes2);
+    setFieldStaticValue("CODIGO_PARA_VERBAS_FERIAS", "NOME_RM", 3, data.codigoParaVerbasFerias);
+    
+    var colObs = getColIndex("OBSERVACAO");
+    if (colObs) {
+      if (data.observacao === "" || data.observacao === null || data.observacao === undefined) {
+        sheetDepara.getRange(r, colObs).clearContent();
+      } else {
+        sheetDepara.getRange(r, colObs).setValue(data.observacao);
+      }
+    }
+  };
+  
+  saveRow(rowNum);
+  
+  var affectedRows = 1;
+  if (applyToAllMatches && data.nomeDe && data.tipoEvento) {
+    var lastRow = sheetDepara.getLastRow();
+    if (lastRow > 1) {
+      var colNomeDeIdx = headers.indexOf("NOME_DE");
+      var colTipoEventoIdx = headers.indexOf("TIPO_EVENTO");
+      
+      if (colNomeDeIdx !== -1 && colTipoEventoIdx !== -1) {
+        var allRows = sheetDepara.getRange(2, 1, lastRow - 1, headers.length).getValues();
+        allRows.forEach(function(rowValues, idx) {
+          var currentRowNum = idx + 2;
+          if (currentRowNum !== rowNum) {
+            var cellNomeDe = String(rowValues[colNomeDeIdx]);
+            var cellTipoEvento = String(rowValues[colTipoEventoIdx]);
+            
+            if (cellNomeDe === data.nomeDe && cellTipoEvento === data.tipoEvento) {
+              saveRow(currentRowNum);
+              affectedRows++;
+            }
+          }
+        });
+      }
+    }
+  }
+  
+  SpreadsheetApp.flush();
+  return { success: true, affectedRows: affectedRows };
+}
+
+function createNewRMEvent(spreadsheetId, eventData) {
+  var ss = getActiveSS(spreadsheetId);
+  var sheet = ss.getSheetByName(SHEET_DADOS_RM);
+  if (!sheet) return { success: false, error: "Aba DADOS_RM_EVENTOS nao encontrada." };
+  
+  try {
+    var lastRow = sheet.getLastRow();
+    var lastCode = 0;
+    
+    if (lastRow > 1) {
+      var codes = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
+      var numericCodes = codes.map(function(row) {
+        return parseInt(row[0], 10);
+      }).filter(function(code) {
+        return !isNaN(code);
+      });
+      
+      if (numericCodes.length > 0) {
+        lastCode = Math.max.apply(null, numericCodes);
+      }
+    }
+    
+    var nextCodeVal = lastCode + 1;
+    var nextCodeStr = String(nextCodeVal);
+    while (nextCodeStr.length < 4) {
+      nextCodeStr = "0" + nextCodeStr;
+    }
+    
+    var descCompleta = "[INCLUSAO MANUAL] " + eventData.nomeDe.toUpperCase();
+    var tipoFinal = eventData.tipoEvento || "PROVENTO";
+    
+    sheet.appendRow(["", "", "", "", ""]);
+    var targetRow = sheet.getLastRow();
+    
+    sheet.getRange(targetRow, 1).setNumberFormat("@").setValue(nextCodeStr);
+    sheet.getRange(targetRow, 2).setValue(descCompleta);
+    sheet.getRange(targetRow, 3).setValue(tipoFinal);
+    sheet.getRange(targetRow, 4).setValue("");
+    sheet.getRange(targetRow, 5).setValue("");
+    
+    SpreadsheetApp.flush();
+    return { success: true, code: nextCodeStr, description: descCompleta, type: tipoFinal };
+  } catch (e) {
+    return { success: false, error: e.message };
+  }
+}
+
+function deleteUnusedCreatedEvent(spreadsheetId, code) {
+  var ss = getActiveSS(spreadsheetId);
+  var sheet = ss.getSheetByName(SHEET_DADOS_RM);
+  if (!sheet) return { success: false, error: "Aba DADOS_RM_EVENTOS nao encontrada." };
+  
+  try {
+    var lastRow = sheet.getLastRow();
+    if (lastRow > 1) {
+      var values = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
+      for (var i = 0; i < values.length; i++) {
+        if (String(values[i][0]) === String(code)) {
+          sheet.deleteRow(i + 2);
+          SpreadsheetApp.flush();
+          return { success: true, message: "Evento manual código " + code + " excluido com sucesso." };
+        }
+      }
+    }
+    return { success: false, error: "Evento nao encontrado." };
+  } catch(e) {
+    return { success: false, error: e.message };
+  }
+}
+
+function importSingleSheet(spreadsheetId, sheetName) {
+  try {
+    var connection = getConnectionInfo(spreadsheetId);
+    var destId = extractSpreadsheetId(connection.destinationUrl);
+    if (!destId) return { success: false, error: "Planilha de destino inválida." };
+    
+    var personalSS = getActiveSS(spreadsheetId);
+    var companySS;
+    try {
+      companySS = SpreadsheetApp.openById(destId);
+    } catch(err) {
+      if (destId.indexOf("/") === -1 && destId.length < 25) {
+        return { 
+          success: false, 
+          error: "O link configurado na aba 'CONFIG_CONEXAO' (célula B1) é inválido (parece ser apenas o nome '" + destId + "'). Certifique-se de preencher a célula B1 com a URL completa da planilha oficial corporativa da TOTVS." 
+        };
+      }
+      return { 
+        success: false, 
+        error: "Não foi possível abrir a Planilha Destino (ID: " + destId + "). Verifique se a célula B1 da aba 'CONFIG_CONEXAO' possui a URL correta e se você possui permissão de acesso a ela." 
+      };
+    }
+    
+    var companySheet = getSheetDynamic(companySS, sheetName);
+    if (!companySheet) {
+      writeLog(spreadsheetId, "IMPORTAÇÃO PARCIAL", "Aba " + sheetName + " não encontrada na Planilha Destino (pulada).", "SUCESSO");
+      return { success: true, message: sheetName + " pulado (não existe no destino)." };
+    }
+    
+    var realSheetName = companySheet.getName();
+    var personalSheet = getSheetDynamic(personalSS, realSheetName);
+    
+    if (!personalSheet) {
+      personalSheet = personalSS.insertSheet(realSheetName);
+    }
+    
+    var dataRange = companySheet.getDataRange();
+    var values = dataRange.getValues();
+    var backgrounds = dataRange.getBackgrounds();
+    var numberFormats = dataRange.getNumberFormats();
+    
+    personalSheet.clearContents();
+    personalSheet.clearFormats();
+    
+    personalSheet.getRange(1, 1, values.length, values[0].length).setValues(values);
+    personalSheet.getRange(1, 1, backgrounds.length, backgrounds[0].length).setBackgrounds(backgrounds);
+    personalSheet.getRange(1, 1, numberFormats.length, numberFormats[0].length).setNumberFormats(numberFormats);
+    
+    if (realSheetName === "ZDEPARA_EVENTOS") {
+      var personalHeaders = values[0];
+      var colCodigoDeIdx = personalHeaders.indexOf("CODIGO_DE");
+      var colCodigoParaIdx = personalHeaders.indexOf("CODIGO_PARA");
+      var colFicha1Idx = personalHeaders.indexOf("CODIGO_PARA_FICHA_MES1");
+      var colFicha2Idx = personalHeaders.indexOf("CODIGO_PARA_FICHA_MES2");
+      var colFeriasIdx = personalHeaders.indexOf("CODIGO_PARA_VERBAS_FERIAS");
+      
+      var treatColumn = function(idx) {
+        if (idx === -1) return;
+        var rangeCol = personalSheet.getRange(2, idx + 1, values.length - 1, 1);
+        rangeCol.setNumberFormat("@");
+        var cellValues = rangeCol.getValues();
+        var fixedValues = cellValues.map(function(row) {
+          var val = row[0];
+          if (val === "" || val === null || val === undefined) return [""];
+          if (typeof val === "number") {
+            var strVal = String(val);
+            while (strVal.length < 4) strVal = "0" + strVal;
+            return [strVal];
+          }
+          return [String(val).trim()];
+        });
+        rangeCol.setValues(fixedValues);
+      };
+      
+      if (values.length > 1) {
+        treatColumn(colCodigoDeIdx);
+        treatColumn(colCodigoParaIdx);
+        treatColumn(colFicha1Idx);
+        treatColumn(colFicha2Idx);
+        treatColumn(colFeriasIdx);
+      }
+    } 
+    else if (realSheetName === "DADOS_RM_EVENTOS") {
+      var personalHeaders = values[0];
+      var colCodigoIdx = personalHeaders.indexOf("CÓDIGO");
+      if (colCodigoIdx === -1) colCodigoIdx = personalHeaders.indexOf("CODIGO");
+      
+      if (colCodigoIdx !== -1 && values.length > 1) {
+        var rangeCol = personalSheet.getRange(2, colCodigoIdx + 1, values.length - 1, 1);
+        rangeCol.setNumberFormat("@");
+        var cellValues = rangeCol.getValues();
+        var fixedValues = cellValues.map(function(row) {
+          var val = row[0];
+          if (val === "" || val === null || val === undefined) return [""];
+          if (typeof val === "number") {
+            var strVal = String(val);
+            while (strVal.length < 4) strVal = "0" + strVal;
+            return [strVal];
+          }
+          return [String(val).trim()];
+        });
+        rangeCol.setValues(fixedValues);
+      }
+    }
+    
+    writeLog(spreadsheetId, "IMPORTAÇÃO PARCIAL", "Importada aba: " + realSheetName + " (" + values.length + " linhas)", "SUCESSO");
+    return { success: true, message: realSheetName + " importado." };
+  } catch (e) {
+    writeLog(spreadsheetId, "IMPORTAÇÃO PARCIAL", "Erro ao importar aba " + sheetName + ": " + e.message, "FALHA");
+    return { success: false, error: e.message };
+  }
+}
+
+function syncSingleSheet(spreadsheetId, sheetName) {
+  try {
+    var connection = getConnectionInfo(spreadsheetId);
+    var destId = extractSpreadsheetId(connection.destinationUrl);
+    if (!destId) return { success: false, error: "Planilha de destino inválida." };
+    
+    var personalSS = getActiveSS(spreadsheetId);
+    var companySS;
+    try {
+      companySS = SpreadsheetApp.openById(destId);
+    } catch(err) {
+      if (destId.indexOf("/") === -1 && destId.length < 25) {
+        return { 
+          success: false, 
+          error: "O link configurado na aba 'CONFIG_CONEXAO' (célula B1) é inválido (parece ser apenas o nome '" + destId + "'). Certifique-se de preencher a célula B1 com a URL completa da planilha oficial corporativa da TOTVS." 
+        };
+      }
+      return { 
+        success: false, 
+        error: "Não foi possível abrir a Planilha Destino (ID: " + destId + "). Verifique se a célula B1 da aba 'CONFIG_CONEXAO' possui a URL correta e se você possui permissão de acesso a ela." 
+      };
+    }
+    
+    var personalSheet = getSheetDynamic(personalSS, sheetName);
+    if (!personalSheet) {
+      return { success: true, message: sheetName + " pulado (não existe na origem)." };
+    }
+    
+    var realSheetName = personalSheet.getName();
+    var companySheet = getSheetDynamic(companySS, realSheetName);
+    
+    if (!companySheet) {
+      companySheet = companySS.insertSheet(realSheetName);
+    }
+    
+    var personalRange = personalSheet.getDataRange();
+    var personalValues = personalRange.getValues();
+    var personalBackgrounds = personalRange.getBackgrounds();
+    var personalNumberFormats = personalRange.getNumberFormats();
+    
+    if (personalValues.length === 0) {
+      return { success: true, message: realSheetName + " está vazia na origem." };
+    }
+    
+    var personalHeaders = personalValues[0];
+    
+    if (realSheetName.startsWith("DADOS_RM_")) {
+      var companyRange = companySheet.getDataRange();
+      var companyValues = companyRange.getValues();
+      
+      if (companyValues.length <= 1 || companyValues[0].length === 0) {
+        companySheet.clearContents();
+        companySheet.clearFormats();
+        companySheet.getRange(1, 1, personalValues.length, personalValues[0].length).setValues(personalValues);
+        companySheet.getRange(1, 1, personalBackgrounds.length, personalBackgrounds[0].length).setBackgrounds(personalBackgrounds);
+        companySheet.getRange(1, 1, personalNumberFormats.length, personalNumberFormats[0].length).setNumberFormats(personalNumberFormats);
+      } else {
+        var companyHeaders = companyValues[0];
+        
+        var companyKeysMap = {};
+        for (var i = 1; i < companyValues.length; i++) {
+          var key = String(companyValues[i][0]).trim();
+          if (key) {
+            companyKeysMap[key] = i + 1;
+          }
+        }
+
+        var colMap = [];
+        personalHeaders.forEach(function(pHeader, pIdx) {
+          var cIdx = companyHeaders.indexOf(pHeader);
+          if (cIdx !== -1) {
+            colMap.push({ personalColIdx: pIdx, companyColIdx: cIdx });
+          }
+        });
+        
+        var rowsAdded = 0;
+        var rowsUpdated = 0;
+        
+        for (var j = 1; j < personalValues.length; j++) {
+          var origKey = String(personalValues[j][0]).trim();
+          if (!origKey) continue;
+          
+          var targetRow;
+          if (companyKeysMap[origKey]) {
+            targetRow = companyKeysMap[origKey];
+            rowsUpdated++;
+          } else {
+            companySheet.appendRow(new Array(companyHeaders.length).fill(""));
+            targetRow = companySheet.getLastRow();
+            companyKeysMap[origKey] = targetRow;
+            rowsAdded++;
+          }
+          
+          colMap.forEach(function(mapping) {
+            var pColIdx = mapping.personalColIdx;
+            var cColIdx = mapping.companyColIdx;
+            
+            var cellVal = personalValues[j][pColIdx];
+            var cellBg = personalBackgrounds[j][pColIdx];
+            var cellFmt = personalNumberFormats[j][pColIdx];
+            
+            var targetCell = companySheet.getRange(targetRow, cColIdx + 1);
+            targetCell.setValue(cellVal);
+            targetCell.setBackground(cellBg);
+            targetCell.setNumberFormat(cellFmt);
+          });
+        }
+        writeLog(spreadsheetId, "EXPORTAÇÃO INCREMENTAL", "Aba: " + realSheetName + " | Inseridos: " + rowsAdded + " | Atualizados: " + rowsUpdated, "SUCESSO");
+      }
+    } else {
+      var companyRange = companySheet.getDataRange();
+      var companyValues = companyRange.getValues();
+      
+      if (companyValues.length <= 1 || companyValues[0].length === 0) {
+        companySheet.clearContents();
+        companySheet.clearFormats();
+        companySheet.getRange(1, 1, personalValues.length, personalValues[0].length).setValues(personalValues);
+        companySheet.getRange(1, 1, personalBackgrounds.length, personalBackgrounds[0].length).setBackgrounds(personalBackgrounds);
+        companySheet.getRange(1, 1, personalNumberFormats.length, personalNumberFormats[0].length).setNumberFormats(personalNumberFormats);
+      } else {
+        var companyHeaders = companyValues[0];
+        
+        var colMap = [];
+        personalHeaders.forEach(function(pHeader, pIdx) {
+          var cIdx = companyHeaders.indexOf(pHeader);
+          if (cIdx !== -1) {
+            colMap.push({ personalColIdx: pIdx, companyColIdx: cIdx });
+          }
+        });
+        
+        var diffRows = personalValues.length - companyValues.length;
+        if (diffRows > 0) {
+          companySheet.insertRowsAfter(companyValues.length, diffRows);
+        } else if (diffRows < 0) {
+          var startDelete = personalValues.length + 1;
+          var numDelete = companyValues.length - personalValues.length;
+          colMap.forEach(function(mapping) {
+            var cColIdx = mapping.companyColIdx;
+            companySheet.getRange(startDelete, cColIdx + 1, numDelete, 1).clearContent().clearFormat();
+          });
+        }
+        
+        colMap.forEach(function(mapping) {
+          var pColIdx = mapping.personalColIdx;
+          var cColIdx = mapping.companyColIdx;
+          
+          var colValues = [];
+          var colBackgrounds = [];
+          var colFormats = [];
+          
+          for (var r = 0; r < personalValues.length; r++) {
+            colValues.push([personalValues[r][pColIdx]]);
+            colBackgrounds.push([personalBackgrounds[r][pColIdx]]);
+            colFormats.push([personalNumberFormats[r][pColIdx]]);
+          }
+          
+          var targetRange = companySheet.getRange(1, cColIdx + 1, personalValues.length, 1);
+          targetRange.setValues(colValues);
+          targetRange.setBackgrounds(colBackgrounds);
+          targetRange.setNumberFormats(colFormats);
+        });
+        
+        writeLog(spreadsheetId, "EXPORTAÇÃO MAPEADA", "Aba: " + realSheetName + " (" + personalValues.length + " linhas atualizadas por coluna)", "SUCESSO");
+      }
+    }
+    
+    return { success: true, message: realSheetName + " sincronizado com segurança." };
+  } catch (e) {
+    writeLog(spreadsheetId, "EXPORTAÇÃO PARCIAL", "Erro ao exportar aba " + sheetName + ": " + e.message, "FALHA");
+    return { success: false, error: e.message };
+  }
+}
+
+function writeLog(spreadsheetId, actionType, detail, status) {
+  var userEmail = Session.getActiveUser().getEmail() || "Usuário do Portal";
+  var timestamp = new Date();
+  
+  var writeToSheet = function(ss) {
+    var sheetLog = ss.getSheetByName(SHEET_LOG);
+    if (!sheetLog) {
+      sheetLog = ss.insertSheet(SHEET_LOG);
+      var logHeaders = ["DATA/HORA", "USUÁRIO", "TIPO AÇÃO", "DETALHES DO PROCESSO", "STATUS"];
+      sheetLog.getRange(1, 1, 1, logHeaders.length).setValues([logHeaders]).setFontWeight("bold").setBackground("#fff2cc");
+    }
+    sheetLog.appendRow([timestamp, userEmail, actionType, detail, status]);
+  };
+  
+  try {
+    writeToSheet(getActiveSS(spreadsheetId));
+  } catch(e) {}
+  
+  try {
+    var connection = getConnectionInfo(spreadsheetId);
+    var destId = extractSpreadsheetId(connection.destinationUrl);
+    if (destId) {
+      writeToSheet(SpreadsheetApp.openById(destId));
+    }
+  } catch(e) {}
+}
