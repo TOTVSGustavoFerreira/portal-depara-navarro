@@ -2009,6 +2009,16 @@
       });
     }
 
+    function isCodeIgnored(cod) {
+      if (!cod) return true;
+      const normalized = String(cod)
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "") // Remove accents
+        .trim()
+        .toUpperCase();
+      return normalized === "NAO IMPORTAR" || normalized === "P/ ANALISE";
+    }
+
     function normalizeEventType(type) {
       if (!type) return "";
       type = type.toUpperCase().replace(/\s/g, "");
@@ -2019,7 +2029,7 @@
     }
 
     function checkTypeCompatibility(legacyType, rmCode) {
-      if (!rmCode || rmCode === "NAO IMPORTAR" || rmCode === "P/ ANALISE") {
+      if (!rmCode || isCodeIgnored(rmCode)) {
         return { isMatch: true, rmType: "" };
       }
       
@@ -2070,12 +2080,14 @@
         if (tipoNorm.includes("PROVENTO")) typeBadge = "badge-prov";
         else if (tipoNorm.includes("DESCONTO")) typeBadge = "badge-desc";
         
-        if (item.codigoPara === "NAO IMPORTAR") {
-          rowColorClass = "row-neutral";
+        if (isCodeIgnored(item.codigoPara)) {
+          if (String(item.codigoPara).toUpperCase().includes("ANALISE")) {
+            rowColorClass = "row-panalise";
+          } else {
+            rowColorClass = "row-neutral";
+          }
         } else if (!item.codigoPara) {
           rowColorClass = "row-unmapped"; 
-        } else if (item.codigoPara === "P/ ANALISE") {
-          rowColorClass = "row-panalise"; 
         } else if (!compatibility.isMatch) {
           rowColorClass = "row-mismatch"; 
         } else {
@@ -2086,15 +2098,17 @@
         let mapBadge = "badge-mapped";
         let statusLabel = item.nomeRm || "MAPEADO";
         
-        if (item.codigoPara === "P/ ANALISE") {
-          mapBadge = "badge-panalise";
-          statusLabel = "P/ ANÁLISE";
+        if (isCodeIgnored(item.codigoPara)) {
+          if (String(item.codigoPara).toUpperCase().includes("ANALISE")) {
+            mapBadge = "badge-panalise";
+            statusLabel = "P/ ANÁLISE";
+          } else {
+            mapBadge = "badge-mapped";
+            statusLabel = "NÃO IMPORTAR";
+          }
         } else if (!item.codigoPara) {
           mapBadge = "badge-unmapped";
           statusLabel = "PENDENTE";
-        } else if (item.codigoPara === "NÃO IMPORTAR") {
-          mapBadge = "badge-mapped";
-          statusLabel = "NÃO IMPORTAR";
         } else if (!compatibility.isMatch) {
           mapBadge = "badge-divergent";
           statusLabel = "DIVERGÊNCIA";
@@ -2104,7 +2118,7 @@
         tr.className = `row-item ${rowColorClass} ${isEditing ? 'row-editing' : ''} ${isExpanded ? 'row-expanded' : ''}`;
         
         let rmCellContent = `<span class="badge ${mapBadge}">${statusLabel}</span>`;
-        if (item.codigoPara && item.codigoPara !== "NAO IMPORTAR" && item.codigoPara !== "P/ ANALISE") {
+        if (item.codigoPara && !isCodeIgnored(item.codigoPara)) {
           const rmTypeLabel = compatibility.rmType ? ` | Tipo: ${compatibility.rmType}` : '';
           const matchWarning = !compatibility.isMatch ? ` <span style="color:var(--magenta); font-weight:700;" title="O tipo de evento RM não condiz com o tipo legado!">(DIVERGÊNCIA TIPO)</span>` : '';
           rmCellContent = `
@@ -2402,7 +2416,7 @@
       if (fieldType === "ficha2") labelInputId = `edit-nomeFicha2-${rowNum}`;
       if (fieldType === "ferias") labelInputId = `edit-nomeFerias-${rowNum}`;
       
-      if (val === "NAO IMPORTAR" || val === "P/ ANALISE") {
+      if (isCodeIgnored(val)) {
         document.getElementById(labelInputId).value = val;
         listElement.style.display = "none";
         return;

@@ -5,6 +5,16 @@
  */
 
 // Permite requisições de outros domínios como o GitHub Pages
+function isCodeIgnored(cod) {
+  if (!cod) return true;
+  var normalized = String(cod)
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // Remove accents
+    .trim()
+    .toUpperCase();
+  return normalized === "NAO IMPORTAR" || normalized === "P/ ANALISE";
+}
+
 function doGet(e) {
   var id = (e && e.parameter && e.parameter.id) ? e.parameter.id : "";
   var action = (e && e.parameter && e.parameter.action) ? e.parameter.action : "";
@@ -422,11 +432,24 @@ function getPortalData(spreadsheetId) {
   
   deparaData.forEach(function(item) {
     var cod = item.codigoPara;
-    if (cod === "P/ ANALISE") pAnalise++;
-    else if (!cod) naoPreenchidos++;
-    else preenchidos++;
+    if (cod) {
+      var isIgnored = isCodeIgnored(cod);
+      if (isIgnored) {
+        // Let's count them appropriately or treat them as filled but ignored.
+        // For stats purposes, they are mapped, but we handle their status
+        if (String(cod).toUpperCase().indexOf("ANALISE") !== -1) {
+          pAnalise++;
+        } else {
+          preenchidos++; // NAO IMPORTAR counts as filled
+        }
+      } else {
+        preenchidos++;
+      }
+    } else {
+      naoPreenchidos++;
+    }
     
-    if (item.nomeDe && item.tipoEvento && cod && cod !== "P/ ANALISE" && cod !== "NAO IMPORTAR") {
+    if (item.nomeDe && item.tipoEvento && cod && !isCodeIgnored(cod)) {
       var key = item.nomeDe.toLowerCase() + "|||" + item.tipoEvento;
       if (!keyMap[key]) keyMap[key] = [];
       if (keyMap[key].indexOf(cod) === -1) keyMap[key].push(cod);
@@ -436,7 +459,7 @@ function getPortalData(spreadsheetId) {
   
   var divergenciasCount = 0;
   deparaData.forEach(function(item) {
-    if (item.nomeDe && item.tipoEvento && item.codigoPara !== "NAO IMPORTAR" && item.codigoPara !== "P/ ANALISE") {
+    if (item.nomeDe && item.tipoEvento && !isCodeIgnored(item.codigoPara)) {
       var key = item.nomeDe.toLowerCase() + "|||" + item.tipoEvento;
       if (duplicateKeys[key]) {
         item.hasDivergencia = true;
@@ -466,7 +489,7 @@ function getPortalData(spreadsheetId) {
   var orphans = [];
   deparaData.forEach(function(item) {
     var cod = item.codigoPara;
-    if (cod && cod !== "P/ ANALISE" && cod !== "NAO IMPORTAR") {
+    if (cod && !isCodeIgnored(cod)) {
       if (!rmCodesSet[cod]) {
         orphans.push({
           rowNum: item.rowNum,
