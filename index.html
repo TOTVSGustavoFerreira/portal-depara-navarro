@@ -2120,11 +2120,18 @@
         let rmCellContent = `<span class="badge ${mapBadge}">${statusLabel}</span>`;
         if (item.codigoPara && !isCodeIgnored(item.codigoPara)) {
           const rmTypeLabel = compatibility.rmType ? ` | Tipo: ${compatibility.rmType}` : '';
-          const matchWarning = !compatibility.isMatch ? ` <span style="color:var(--magenta); font-weight:700;" title="O tipo de evento RM não condiz com o tipo legado!">(DIVERGÊNCIA TIPO)</span>` : '';
+          
+          let mismatchSpan = '';
+          if (item.hasDivergenciaDuplicidade) {
+            mismatchSpan = ` <span style="color:var(--magenta); font-weight:700;" title="Este nome de evento legado está mapeado para mais de um código RM diferente!">(DIVERGÊNCIA DUPLICIDADE)</span>`;
+          } else if (item.hasDivergenciaTipo || !compatibility.isMatch) {
+            mismatchSpan = ` <span style="color:var(--magenta); font-weight:700;" title="O tipo de evento RM não condiz com o tipo legado!">(DIVERGÊNCIA TIPO)</span>`;
+          }
+
           rmCellContent = `
             <div style="display:flex; flex-direction:column; gap:2px;">
               <span style="font-weight:600;">${item.nomeRm}</span>
-              <span style="font-size:0.75rem; color:var(--color-text-muted);">${rmTypeLabel}${matchWarning}</span>
+              <span style="font-size:0.75rem; color:var(--color-text-muted);">${rmTypeLabel}${mismatchSpan}</span>
             </div>
           `;
         }

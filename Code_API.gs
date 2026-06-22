@@ -457,14 +457,53 @@ function getPortalData(spreadsheetId) {
     }
   });
   
+  // Helper local no backend para normalizar o tipo de evento (tolerância de singular/plural, P/D/B)
+  function normalizeEventType(type) {
+    if (!type) return "";
+    var t = String(type).toUpperCase().replace(/\s/g, "");
+    if (t.indexOf("PROV") !== -1 || t === "P") return "PROVENTO";
+    if (t.indexOf("DESC") !== -1 || t === "D") return "DESCONTO";
+    if (t.indexOf("BASE") !== -1 || t.indexOf("CALC") !== -1 || t === "B") return "BASE";
+    return t;
+  }
+
+  // Mapa de eventos RM para validação de tipo rápida
+  var rmEventsMap = {};
+  rmEvents.forEach(function(ev) {
+    rmEventsMap[ev.codigo] = ev;
+  });
+
   var divergenciasCount = 0;
   deparaData.forEach(function(item) {
-    if (item.nomeDe && item.tipoEvento && !isCodeIgnored(item.codigoPara)) {
+    var cod = item.codigoPara;
+    var isIgnored = isCodeIgnored(cod);
+    
+    var hasDuplicidade = false;
+    var hasTipoMismatch = false;
+
+    // 1. Verificar duplicidade de chave (nome legado + tipo mapeado para diferentes RMs)
+    if (item.nomeDe && item.tipoEvento && cod && !isIgnored) {
       var key = item.nomeDe.toLowerCase() + "|||" + item.tipoEvento;
       if (duplicateKeys[key]) {
-        item.hasDivergencia = true;
-        divergenciasCount++;
+        hasDuplicidade = true;
       }
+    }
+
+    // 2. Verificar incompatibilidade de tipo
+    if (cod && !isIgnored && rmEventsMap[cod] && item.tipoEvento) {
+      var rmEvent = rmEventsMap[cod];
+      var normLegacy = normalizeEventType(item.tipoEvento);
+      var normRM = normalizeEventType(rmEvent.tipo);
+      if (normLegacy && normRM && normLegacy !== normRM) {
+        hasTipoMismatch = true;
+      }
+    }
+
+    if (hasDuplicidade || hasTipoMismatch) {
+      item.hasDivergencia = true;
+      item.hasDivergenciaDuplicidade = hasDuplicidade;
+      item.hasDivergenciaTipo = hasTipoMismatch;
+      divergenciasCount++;
     }
   });
   
