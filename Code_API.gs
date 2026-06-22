@@ -804,6 +804,19 @@ function getRowKey(headers, rowValues) {
   return String(rowValues[0]).trim().toUpperCase();
 }
 
+function headersMatch(h1, h2) {
+  var norm1 = String(h1).trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
+  var norm2 = String(h2).trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
+  
+  if (norm1 === norm2) return true;
+  
+  // Trata chaves comuns com erros de digitação / abreviações comuns
+  if ((norm1 === "CODIGODE" || norm1 === "CODIGOD") && (norm2 === "CODIGODE" || norm2 === "CODIGOD")) return true;
+  if ((norm1 === "CODIGOPARA" || norm1 === "CODIGOPAR") && (norm2 === "CODIGOPARA" || norm2 === "CODIGOPAR")) return true;
+  
+  return false;
+}
+
 function syncSingleSheet(spreadsheetId, sheetName) {
   try {
     var connection = getConnectionInfo(spreadsheetId);
@@ -860,24 +873,29 @@ function syncSingleSheet(spreadsheetId, sheetName) {
       companySheet.getRange(1, 1, personalBackgrounds.length, personalBackgrounds[0].length).setBackgrounds(personalBackgrounds);
       companySheet.getRange(1, 1, personalNumberFormats.length, personalNumberFormats[0].length).setNumberFormats(personalNumberFormats);
       writeLog(spreadsheetId, "EXPORTAÇÃO DIRETA", "Aba: " + realSheetName + " sincronizada por cópia direta (destino estava vazio)", "SUCESSO");
-      return { success: true, message: realSheetName + " sincronizado por cópia direta." };
+      return { 
+        success: true, 
+        message: realSheetName + " sincronizado por cópia direta.",
+        details: { mode: "direta", rows: personalValues.length - 1 }
+      };
     }
     
     var companyHeaders = companyValues[0];
     
     // Mapeamento tolerante a caixa alta/baixa e espaços extras nos cabeçalhos
     var colMap = [];
+    var mappedNames = [];
     personalHeaders.forEach(function(pHeader, pIdx) {
-      var pHeaderNorm = String(pHeader).trim().toUpperCase();
       var cIdx = -1;
       for (var i = 0; i < companyHeaders.length; i++) {
-        if (String(companyHeaders[i]).trim().toUpperCase() === pHeaderNorm) {
+        if (headersMatch(companyHeaders[i], pHeader)) {
           cIdx = i;
           break;
         }
       }
       if (cIdx !== -1) {
         colMap.push({ personalColIdx: pIdx, companyColIdx: cIdx });
+        mappedNames.push(pHeader + " -> " + companyHeaders[cIdx]);
       }
     });
     
@@ -927,7 +945,11 @@ function syncSingleSheet(spreadsheetId, sheetName) {
     }
     
     writeLog(spreadsheetId, "EXPORTAÇÃO POR LINHA", "Aba: " + realSheetName + " | Inseridas: " + rowsAdded + " | Atualizadas: " + rowsUpdated, "SUCESSO");
-    return { success: true, message: realSheetName + " sincronizado por linha com sucesso." };
+    return { 
+      success: true, 
+      message: realSheetName + " sincronizado por linha.", 
+      details: { mode: "linha", added: rowsAdded, updated: rowsUpdated, columns: mappedNames }
+    };
   } catch (e) {
     writeLog(spreadsheetId, "EXPORTAÇÃO PARCIAL", "Erro ao exportar aba " + sheetName + ": " + e.message, "FALHA");
     return { success: false, error: e.message };
