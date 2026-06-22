@@ -677,12 +677,12 @@ function importSingleSheet(spreadsheetId, sheetName) {
       if (destId.indexOf("/") === -1 && destId.length < 25) {
         return { 
           success: false, 
-          error: "O link configurado na aba 'CONFIG_CONEXAO' (célula B1) é inválido (parece ser apenas o nome '" + destId + "'). Certifique-se de preencher a célula B1 com a URL completa da planilha oficial corporativa da TOTVS." 
+          error: "O link configurado na aba 'CONFIG_CONEXAO' (célula B1) é inválido. Certifique-se de preencher a célula B1 com a URL completa da planilha oficial corporativa da TOTVS." 
         };
       }
       return { 
         success: false, 
-        error: "Não foi possível abrir a Planilha Destino (ID: " + destId + "). Verifique se a célula B1 da aba 'CONFIG_CONEXAO' possui a URL correta e se você possui permissão de acesso a ela." 
+        error: "Não foi possível abrir a Planilha Destino (ID: " + destId + "). Verifique a URL e as permissões de acesso." 
       };
     }
     
@@ -704,6 +704,45 @@ function importSingleSheet(spreadsheetId, sheetName) {
     var backgrounds = dataRange.getBackgrounds();
     var numberFormats = dataRange.getNumberFormats();
     
+    if (values.length === 0) {
+      return { success: true, message: realSheetName + " está vazia no destino." };
+    }
+    
+    var headers = values[0];
+    
+    // Identifica e formata as colunas em memória
+    var colsToFormat = [];
+    var normHeaders = headers.map(function(h) { 
+      return String(h).normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toUpperCase(); 
+    });
+    
+    if (realSheetName === "ZDEPARA_EVENTOS") {
+      ["CODIGO_DE", "CODIGO_PARA", "CODIGO_PARA_FICHA_MES1", "CODIGO_PARA_FICHA_MES2", "CODIGO_PARA_VERBAS_FERIAS"].forEach(function(colName) {
+        var idx = normHeaders.indexOf(colName);
+        if (idx !== -1) colsToFormat.push(idx);
+      });
+    } else if (realSheetName === "DADOS_RM_EVENTOS") {
+      var idx = normHeaders.indexOf("CODIGO");
+      if (idx !== -1) colsToFormat.push(idx);
+    }
+    
+    // Processamento de formatação 100% em memória
+    for (var r = 1; r < values.length; r++) {
+      colsToFormat.forEach(function(colIdx) {
+        var val = values[r][colIdx];
+        if (val === "" || val === null || val === undefined) {
+          values[r][colIdx] = "";
+        } else if (typeof val === "number") {
+          var strVal = String(val);
+          while (strVal.length < 4) strVal = "0" + strVal;
+          values[r][colIdx] = strVal;
+        } else {
+          values[r][colIdx] = String(val).trim();
+        }
+        numberFormats[r][colIdx] = "@";
+      });
+    }
+    
     personalSheet.clearContents();
     personalSheet.clearFormats();
     
@@ -711,65 +750,8 @@ function importSingleSheet(spreadsheetId, sheetName) {
     personalSheet.getRange(1, 1, backgrounds.length, backgrounds[0].length).setBackgrounds(backgrounds);
     personalSheet.getRange(1, 1, numberFormats.length, numberFormats[0].length).setNumberFormats(numberFormats);
     
-    if (realSheetName === "ZDEPARA_EVENTOS") {
-      var personalHeaders = values[0];
-      var colCodigoDeIdx = personalHeaders.indexOf("CODIGO_DE");
-      var colCodigoParaIdx = personalHeaders.indexOf("CODIGO_PARA");
-      var colFicha1Idx = personalHeaders.indexOf("CODIGO_PARA_FICHA_MES1");
-      var colFicha2Idx = personalHeaders.indexOf("CODIGO_PARA_FICHA_MES2");
-      var colFeriasIdx = personalHeaders.indexOf("CODIGO_PARA_VERBAS_FERIAS");
-      
-      var treatColumn = function(idx) {
-        if (idx === -1) return;
-        var rangeCol = personalSheet.getRange(2, idx + 1, values.length - 1, 1);
-        rangeCol.setNumberFormat("@");
-        var cellValues = rangeCol.getValues();
-        var fixedValues = cellValues.map(function(row) {
-          var val = row[0];
-          if (val === "" || val === null || val === undefined) return [""];
-          if (typeof val === "number") {
-            var strVal = String(val);
-            while (strVal.length < 4) strVal = "0" + strVal;
-            return [strVal];
-          }
-          return [String(val).trim()];
-        });
-        rangeCol.setValues(fixedValues);
-      };
-      
-      if (values.length > 1) {
-        treatColumn(colCodigoDeIdx);
-        treatColumn(colCodigoParaIdx);
-        treatColumn(colFicha1Idx);
-        treatColumn(colFicha2Idx);
-        treatColumn(colFeriasIdx);
-      }
-    } 
-    else if (realSheetName === "DADOS_RM_EVENTOS") {
-      var personalHeaders = values[0];
-      var colCodigoIdx = personalHeaders.indexOf("CÓDIGO");
-      if (colCodigoIdx === -1) colCodigoIdx = personalHeaders.indexOf("CODIGO");
-      
-      if (colCodigoIdx !== -1 && values.length > 1) {
-        var rangeCol = personalSheet.getRange(2, colCodigoIdx + 1, values.length - 1, 1);
-        rangeCol.setNumberFormat("@");
-        var cellValues = rangeCol.getValues();
-        var fixedValues = cellValues.map(function(row) {
-          var val = row[0];
-          if (val === "" || val === null || val === undefined) return [""];
-          if (typeof val === "number") {
-            var strVal = String(val);
-            while (strVal.length < 4) strVal = "0" + strVal;
-            return [strVal];
-          }
-          return [String(val).trim()];
-        });
-        rangeCol.setValues(fixedValues);
-      }
-    }
-    
     writeLog(spreadsheetId, "IMPORTAÇÃO PARCIAL", "Importada aba: " + realSheetName + " (" + values.length + " linhas)", "SUCESSO");
-    return { success: true, message: realSheetName + " importado." };
+    return { success: true, message: realSheetName + " importado com sucesso." };
   } catch (e) {
     writeLog(spreadsheetId, "IMPORTAÇÃO PARCIAL", "Erro ao importar aba " + sheetName + ": " + e.message, "FALHA");
     return { success: false, error: e.message };
