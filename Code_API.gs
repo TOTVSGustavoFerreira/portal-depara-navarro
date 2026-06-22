@@ -456,6 +456,29 @@ function getPortalData(spreadsheetId) {
   var unusedCreatedEvents = rmEvents.filter(function(ev) {
     return ev.descricao.indexOf("[INCLUSAO MANUAL]") !== -1 && !utilizedCodes.has(ev.codigo);
   });
+
+  // Detectar Mapeamentos Órfãos (Código RM no De-Para que não existe em DADOS_RM_EVENTOS)
+  var rmCodesSet = {};
+  rmEvents.forEach(function(ev) {
+    rmCodesSet[ev.codigo] = true;
+  });
+
+  var orphans = [];
+  deparaData.forEach(function(item) {
+    var cod = item.codigoPara;
+    if (cod && cod !== "P/ ANALISE" && cod !== "NAO IMPORTAR") {
+      if (!rmCodesSet[cod]) {
+        orphans.push({
+          rowNum: item.rowNum,
+          codigoDe: item.codigoDe,
+          nomeDe: item.nomeDe,
+          codigoPara: cod,
+          nomeRm: item.nomeRm
+        });
+      }
+    }
+  });
+  diagnostics.orphans = orphans;
   
   var stats = {
     total: total,
@@ -465,7 +488,8 @@ function getPortalData(spreadsheetId) {
     divergencias: divergenciasCount,
     gapsCount: diagnostics.gaps.length,
     duplicatesCount: diagnostics.duplicates.length,
-    unusedCreatedCount: unusedCreatedEvents.length
+    unusedCreatedCount: unusedCreatedEvents.length,
+    orphansCount: orphans.length
   };
   
   return {

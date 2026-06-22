@@ -1217,28 +1217,13 @@
       <div class="content-body">
         
         <!-- WARNING BANNERS -->
-        <div id="gapWarningBanner" class="warning-banner" style="display: none;">
+        <!-- UNIFIED WARNING BANNER -->
+        <div id="inconsistencyWarningBanner" class="warning-banner" style="display: none; background-color: #fff1f2; border-color: rgba(244, 63, 94, 0.2); border-left-color: #f43f5e; color: #9f1239;">
           <div class="warning-banner-text">
-            <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="color: var(--warning);"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-            <span>Há lacunas (gaps) identificadas na numeração de eventos criados pelo usuário na aba DADOS_RM_EVENTOS.</span>
+            <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" style="color: #f43f5e;"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            <span><strong>Aviso de Inconsistências:</strong> Encontramos problemas na base de dados (códigos duplicados, mapeamentos órfãos, lacunas ou cadastros RM não utilizados).</span>
           </div>
-          <button class="row-btn" style="padding: 4px 12px; font-size: 0.75rem; background:#fff; border-color:#f59e0b; color:#d97706; border-radius:6px;" onclick="showGapsList()">Ver Gaps</button>
-        </div>
-
-        <div id="unusedCreatedWarningBanner" class="warning-banner" style="display: none; background-color: #fdf2f8; border-color: rgba(219, 39, 119, 0.2); border-left-color: var(--magenta); color: #85144b;">
-          <div class="warning-banner-text">
-            <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="color: var(--magenta);"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-            <span>Existem novos eventos criados pelo usuário que ainda não foram utilizados em nenhum vínculo de-para.</span>
-          </div>
-          <button class="row-btn" style="padding: 4px 12px; font-size: 0.75rem; background:#fff; border-color:var(--magenta); color:var(--magenta); border-radius:6px;" onclick="showUnusedCreatedList()">Ver Lista</button>
-        </div>
-
-        <div id="duplicateWarningBanner" class="warning-banner" style="display: none; background-color: #fdf2f2; border-color: rgba(239, 68, 68, 0.2); border-left-color: var(--danger); color: #991b1b;">
-          <div class="warning-banner-text">
-            <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="color: var(--danger);"><path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
-            <span><strong>Erro Crítico:</strong> Existem códigos duplicados inseridos manualmente na aba de referência do RM (DADOS_RM_EVENTOS). Corrija as duplicidades.</span>
-          </div>
-          <button class="row-btn" style="padding: 4px 12px; font-size: 0.75rem; background:#fff; border-color:var(--danger); color:var(--danger); border-radius:6px;" onclick="showDuplicatesList()">Ver Lista</button>
+          <button class="row-btn" style="padding: 4px 12px; font-size: 0.75rem; background:#fff; border-color:#f43f5e; color:#e11d48; border-radius:6px; font-weight: 600;" onclick="showInconsistenciesPanel()">Ver Lista</button>
         </div>
 
         <!-- KPI MINI DASHBOARD -->
@@ -1542,120 +1527,108 @@
     }
 
     function renderWarnings() {
-      const gapBanner = document.getElementById("gapWarningBanner");
-      if (diagnostics.gaps && diagnostics.gaps.length > 0) {
-        gapBanner.style.display = "flex";
+      const banner = document.getElementById("inconsistencyWarningBanner");
+      const hasDuplicates = (diagnostics.duplicates && diagnostics.duplicates.length > 0);
+      const hasOrphans = (diagnostics.orphans && diagnostics.orphans.length > 0);
+      const hasUnused = (unusedCreatedEvents && unusedCreatedEvents.length > 0);
+      const hasGaps = (diagnostics.gaps && diagnostics.gaps.length > 0);
+      
+      if (hasDuplicates || hasOrphans || hasUnused || hasGaps) {
+        banner.style.display = "flex";
       } else {
-        gapBanner.style.display = "none";
+        banner.style.display = "none";
       }
+    }
 
-      const unusedBanner = document.getElementById("unusedCreatedWarningBanner");
-      if (unusedCreatedEvents && unusedCreatedEvents.length > 0) {
-        unusedBanner.style.display = "flex";
-      } else {
-        unusedBanner.style.display = "none";
-      }
-
-      const dupBanner = document.getElementById("duplicateWarningBanner");
+    function showInconsistenciesPanel() {
+      const modal = document.getElementById("diagnosticsModal");
+      const title = document.getElementById("diagnosticsModalTitle");
+      const content = document.getElementById("diagnosticsContentList");
+      
+      title.innerText = "Painel de Inconsistências e Alertas";
+      
+      let html = "";
+      
+      // 1. DUPLICIDADES (CÓDIGO DUPLICADO)
       if (diagnostics.duplicates && diagnostics.duplicates.length > 0) {
-        dupBanner.style.display = "flex";
-      } else {
-        dupBanner.style.display = "none";
-      }
-    }
-
-    function showGapsList() {
-      const modal = document.getElementById("diagnosticsModal");
-      const title = document.getElementById("diagnosticsModalTitle");
-      const content = document.getElementById("diagnosticsContentList");
-      
-      title.innerText = "Lacunas (Gaps) Identificadas na Criação Manual";
-      content.innerHTML = `
-        <p style="font-size:0.9rem; color:var(--color-text-muted);">
-          A numeração manual abaixo foi pulada ou liberada na aba DADOS_RM_EVENTOS. Recomendamos revisar ou utilizar estes códigos no próximo cadastro manual:
-        </p>
-        <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:8px;">
-          ${diagnostics.gaps.map(g => `<span class="badge" style="background:#fffbeb; color:#d97706; border:1px solid #fde68a; font-family:monospace; font-size:0.85rem; padding:6px 12px;">${g}</span>`).join('')}
-        </div>
-      `;
-      modal.style.display = "flex";
-    }
-
-    function showDuplicatesList() {
-      const modal = document.getElementById("diagnosticsModal");
-      const title = document.getElementById("diagnosticsModalTitle");
-      const content = document.getElementById("diagnosticsContentList");
-      
-      title.innerText = "Códigos Manuais Duplicados no RM (DADOS_RM_EVENTOS)";
-      
-      if (!diagnostics.duplicates || diagnostics.duplicates.length === 0) {
-        content.innerHTML = `<p style="text-align:center; padding:20px; color:var(--color-text-muted);">Nenhuma duplicidade manual encontrada.</p>`;
-      } else {
-        let dupItems = [];
-        diagnostics.duplicates.forEach(code => {
-          const events = rmEvents.filter(ev => ev.codigo === code);
-          dupItems = dupItems.concat(events);
-        });
-        
-        let listHtml = dupItems.map(ev => `
-          <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 14px; background:#fff5f5; border:1px solid #feb2b2; border-radius:6px; margin-bottom:8px;">
-            <div>
-              <span style="font-weight:600; font-family:monospace; font-size:0.9rem; margin-right:8px; color:#c53030;">${ev.codigo}</span>
-              <span style="font-size:0.88rem; color:#9b2c2c;">${ev.descricao}</span>
-              <span class="badge badge-base" style="font-size:0.65rem; margin-left:6px; background:#feb2b2; color:#9b2c2c;">${ev.tipo}</span>
+        html += `
+          <div style="border: 1px solid #fee2e2; background: #fff5f5; padding: 12px; border-radius: 8px; margin-bottom: 12px;">
+            <h4 style="color:#b91c1c; margin:0 0 6px 0; font-size:0.9rem; display:flex; align-items:center; gap:6px;">
+              <span style="background:#ef4444; color:#fff; width:18px; height:18px; display:inline-flex; align-items:center; justify-content:center; border-radius:50%; font-size:0.75rem; font-weight:700;">!</span>
+              Códigos Duplicados na DADOS_RM_EVENTOS (${diagnostics.duplicates.length})
+            </h4>
+            <p style="font-size:0.8rem; margin:0 0 8px 0; color:#7f1d1d;">Estes códigos de evento foram cadastrados mais de uma vez na aba de referência oficial do RM. Remova as linhas duplicadas na planilha:</p>
+            <div style="display:flex; flex-wrap:wrap; gap:6px;">
+              ${diagnostics.duplicates.map(d => `<span class="badge" style="background:#fee2e2; color:#b91c1c; border:1px solid #fca5a5; font-family:monospace; padding:2px 8px; border-radius:4px; font-size:0.75rem;">${d}</span>`).join('')}
             </div>
-            ${ev.descricao.indexOf("[INCLUSAO MANUAL]") !== -1 ? `
-              <button class="row-btn" style="padding:4px 8px; font-size:0.75rem; background:#fee2e2; border-color:#fca5a5; color:#b91c1c;" onclick="deleteManualEvent('${ev.codigo}')">
-                Excluir
-              </button>
-            ` : `<span style="font-size:0.72rem; color:var(--color-text-muted);">Nativo (Não editável)</span>`}
-          </div>
-        `).join('');
-        
-        content.innerHTML = `
-          <p style="font-size:0.9rem; color:var(--color-text-muted); margin-bottom:12px;">
-            Os códigos manuais abaixo possuem mais de um cadastro na aba DADOS_RM_EVENTOS. Corrija-os excluindo o registro duplicado ou ajustando na planilha:
-          </p>
-          <div style="display:flex; flex-direction:column; gap:4px; max-height: 400px; overflow-y: auto; padding-right: 4px;">
-            ${listHtml}
           </div>
         `;
       }
-      modal.style.display = "flex";
-    }
-
-    function showUnusedCreatedList() {
-      const modal = document.getElementById("diagnosticsModal");
-      const title = document.getElementById("diagnosticsModalTitle");
-      const content = document.getElementById("diagnosticsContentList");
       
-      title.innerText = "Eventos Criados sem Vínculo (Inclusões Manuais Não Utilizadas)";
-      
-      if (unusedCreatedEvents.length === 0) {
-        content.innerHTML = `<p style="text-align:center; padding:20px; color:var(--color-text-muted);">Nenhum evento criado pelo usuário está sem vínculo.</p>`;
-      } else {
-        let listHtml = unusedCreatedEvents.map(ev => `
-          <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 14px; background:#f8fafc; border:1px solid var(--border-color); border-radius:6px;">
-            <div>
-              <span style="font-weight:600; font-family:monospace; font-size:0.9rem; margin-right:8px;">${ev.codigo}</span>
-              <span style="font-size:0.88rem;">${ev.descricao}</span>
-              <span class="badge badge-base" style="font-size:0.65rem; margin-left:6px;">${ev.tipo}</span>
+      // 2. MAPEAMENTOS ÓRFÃOS (VÍNCULOS APONTANDO PARA RM INEXISTENTE)
+      if (diagnostics.orphans && diagnostics.orphans.length > 0) {
+        html += `
+          <div style="border: 1px solid #fef3c7; background: #fffbeb; padding: 12px; border-radius: 8px; margin-bottom: 12px;">
+            <h4 style="color:#d97706; margin:0 0 6px 0; font-size:0.9rem; display:flex; align-items:center; gap:6px;">
+              <span style="background:#f59e0b; color:#fff; width:18px; height:18px; display:inline-flex; align-items:center; justify-content:center; border-radius:50%; font-size:0.75rem; font-weight:700;">?</span>
+              Mapeamentos Órfãos em ZDEPARA_EVENTOS (${diagnostics.orphans.length})
+            </h4>
+            <p style="font-size:0.8rem; margin:0 0 8px 0; color:#92400e;">Eventos legados associados a um código RM que <strong>não existe</strong> na base de apoio. Ajuste o vínculo ou cadastre o evento correspondente:</p>
+            <div style="display:flex; flex-direction:column; gap:6px; max-height: 180px; overflow-y: auto; padding-right: 4px;">
+              ${diagnostics.orphans.map(o => `
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 10px; background:#fff; border:1px solid #fde68a; border-radius:6px; font-size:0.78rem;">
+                  <span>Linha ${o.rowNum}: <strong>${o.codigoDe} - ${o.nomeDe}</strong></span>
+                  <span style="background:#fffbeb; color:#d97706; font-family:monospace; padding:2px 6px; border-radius:4px; font-weight:700; border:1px solid #fde68a;">RM Inexistente: ${o.codigoPara}</span>
+                </div>
+              `).join('')}
             </div>
-            <button class="row-btn" style="padding:4px 8px; font-size:0.75rem; background:#fee2e2; border-color:#fca5a5; color:#b91c1c;" onclick="deleteManualEvent('${ev.codigo}')">
-              Excluir
-            </button>
-          </div>
-        `).join('');
-        
-        content.innerHTML = `
-          <p style="font-size:0.9rem; color:var(--color-text-muted); margin-bottom:8px;">
-            Estes eventos foram criados via portal, mas não foram associados a nenhum evento de origem em ZDEPARA_EVENTOS. Você pode excluí-los com segurança:
-          </p>
-          <div style="display:flex; flex-direction:column; gap:8px;">
-            ${listHtml}
           </div>
         `;
       }
+      
+      // 3. EVENTOS MANUAIS NÃO UTILIZADOS
+      if (unusedCreatedEvents && unusedCreatedEvents.length > 0) {
+        html += `
+          <div style="border: 1px solid #fce7f3; background: #fdf2f8; padding: 12px; border-radius: 8px; margin-bottom: 12px;">
+            <h4 style="color:#c026d3; margin:0 0 6px 0; font-size:0.9rem; display:flex; align-items:center; gap:6px;">
+              <span style="background:#d946ef; color:#fff; width:18px; height:18px; display:inline-flex; align-items:center; justify-content:center; border-radius:50%; font-size:0.75rem; font-weight:700;">*</span>
+              Eventos Manuais Criados Não Utilizados (${unusedCreatedEvents.length})
+            </h4>
+            <p style="font-size:0.8rem; margin:0 0 8px 0; color:#701a75;">Novos códigos criados manualmente via portal que ainda não possuem nenhum vínculo. Se desistiu deles, você pode excluí-los:</p>
+            <div style="display:flex; flex-direction:column; gap:6px; max-height: 180px; overflow-y: auto; padding-right: 4px;">
+              ${unusedCreatedEvents.map(ev => `
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 10px; background:#fff; border:1px solid #fbcfe8; border-radius:6px; font-size:0.78rem;">
+                  <span>Código <strong>${ev.codigo}</strong> - ${ev.descricao} (${ev.tipo})</span>
+                  <button class="row-btn" style="padding:2px 8px; font-size:0.7rem; background:#fee2e2; border-color:#fca5a5; color:#b91c1c; border-radius:4px;" onclick="deleteManualEvent('${ev.codigo}')">Excluir</button>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }
+      
+      // 4. GAPS
+      if (diagnostics.gaps && diagnostics.gaps.length > 0) {
+        html += `
+          <div style="border: 1px solid #e2e8f0; background: #f8fafc; padding: 12px; border-radius: 8px;">
+            <h4 style="color:#475569; margin:0 0 6px 0; font-size:0.9rem; display:flex; align-items:center; gap:6px;">
+              <span style="background:#64748b; color:#fff; width:18px; height:18px; display:inline-flex; align-items:center; justify-content:center; border-radius:50%; font-size:0.75rem; font-weight:700;">#</span>
+              Lacunas na Numeração Manual (Gaps) (${diagnostics.gaps.length})
+            </h4>
+            <p style="font-size:0.8rem; margin:0 0 8px 0; color:#334155;">Numerações manuais que foram puladas/liberadas. Recomendamos usar estes códigos ao cadastrar novos eventos:</p>
+            <div style="display:flex; flex-wrap:wrap; gap:6px;">
+              ${diagnostics.gaps.map(g => `<span class="badge" style="background:#e2e8f0; color:#475569; border:1px solid #cbd5e1; font-family:monospace; padding:2px 6px; border-radius:4px; font-size:0.75rem;">${g}</span>`).join('')}
+            </div>
+          </div>
+        `;
+      }
+      
+      if (!html) {
+        content.innerHTML = `<p style="text-align:center; padding:20px; color:var(--color-text-muted);">Nenhuma inconsistência ou alerta de integridade identificado na base de dados.</p>`;
+      } else {
+        content.innerHTML = html;
+      }
+      
       modal.style.display = "flex";
     }
 
@@ -2037,9 +2010,9 @@
     function normalizeEventType(type) {
       if (!type) return "";
       type = type.toUpperCase().replace(/\s/g, "");
-      if (type.includes("PROV")) return "PROVENTO";
-      if (type.includes("DESC")) return "DESCONTO";
-      if (type.includes("BASE") || type.includes("CALC")) return "BASE";
+      if (type.includes("PROV") || type === "P") return "PROVENTO";
+      if (type.includes("DESC") || type === "D") return "DESCONTO";
+      if (type.includes("BASE") || type.includes("CALC") || type === "B") return "BASE";
       return type;
     }
 
@@ -2057,7 +2030,14 @@
       const normLegacy = normalizeEventType(legacyType);
       const normRM = normalizeEventType(rmType);
       
-      return { isMatch: (normLegacy === normRM), rmType: rmType };
+      // Traduz o tipo abreviado para um nome completo amigável na tela
+      let prettyType = rmType;
+      const normRMVal = normRM;
+      if (normRMVal === "PROVENTO") prettyType = "Provento";
+      else if (normRMVal === "DESCONTO") prettyType = "Desconto";
+      else if (normRMVal === "BASE") prettyType = "Base de Cálculo";
+      
+      return { isMatch: (normLegacy === normRM), rmType: prettyType };
     }
 
     function renderTableContent() {
