@@ -618,6 +618,7 @@
     tr.row-mismatch  { background-color: var(--row-mismatch) !important; }
     tr.row-unmapped  { background-color: var(--row-unmapped) !important; }
     tr.row-panalise  { background-color: var(--row-panalise) !important; }
+    tr.row-neutral   { background-color: #f1f5f9 !important; } /* Soft neutral gray */
 
     /* Left highlight borders */
     tr.row-item {
@@ -629,6 +630,7 @@
     tr.row-mismatch { border-left-color: var(--magenta); }
     tr.row-unmapped { border-left-color: var(--orange); }
     tr.row-panalise { border-left-color: var(--warning); }
+    tr.row-neutral  { border-left-color: #94a3b8; }
 
     tr.row-item:hover {
       filter: brightness(0.97);
@@ -2068,7 +2070,9 @@
         if (tipoNorm.includes("PROVENTO")) typeBadge = "badge-prov";
         else if (tipoNorm.includes("DESCONTO")) typeBadge = "badge-desc";
         
-        if (!item.codigoPara) {
+        if (item.codigoPara === "NAO IMPORTAR") {
+          rowColorClass = "row-neutral";
+        } else if (!item.codigoPara) {
           rowColorClass = "row-unmapped"; 
         } else if (item.codigoPara === "P/ ANALISE") {
           rowColorClass = "row-panalise"; 

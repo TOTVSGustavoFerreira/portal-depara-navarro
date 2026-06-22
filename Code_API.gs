@@ -426,7 +426,7 @@ function getPortalData(spreadsheetId) {
     else if (!cod) naoPreenchidos++;
     else preenchidos++;
     
-    if (item.nomeDe && item.tipoEvento && cod && cod !== "P/ ANALISE") {
+    if (item.nomeDe && item.tipoEvento && cod && cod !== "P/ ANALISE" && cod !== "NAO IMPORTAR") {
       var key = item.nomeDe.toLowerCase() + "|||" + item.tipoEvento;
       if (!keyMap[key]) keyMap[key] = [];
       if (keyMap[key].indexOf(cod) === -1) keyMap[key].push(cod);
@@ -436,7 +436,7 @@ function getPortalData(spreadsheetId) {
   
   var divergenciasCount = 0;
   deparaData.forEach(function(item) {
-    if (item.nomeDe && item.tipoEvento) {
+    if (item.nomeDe && item.tipoEvento && item.codigoPara !== "NAO IMPORTAR" && item.codigoPara !== "P/ ANALISE") {
       var key = item.nomeDe.toLowerCase() + "|||" + item.tipoEvento;
       if (duplicateKeys[key]) {
         item.hasDivergencia = true;
