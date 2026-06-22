@@ -785,7 +785,13 @@ function normalizeTipoEvento(tipo) {
 }
 
 function getRowKey(headers, rowValues) {
-  var normHeaders = headers.map(function(h) { return String(h).trim().toUpperCase(); });
+  var normHeaders = headers.map(function(h) { 
+    return String(h)
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .trim()
+      .toUpperCase(); 
+  });
   
   var nomeDeIdx = normHeaders.indexOf("NOME_DE");
   var tipoDeIdx = normHeaders.indexOf("TIPO_EVENTO");
@@ -813,8 +819,17 @@ function getRowKey(headers, rowValues) {
 }
 
 function headersMatch(h1, h2) {
-  var norm1 = String(h1).trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
-  var norm2 = String(h2).trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
+  var norm = function(str) {
+    return String(str)
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .trim()
+      .toUpperCase()
+      .replace(/[^A-Z0-9]/g, "");
+  };
+  
+  var norm1 = norm(h1);
+  var norm2 = norm(h2);
   
   if (norm1 === norm2) return true;
   
