@@ -776,6 +776,34 @@ function importSingleSheet(spreadsheetId, sheetName) {
   }
 }
 
+function getRowKey(headers, rowValues) {
+  var normHeaders = headers.map(function(h) { return String(h).trim().toUpperCase(); });
+  
+  var nomeDeIdx = normHeaders.indexOf("NOME_DE");
+  var tipoDeIdx = normHeaders.indexOf("TIPO_EVENTO");
+  var codDeIdx = normHeaders.indexOf("CODIGO_DE");
+  
+  if (nomeDeIdx !== -1 && tipoDeIdx !== -1) {
+    var nomeVal = String(rowValues[nomeDeIdx]).trim().toUpperCase();
+    var tipoVal = String(rowValues[tipoDeIdx]).trim().toUpperCase();
+    if (nomeVal) {
+      return nomeVal + "||" + tipoVal;
+    }
+  }
+  
+  if (nomeDeIdx !== -1) {
+    var nomeVal = String(rowValues[nomeDeIdx]).trim().toUpperCase();
+    if (nomeVal) return nomeVal;
+  }
+  
+  if (codDeIdx !== -1) {
+    var codVal = String(rowValues[codDeIdx]).trim().toUpperCase();
+    if (codVal) return codVal;
+  }
+  
+  return String(rowValues[0]).trim().toUpperCase();
+}
+
 function syncSingleSheet(spreadsheetId, sheetName) {
   try {
     var connection = getConnectionInfo(spreadsheetId);
@@ -790,12 +818,12 @@ function syncSingleSheet(spreadsheetId, sheetName) {
       if (destId.indexOf("/") === -1 && destId.length < 25) {
         return { 
           success: false, 
-          error: "O link configurado na aba 'CONFIG_CONEXAO' (célula B1) é inválido (parece ser apenas o nome '" + destId + "'). Certifique-se de preencher a célula B1 com a URL completa da planilha oficial corporativa da TOTVS." 
+          error: "O link configurado na aba 'CONFIG_CONEXAO' (célula B1) é inválido. Certifique-se de preencher a célula B1 com a URL completa da planilha oficial corporativa da TOTVS." 
         };
       }
       return { 
         success: false, 
-        error: "Não foi possível abrir a Planilha Destino (ID: " + destId + "). Verifique se a célula B1 da aba 'CONFIG_CONEXAO' possui a URL correta e se você possui permissão de acesso a ela." 
+        error: "Não foi possível abrir a Planilha Destino (ID: " + destId + "). Verifique a URL e as permissões de acesso." 
       };
     }
     
@@ -821,128 +849,85 @@ function syncSingleSheet(spreadsheetId, sheetName) {
     }
     
     var personalHeaders = personalValues[0];
+    var companyRange = companySheet.getDataRange();
+    var companyValues = companyRange.getValues();
     
-    if (realSheetName.startsWith("DADOS_RM_")) {
-      var companyRange = companySheet.getDataRange();
-      var companyValues = companyRange.getValues();
-      
-      if (companyValues.length <= 1 || companyValues[0].length === 0) {
-        companySheet.clearContents();
-        companySheet.clearFormats();
-        companySheet.getRange(1, 1, personalValues.length, personalValues[0].length).setValues(personalValues);
-        companySheet.getRange(1, 1, personalBackgrounds.length, personalBackgrounds[0].length).setBackgrounds(personalBackgrounds);
-        companySheet.getRange(1, 1, personalNumberFormats.length, personalNumberFormats[0].length).setNumberFormats(personalNumberFormats);
-      } else {
-        var companyHeaders = companyValues[0];
-        
-        var companyKeysMap = {};
-        for (var i = 1; i < companyValues.length; i++) {
-          var key = String(companyValues[i][0]).trim();
-          if (key) {
-            companyKeysMap[key] = i + 1;
-          }
+    // Se a planilha de destino estiver totalmente vazia
+    if (companyValues.length <= 1 || companyValues[0].length === 0) {
+      companySheet.clearContents();
+      companySheet.clearFormats();
+      companySheet.getRange(1, 1, personalValues.length, personalValues[0].length).setValues(personalValues);
+      companySheet.getRange(1, 1, personalBackgrounds.length, personalBackgrounds[0].length).setBackgrounds(personalBackgrounds);
+      companySheet.getRange(1, 1, personalNumberFormats.length, personalNumberFormats[0].length).setNumberFormats(personalNumberFormats);
+      writeLog(spreadsheetId, "EXPORTAÇÃO DIRETA", "Aba: " + realSheetName + " sincronizada por cópia direta (destino estava vazio)", "SUCESSO");
+      return { success: true, message: realSheetName + " sincronizado por cópia direta." };
+    }
+    
+    var companyHeaders = companyValues[0];
+    
+    // Mapeamento tolerante a caixa alta/baixa e espaços extras nos cabeçalhos
+    var colMap = [];
+    personalHeaders.forEach(function(pHeader, pIdx) {
+      var pHeaderNorm = String(pHeader).trim().toUpperCase();
+      var cIdx = -1;
+      for (var i = 0; i < companyHeaders.length; i++) {
+        if (String(companyHeaders[i]).trim().toUpperCase() === pHeaderNorm) {
+          cIdx = i;
+          break;
         }
-
-        var colMap = [];
-        personalHeaders.forEach(function(pHeader, pIdx) {
-          var cIdx = companyHeaders.indexOf(pHeader);
-          if (cIdx !== -1) {
-            colMap.push({ personalColIdx: pIdx, companyColIdx: cIdx });
-          }
-        });
-        
-        var rowsAdded = 0;
-        var rowsUpdated = 0;
-        
-        for (var j = 1; j < personalValues.length; j++) {
-          var origKey = String(personalValues[j][0]).trim();
-          if (!origKey) continue;
-          
-          var targetRow;
-          if (companyKeysMap[origKey]) {
-            targetRow = companyKeysMap[origKey];
-            rowsUpdated++;
-          } else {
-            companySheet.appendRow(new Array(companyHeaders.length).fill(""));
-            targetRow = companySheet.getLastRow();
-            companyKeysMap[origKey] = targetRow;
-            rowsAdded++;
-          }
-          
-          colMap.forEach(function(mapping) {
-            var pColIdx = mapping.personalColIdx;
-            var cColIdx = mapping.companyColIdx;
-            
-            var cellVal = personalValues[j][pColIdx];
-            var cellBg = personalBackgrounds[j][pColIdx];
-            var cellFmt = personalNumberFormats[j][pColIdx];
-            
-            var targetCell = companySheet.getRange(targetRow, cColIdx + 1);
-            targetCell.setValue(cellVal);
-            targetCell.setBackground(cellBg);
-            targetCell.setNumberFormat(cellFmt);
-          });
-        }
-        writeLog(spreadsheetId, "EXPORTAÇÃO INCREMENTAL", "Aba: " + realSheetName + " | Inseridos: " + rowsAdded + " | Atualizados: " + rowsUpdated, "SUCESSO");
       }
-    } else {
-      var companyRange = companySheet.getDataRange();
-      var companyValues = companyRange.getValues();
-      
-      if (companyValues.length <= 1 || companyValues[0].length === 0) {
-        companySheet.clearContents();
-        companySheet.clearFormats();
-        companySheet.getRange(1, 1, personalValues.length, personalValues[0].length).setValues(personalValues);
-        companySheet.getRange(1, 1, personalBackgrounds.length, personalBackgrounds[0].length).setBackgrounds(personalBackgrounds);
-        companySheet.getRange(1, 1, personalNumberFormats.length, personalNumberFormats[0].length).setNumberFormats(personalNumberFormats);
-      } else {
-        var companyHeaders = companyValues[0];
-        
-        var colMap = [];
-        personalHeaders.forEach(function(pHeader, pIdx) {
-          var cIdx = companyHeaders.indexOf(pHeader);
-          if (cIdx !== -1) {
-            colMap.push({ personalColIdx: pIdx, companyColIdx: cIdx });
-          }
-        });
-        
-        var diffRows = personalValues.length - companyValues.length;
-        if (diffRows > 0) {
-          companySheet.insertRowsAfter(companyValues.length, diffRows);
-        } else if (diffRows < 0) {
-          var startDelete = personalValues.length + 1;
-          var numDelete = companyValues.length - personalValues.length;
-          colMap.forEach(function(mapping) {
-            var cColIdx = mapping.companyColIdx;
-            companySheet.getRange(startDelete, cColIdx + 1, numDelete, 1).clearContent().clearFormat();
-          });
-        }
-        
-        colMap.forEach(function(mapping) {
-          var pColIdx = mapping.personalColIdx;
-          var cColIdx = mapping.companyColIdx;
-          
-          var colValues = [];
-          var colBackgrounds = [];
-          var colFormats = [];
-          
-          for (var r = 0; r < personalValues.length; r++) {
-            colValues.push([personalValues[r][pColIdx]]);
-            colBackgrounds.push([personalBackgrounds[r][pColIdx]]);
-            colFormats.push([personalNumberFormats[r][pColIdx]]);
-          }
-          
-          var targetRange = companySheet.getRange(1, cColIdx + 1, personalValues.length, 1);
-          targetRange.setValues(colValues);
-          targetRange.setBackgrounds(colBackgrounds);
-          targetRange.setNumberFormats(colFormats);
-        });
-        
-        writeLog(spreadsheetId, "EXPORTAÇÃO MAPEADA", "Aba: " + realSheetName + " (" + personalValues.length + " linhas atualizadas por coluna)", "SUCESSO");
+      if (cIdx !== -1) {
+        colMap.push({ personalColIdx: pIdx, companyColIdx: cIdx });
+      }
+    });
+    
+    // Indexar linhas existentes na planilha destino usando chaves inteligentes
+    var companyKeysMap = {};
+    for (var i = 1; i < companyValues.length; i++) {
+      var key = getRowKey(companyHeaders, companyValues[i]);
+      if (key) {
+        companyKeysMap[key] = i + 1; // Guarda a linha 1-based correspondente
       }
     }
     
-    return { success: true, message: realSheetName + " sincronizado com segurança." };
+    var rowsAdded = 0;
+    var rowsUpdated = 0;
+    
+    // Sincronizar linha por linha
+    for (var j = 1; j < personalValues.length; j++) {
+      var key = getRowKey(personalHeaders, personalValues[j]);
+      if (!key) continue;
+      
+      var targetRow;
+      if (companyKeysMap[key]) {
+        targetRow = companyKeysMap[key];
+        rowsUpdated++;
+      } else {
+        // Se a linha não existe na destino, adiciona uma linha em branco no fim
+        companySheet.appendRow(new Array(companyHeaders.length).fill(""));
+        targetRow = companySheet.getLastRow();
+        companyKeysMap[key] = targetRow;
+        rowsAdded++;
+      }
+      
+      // Escreve os valores/formatos apenas nas colunas mapeadas
+      colMap.forEach(function(mapping) {
+        var pColIdx = mapping.personalColIdx;
+        var cColIdx = mapping.companyColIdx;
+        
+        var cellVal = personalValues[j][pColIdx];
+        var cellBg = personalBackgrounds[j][pColIdx];
+        var cellFmt = personalNumberFormats[j][pColIdx];
+        
+        var targetCell = companySheet.getRange(targetRow, cColIdx + 1);
+        targetCell.setValue(cellVal);
+        targetCell.setBackground(cellBg);
+        targetCell.setNumberFormat(cellFmt);
+      });
+    }
+    
+    writeLog(spreadsheetId, "EXPORTAÇÃO POR LINHA", "Aba: " + realSheetName + " | Inseridas: " + rowsAdded + " | Atualizadas: " + rowsUpdated, "SUCESSO");
+    return { success: true, message: realSheetName + " sincronizado por linha com sucesso." };
   } catch (e) {
     writeLog(spreadsheetId, "EXPORTAÇÃO PARCIAL", "Erro ao exportar aba " + sheetName + ": " + e.message, "FALHA");
     return { success: false, error: e.message };
