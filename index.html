@@ -1788,14 +1788,14 @@
         function() {
           const sheets = ["ZDEPARA_EVENTOS", "DADOS_RM_EVENTOS"];
           showProgressModal("Sincronizando com a TOTVS");
-          addProgressLog("Iniciando fluxo de exportação por linha...");
+          addProgressLog("Iniciando fluxo de sincronização transacional...");
           
           let current = 0;
           function syncNext() {
             if (current < sheets.length) {
               const sheetName = sheets[current];
               updateProgressModal(current + 1, sheets.length, sheetName);
-              addProgressLog(`Sincronizando aba: ${sheetName} com a planilha corporativa...`);
+              addProgressLog(`Sincronizando aba: ${sheetName} com a planilha corporativa de forma segura...`);
               
               apiGet("syncSingleSheet", { sheetName: sheetName })
                 .then(function(response) {
@@ -1803,12 +1803,9 @@
                     let logMsg = `Aba ${sheetName} sincronizada com sucesso.`;
                     if (response.details) {
                       if (response.details.mode === "direta") {
-                        logMsg += ` (Cópia direta: ${response.details.rows} linhas)`;
+                        logMsg += ` (Cópia integral transacional: ${response.details.rows} linhas)`;
                       } else if (response.details.mode === "linha") {
                         logMsg += ` (Linhas Inseridas: ${response.details.added}, Atualizadas: ${response.details.updated})`;
-                        if (response.details.columns && response.details.columns.length > 0) {
-                          logMsg += `\n  Colunas mapeadas tolerantes:\n  ${response.details.columns.join("\n  ")}`;
-                        }
                       }
                     }
                     addProgressLog(logMsg);

@@ -809,6 +809,7 @@ function importSingleSheet(spreadsheetId, sheetName) {
       });
     } else if (realSheetName === "DADOS_RM_EVENTOS") {
       var idx = normHeaders.indexOf("CODIGO");
+      if (idx === -1) idx = normHeaders.indexOf("COD");
       if (idx !== -1) colsToFormat.push(idx);
     }
     
@@ -937,138 +938,50 @@ function syncSingleSheet(spreadsheetId, sheetName) {
     }
     
     var realSheetName = personalSheet.getName();
-    var companySheet = getSheetDynamic(companySS, realSheetName);
     
-    if (!companySheet) {
-      companySheet = companySS.insertSheet(realSheetName);
-    }
-    
+    // Obter todos os dados, cores e formatos da origem em memória
     var personalRange = personalSheet.getDataRange();
-    var personalValues = personalRange.getValues();
-    var personalBackgrounds = personalRange.getBackgrounds();
-    var personalNumberFormats = personalRange.getNumberFormats();
+    var values = personalRange.getValues();
+    var backgrounds = personalRange.getBackgrounds();
+    var numberFormats = personalRange.getNumberFormats();
     
-    if (personalValues.length === 0) {
+    if (values.length === 0) {
       return { success: true, message: realSheetName + " está vazia na origem." };
     }
     
-    var personalHeaders = personalValues[0];
-    var companyRange = companySheet.getDataRange();
-    var companyValues = companyRange.getValues();
+    // 1. Criar uma nova aba temporária no destino
+    var tempSheetName = realSheetName + "_TEMP_SYNC";
+    var tempSheet = companySS.getSheetByName(tempSheetName);
+    if (tempSheet) {
+      companySS.deleteSheet(tempSheet);
+    }
+    tempSheet = companySS.insertSheet(tempSheetName);
     
-    // Se a planilha de destino estiver totalmente vazia
-    if (companyValues.length <= 1 || companyValues[0].length === 0) {
-      companySheet.clearContents();
-      companySheet.clearFormats();
-      companySheet.getRange(1, 1, personalValues.length, personalValues[0].length).setValues(personalValues);
-      companySheet.getRange(1, 1, personalBackgrounds.length, personalBackgrounds[0].length).setBackgrounds(personalBackgrounds);
-      companySheet.getRange(1, 1, personalNumberFormats.length, personalNumberFormats[0].length).setNumberFormats(personalNumberFormats);
-      writeLog(spreadsheetId, "EXPORTAÇÃO DIRETA", "Aba: " + realSheetName + " sincronizada por cópia direta (destino estava vazio)", "SUCESSO");
-      return { 
-        success: true, 
-        message: realSheetName + " sincronizado por cópia direta.",
-        details: { mode: "direta", rows: personalValues.length - 1 }
-      };
+    // 2. Gravar os dados completos na aba temporária (se falhar aqui por timeout, a original continua intacta)
+    tempSheet.getRange(1, 1, values.length, values[0].length).setValues(values);
+    tempSheet.getRange(1, 1, backgrounds.length, backgrounds[0].length).setBackgrounds(backgrounds);
+    tempSheet.getRange(1, 1, numberFormats.length, numberFormats[0].length).setNumberFormats(numberFormats);
+    
+    // 3. Deletar a aba antiga oficial
+    var oldCompanySheet = getSheetDynamic(companySS, realSheetName);
+    if (oldCompanySheet) {
+      companySS.deleteSheet(oldCompanySheet);
     }
     
-    var companyHeaders = companyValues[0];
+    // 4. Renomear a temporária para a oficial
+    tempSheet.setName(realSheetName);
     
-    // Mapeamento tolerante a caixa alta/baixa e espaços extras nos cabeçalhos
-    var colMap = [];
-    var mappedNames = [];
-    personalHeaders.forEach(function(pHeader, pIdx) {
-      var cIdx = -1;
-      for (var i = 0; i < companyHeaders.length; i++) {
-        if (headersMatch(companyHeaders[i], pHeader)) {
-          cIdx = i;
-          break;
-        }
-      }
-      if (cIdx !== -1) {
-        colMap.push({ personalColIdx: pIdx, companyColIdx: cIdx });
-        mappedNames.push(pHeader + " -> " + companyHeaders[cIdx]);
-      }
-    });
+    // Forçar recálculo e gravação imediata
+    SpreadsheetApp.flush();
     
-    // Indexar chaves da origem para deleção (apenas para ZDEPARA_)
-    var isDePara = realSheetName.toUpperCase().indexOf("ZDEPARA_") !== -1;
-    var deletedCount = 0;
-    if (isDePara) {
-      var personalKeysMap = {};
-      for (var j = 1; j < personalValues.length; j++) {
-        var key = getRowKey(personalHeaders, personalValues[j]);
-        if (key) personalKeysMap[key] = true;
-      }
-      
-      // Deletar linhas obsoletas na planilha de destino (TOTVS) de trás para frente
-      for (var i = companyValues.length - 1; i >= 1; i--) {
-        var key = getRowKey(companyHeaders, companyValues[i]);
-        if (!key || !personalKeysMap[key]) {
-          companySheet.deleteRow(i + 1);
-          deletedCount++;
-        }
-      }
-      
-      // Recarregar os dados do destino se houve deleção
-      if (deletedCount > 0) {
-        companyRange = companySheet.getDataRange();
-        companyValues = companyRange.getValues();
-      }
-    }
-    
-    // Indexar linhas existentes na planilha destino usando chaves inteligentes
-    var companyKeysMap = {};
-    for (var i = 1; i < companyValues.length; i++) {
-      var key = getRowKey(companyHeaders, companyValues[i]);
-      if (key) {
-        companyKeysMap[key] = i + 1; // Guarda a linha 1-based correspondente
-      }
-    }
-    
-    var rowsAdded = 0;
-    var rowsUpdated = 0;
-    
-    // Sincronizar linha por linha
-    for (var j = 1; j < personalValues.length; j++) {
-      var key = getRowKey(personalHeaders, personalValues[j]);
-      if (!key) continue;
-      
-      var targetRow;
-      if (companyKeysMap[key]) {
-        targetRow = companyKeysMap[key];
-        rowsUpdated++;
-      } else {
-        // Se a linha não existe na destino, adiciona uma linha em branco no fim
-        companySheet.appendRow(new Array(companyHeaders.length).fill(""));
-        targetRow = companySheet.getLastRow();
-        companyKeysMap[key] = targetRow;
-        rowsAdded++;
-      }
-      
-      // Escreve os valores/formatos apenas nas colunas mapeadas
-      colMap.forEach(function(mapping) {
-        var pColIdx = mapping.personalColIdx;
-        var cColIdx = mapping.companyColIdx;
-        
-        var cellVal = personalValues[j][pColIdx];
-        var cellBg = personalBackgrounds[j][pColIdx];
-        var cellFmt = personalNumberFormats[j][pColIdx];
-        
-        var targetCell = companySheet.getRange(targetRow, cColIdx + 1);
-        targetCell.setValue(cellVal);
-        targetCell.setBackground(cellBg);
-        targetCell.setNumberFormat(cellFmt);
-      });
-    }
-    
-    writeLog(spreadsheetId, "EXPORTAÇÃO POR LINHA", "Aba: " + realSheetName + " | Inseridas: " + rowsAdded + " | Atualizadas: " + rowsUpdated, "SUCESSO");
+    writeLog(spreadsheetId, "SINCRONIZAÇÃO COMPLETA", "Aba: " + realSheetName + " copiada integralmente de forma segura (Transacional)", "SUCESSO");
     return { 
       success: true, 
-      message: realSheetName + " sincronizado por linha.", 
-      details: { mode: "linha", added: rowsAdded, updated: rowsUpdated, columns: mappedNames }
+      message: realSheetName + " sincronizado com segurança (Cópia integral transacional).",
+      details: { mode: "direta", rows: values.length - 1 }
     };
   } catch (e) {
-    writeLog(spreadsheetId, "EXPORTAÇÃO PARCIAL", "Erro ao exportar aba " + sheetName + ": " + e.message, "FALHA");
+    writeLog(spreadsheetId, "EXPORTAÇÃO PARCIAL", "Erro ao sincronizar aba " + sheetName + ": " + e.message, "FALHA");
     return { success: false, error: e.message };
   }
 }
