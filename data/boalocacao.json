@@ -1,7 +1,7 @@
 {
   "cliente": "boalocacao",
   "config": {
-    "ultimo_sincronismo": "2026-06-29T19:09:04.707Z",
+    "ultimo_sincronismo": "2026-06-29T19:44:44.897Z",
     "originName": "TESTE -- BOALOCACAO-TESTE PASTA PESSOAL.xlsx",
     "destinationName": "TESTE -- BOALOCACAO-TESTE PASTA TOTVS.xlsx"
   },
@@ -35,7 +35,7 @@
       "nomeDe": "# adiantamento base de cálculo",
       "tipoEvento": "B-BASE",
       "coligadaPara": "1",
-      "codigoPara": "NAO IMPORTAR",
+      "codigoPara": "0003",
       "nomeRm": "",
       "codigoParaFichaMes1": "",
       "NOMERM1": "",
