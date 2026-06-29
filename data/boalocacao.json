@@ -1,7 +1,7 @@
 {
   "cliente": "boalocacao",
   "config": {
-    "ultimo_sincronismo": "2026-06-29T21:18:58.284Z",
+    "ultimo_sincronismo": "2026-06-29T21:19:49.985Z",
     "originName": "TESTE -- BOALOCACAO-TESTE PASTA PESSOAL.xlsx",
     "destinationName": "TESTE -- BOALOCACAO-TESTE PASTA TOTVS.xlsx"
   },
@@ -198,7 +198,7 @@
       "codigoParaVerbasFerias": "",
       "NOMERM3": "",
       "LOGAUDITORIA": "",
-      "observacao": "",
+      "observacao": "teste",
       "sugestoes": "Mapeamento identificado em histórico anterior. Outras sugestões de eventos: 0009 - 1ª PARCELA 13º SALARIO | 0129 - 2ª PARCELA 13º SALARIO | 0048 - 13º SALARIO RESCISAO.",
       "hasDivergencia": false,
       "hasDivergenciaDuplicidade": false,
