@@ -1,7 +1,7 @@
 {
   "cliente": "boalocacao",
   "config": {
-    "ultimo_sincronismo": "2026-06-29T20:42:02.135Z",
+    "ultimo_sincronismo": "2026-06-29T20:42:08.448Z",
     "originName": "TESTE -- BOALOCACAO-TESTE PASTA PESSOAL.xlsx",
     "destinationName": "TESTE -- BOALOCACAO-TESTE PASTA TOTVS.xlsx"
   },
@@ -18857,11 +18857,6 @@
       "codigo": "9001",
       "descricao": "[INCLUSAO MANUAL] # 1ª via cartão hapvida",
       "tipo": "DESCONTO"
-    },
-    {
-      "codigo": "9002",
-      "descricao": "[INCLUSAO MANUAL] # 1ª via cartão hapvida",
-      "tipo": "DESCONTO"
     }
   ],
   "ZDEPARA_COLIGADAS": [],
@@ -18869,5 +18864,5 @@
   "ZDEPARA_SINDICATOS": [],
   "ZDEPARA_SECOES": [],
   "ZDEPARA_SITUACAO": [],
-  "_sha": "78d992b50d2ab1f8aff33e0a7f5f226898a71777"
+  "_sha": "c569888b0c2ff39c292fa71090fe389cf4116a9c"
 }
