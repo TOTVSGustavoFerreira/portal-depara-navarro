@@ -1625,7 +1625,8 @@
         if (matches) clientKey = matches[1].toLowerCase();
       }
 
-      fetch(`data/${clientKey}.json`)
+      const timestamp = new Date().getTime();
+      fetch(`data/${clientKey}.json?t=${timestamp}`)
         .then(res => {
           if (!res.ok) throw new Error("Base de dados do cliente não encontrada ou vazia.");
           return res.json();
