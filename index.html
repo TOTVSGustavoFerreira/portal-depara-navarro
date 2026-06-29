@@ -1625,16 +1625,56 @@
         if (matches) clientKey = matches[1].toLowerCase();
       }
 
-      const timestamp = new Date().getTime();
-      fetch(`data/${clientKey}.json?t=${timestamp}`)
+      const pat = localStorage.getItem("gh_pat");
+      const owner = localStorage.getItem("gh_owner") || "TOTVSGustavoFerreira";
+      const repo = localStorage.getItem("gh_repo") || "portal-depara-navarro";
+      const filePath = `data/${clientKey}.json`;
+      
+      // Se o token estiver configurado, lê DIRETAMENTE da API do GitHub (sempre atualizado).
+      // Isso evita o atraso de deploy do GitHub Pages (que pode demorar até 10 minutos).
+      // Se não houver token, usa o fallback pelo GitHub Pages como antes.
+      let fetchPromise;
+      if (pat) {
+        const timestamp = new Date().getTime();
+        const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${filePath}?t=${timestamp}`;
+        fetchPromise = fetch(apiUrl, {
+          headers: {
+            "Authorization": `token ${pat}`,
+            "Accept": "application/vnd.github.v3+json"
+          }
+        })
         .then(res => {
-          if (!res.ok) throw new Error("Base de dados do cliente não encontrada ou vazia.");
+          if (res.status === 401) throw new Error("Token do GitHub inválido ou expirado.");
+          if (res.status === 404) throw new Error("Base de dados do cliente não encontrada. Faça a sincronização inicial primeiro.");
+          if (!res.ok) throw new Error("Erro ao acessar a API do GitHub.");
           return res.json();
         })
+        .then(fileInfo => {
+          // A API retorna o conteúdo em Base64 — decodifica para obter o JSON
+          const decoded = decodeURIComponent(escape(atob(fileInfo.content.replace(/\n/g, ""))));
+          const parsed = JSON.parse(decoded);
+          // Guardar o SHA para futuros commits sem precisar de um GET extra
+          rawJsonDatabase = parsed;
+          rawJsonDatabase._sha = fileInfo.sha;
+          return parsed;
+        });
+      } else {
+        // Fallback: GitHub Pages (pode ter atraso de deploy)
+        const timestamp = new Date().getTime();
+        fetchPromise = fetch(`data/${clientKey}.json?t=${timestamp}`)
+          .then(res => {
+            if (!res.ok) throw new Error("Base de dados do cliente não encontrada ou vazia.");
+            return res.json();
+          })
+          .then(response => {
+            rawJsonDatabase = response;
+            return response;
+          });
+      }
+      
+      fetchPromise
         .then(response => {
           hideLoading();
-          
-          rawJsonDatabase = response;
           
           connectionInfo = {
             isInstalled: true,
@@ -1649,7 +1689,7 @@
           
           database = response.ZDEPARA_EVENTOS || [];
           rmEvents = response.DADOS_RM_EVENTOS || [];
-          unusedCreatedEvents = response.unusedCreatedEvents || [];
+          unusedCreatedEvents = [];
           
           // Calcular diagnósticos e estatísticas localmente para o portal continuar 100% funcional
           calculateLocalDiagnosticsAndStats();
@@ -1660,9 +1700,10 @@
         })
         .catch(err => {
           hideLoading();
-          showToast("Erro ao carregar dados do GitHub: " + err.message, 'error');
+          showToast("Erro ao carregar dados: " + err.message, 'error');
         });
     }
+
 
     function calculateLocalDiagnosticsAndStats() {
       // 1. Identificar Duplicados
@@ -2834,25 +2875,12 @@
       }
       
       const filePath = `data/${clientKey}.json`;
-      const timestamp = new Date().getTime();
-      const url = `https://api.github.com/repos/${owner}/${repo}/contents/${filePath}?t=${timestamp}`;
+      // URL sem timestamp para o PUT (o PUT não pode ter query params extras no GitHub API)
+      const putUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`;
       
-      // 1. Obter o SHA do arquivo atual no repositório
-      fetch(url, {
-        headers: {
-          "Authorization": `token ${pat}`,
-          "Accept": "application/vnd.github.v3+json"
-        }
-      })
-      .then(res => {
-        if (res.status === 401) throw new Error("Token do GitHub inválido ou expirado.");
-        if (res.status === 404) throw new Error("Arquivo no repositório não encontrado.");
-        return res.json();
-      })
-      .then(fileInfo => {
-        const sha = fileInfo.sha;
-        
-        // 2. Atualizar os dados locais do banco de dados completo na memória
+      // Função interna que faz o PUT com o SHA conhecido
+      function doPut(sha) {
+        // Aplicar as mudanças na memória
         updatedDatabaseCallback();
         rawJsonDatabase.config = rawJsonDatabase.config || {};
         rawJsonDatabase.config.ultimo_sincronismo = new Date().toISOString();
@@ -2861,8 +2889,7 @@
         const { _sha: _omit, ...cleanDb } = rawJsonDatabase;
         const fileContent = JSON.stringify(cleanDb, null, 2);
         
-        // 3. Fazer requisição PUT para salvar a alteração
-        return fetch(url, {
+        return fetch(putUrl, {
           method: "PUT",
           headers: {
             "Authorization": `token ${pat}`,
@@ -2874,32 +2901,76 @@
             content: btoa(unescape(encodeURIComponent(fileContent))),
             sha: sha
           })
+        })
+        .then(res => {
+          if (!res.ok) return res.json().then(errData => { throw new Error(errData.message); });
+          return res.json();
+        })
+        .then(response => {
+          hideLoading();
+          showToast("Dados salvos e commitados no GitHub com sucesso!", "success");
+          
+          // Guardar o novo SHA para o próximo commit — evita GET desnecessário
+          if (response.content && response.content.sha) {
+            rawJsonDatabase._sha = response.content.sha;
+          }
+          
+          calculateLocalDiagnosticsAndStats();
+          renderWarnings();
+          updateDashboard();
+          applyFilters();
         });
-      })
-      .then(res => {
-        if (!res.ok) return res.json().then(errData => { throw new Error(errData.message); });
-        return res.json();
-      })
-      .then(response => {
-        hideLoading();
-        showToast("Dados salvos e commitados no GitHub com sucesso!", "success");
-        
-        // A API do GitHub retorna a nova versão do arquivo em response.content.sha.
-        // Nós guardamos esse novo SHA na nossa base para a próxima chamada PUT funcionar de imediato!
-        if (response.content && response.content.sha) {
-          rawJsonDatabase._sha = response.content.sha;
-        }
-        
-        calculateLocalDiagnosticsAndStats();
-        renderWarnings();
-        updateDashboard();
-        applyFilters();
-      })
-      .catch(err => {
-        hideLoading();
-        showToast("Erro ao gravar no GitHub: " + err.message, "error");
-      });
+      }
+      
+      // Usar o SHA já em memória se disponível (carregado pelo loadPortalData via API)
+      // Isso elimina o GET extra e o problema de SHA desatualizado
+      if (rawJsonDatabase._sha) {
+        doPut(rawJsonDatabase._sha)
+          .catch(err => {
+            hideLoading();
+            // Se o SHA em cache falhou (ex: outro dispositivo fez um commit), busca o SHA atualizado
+            if (err.message && err.message.includes("does not match")) {
+              showToast("SHA desatualizado, buscando versão atual...", "error");
+              const getUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${filePath}?t=${Date.now()}`;
+              fetch(getUrl, { headers: { "Authorization": `token ${pat}`, "Accept": "application/vnd.github.v3+json" } })
+                .then(r => r.json())
+                .then(info => {
+                  rawJsonDatabase._sha = info.sha;
+                  return doPut(info.sha);
+                })
+                .catch(e => {
+                  hideLoading();
+                  showToast("Erro ao gravar no GitHub: " + e.message, "error");
+                });
+            } else {
+              showToast("Erro ao gravar no GitHub: " + err.message, "error");
+            }
+          });
+      } else {
+        // Sem SHA em memória: faz GET para obtê-lo primeiro (primeira gravação da sessão sem token no load)
+        const getUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${filePath}?t=${Date.now()}`;
+        fetch(getUrl, {
+          headers: {
+            "Authorization": `token ${pat}`,
+            "Accept": "application/vnd.github.v3+json"
+          }
+        })
+        .then(res => {
+          if (res.status === 401) throw new Error("Token do GitHub inválido ou expirado.");
+          if (res.status === 404) throw new Error("Arquivo no repositório não encontrado.");
+          return res.json();
+        })
+        .then(fileInfo => {
+          rawJsonDatabase._sha = fileInfo.sha;
+          return doPut(fileInfo.sha);
+        })
+        .catch(err => {
+          hideLoading();
+          showToast("Erro ao gravar no GitHub: " + err.message, "error");
+        });
+      }
     }
+
 
     function deleteManualEvent(code) {
       showCustomConfirm(
