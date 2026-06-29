@@ -1,7 +1,7 @@
 {
   "cliente": "boalocacao",
   "config": {
-    "ultimo_sincronismo": "2026-06-29T20:41:51.141Z",
+    "ultimo_sincronismo": "2026-06-29T20:41:56.449Z",
     "originName": "TESTE -- BOALOCACAO-TESTE PASTA PESSOAL.xlsx",
     "destinationName": "TESTE -- BOALOCACAO-TESTE PASTA TOTVS.xlsx"
   },
@@ -18867,11 +18867,6 @@
       "codigo": "9003",
       "descricao": "[INCLUSAO MANUAL] # 1ª via cartão hapvida",
       "tipo": "DESCONTO"
-    },
-    {
-      "codigo": "9004",
-      "descricao": "[INCLUSAO MANUAL] # adiantamento de 13º salário (férias)",
-      "tipo": "PROVENTO"
     }
   ],
   "ZDEPARA_COLIGADAS": [],
@@ -18879,5 +18874,5 @@
   "ZDEPARA_SINDICATOS": [],
   "ZDEPARA_SECOES": [],
   "ZDEPARA_SITUACAO": [],
-  "_sha": "830ff26a63ff37a41d54b58f9d8d77912c492726"
+  "_sha": "3b830cb21e5288c80143eded0260ad20beb3faba"
 }
