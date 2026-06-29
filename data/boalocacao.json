@@ -1,7 +1,7 @@
 {
   "cliente": "boalocacao",
   "config": {
-    "ultimo_sincronismo": "2026-06-29T21:05:21.283Z",
+    "ultimo_sincronismo": "2026-06-29T21:06:03.608Z",
     "originName": "TESTE -- BOALOCACAO-TESTE PASTA PESSOAL.xlsx",
     "destinationName": "TESTE -- BOALOCACAO-TESTE PASTA TOTVS.xlsx"
   },
@@ -57,8 +57,8 @@
       "nomeDe": "# adiantamento de 13º salário (férias)",
       "tipoEvento": "P-PROVENTO",
       "coligadaPara": "2",
-      "codigoPara": "P/ ANALISE",
-      "nomeRm": "ANTECIPACAO PRIMEIRA PARCELA 13º NAS FER",
+      "codigoPara": "1128",
+      "nomeRm": "[INCLUSAO MANUAL] # adiantamento de 13º salário (férias)",
       "codigoParaFichaMes1": "",
       "NOMERM1": "",
       "codigoParaFichaMes2": "",
@@ -18851,6 +18851,11 @@
     {
       "codigo": "1127",
       "descricao": "PARTICIPACAO NOS LUCROS - (RN) RESCISAO",
+      "tipo": "PROVENTO"
+    },
+    {
+      "codigo": "1128",
+      "descricao": "[INCLUSAO MANUAL] # adiantamento de 13º salário (férias)",
       "tipo": "PROVENTO"
     }
   ],
