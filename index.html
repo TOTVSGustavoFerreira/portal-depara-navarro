@@ -6,6 +6,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- SheetJS Library for Excel Export -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
     :root {
       --bg-primary: #002233;
@@ -1092,7 +1094,7 @@
     <div class="modal-card" style="max-width: 420px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); background-color: var(--bg-secondary);">
       <div style="padding: 32px; text-align: center; display: flex; flex-direction: column; gap: 20px;">
         <div>
-          <img src="https://midias-sites.totvs.com/marca/wp-content/uploads/2025/11/Vector-3.png.webp" alt="TOTVS" style="width: 64px; height: 64px; margin-bottom: 12px;">
+          <img src="https://midias-sites.totvs.com/marca/wp-content/uploads/2025/11/Vector-3.png.webp" alt="TOTVS" style="width: 140px; height: auto; max-height: 48px; object-fit: contain; margin-bottom: 12px;">
           <h2 style="color: white; font-weight: 700; font-size: 1.5rem; letter-spacing: 0.5px;">Acesso Restrito</h2>
           <p style="color: var(--color-text-muted); font-size: 0.85rem; margin-top: 6px;" id="passkeyClientLabel">Mapeamento De-Para</p>
         </div>
@@ -1990,58 +1992,62 @@
 
     function triggerExport() {
       showCustomConfirm(
-        "Sincronizar com a TOTVS",
-        "Deseja sincronizar e gravar a base atual na Planilha Oficial da Empresa da TOTVS?",
+        "Exportar Planilha Oficial",
+        "Deseja exportar e baixar a base de dados atualizada em formato Excel (.xlsx)?",
         function() {
-          const sheets = ["ZDEPARA_EVENTOS", "DADOS_RM_EVENTOS"];
-          showProgressModal("Sincronizando com a TOTVS");
-          addProgressLog("Iniciando fluxo de sincronização transacional...");
+          showLoading("Gerando arquivo Excel...");
           
-          let current = 0;
-          function syncNext() {
-            if (current < sheets.length) {
-              const sheetName = sheets[current];
-              updateProgressModal(current + 1, sheets.length, sheetName);
-              addProgressLog(`Sincronizando aba: ${sheetName} com a planilha corporativa de forma segura...`);
-              
-              apiGet("syncSingleSheet", { sheetName: sheetName })
-                .then(function(response) {
-                  if (response.success) {
-                    let logMsg = `Aba ${sheetName} sincronizada com sucesso.`;
-                    if (response.details) {
-                      if (response.details.mode === "direta") {
-                        logMsg += ` (Cópia integral transacional: ${response.details.rows} linhas)`;
-                      } else if (response.details.mode === "linha") {
-                        logMsg += ` (Linhas Inseridas: ${response.details.added}, Atualizadas: ${response.details.updated})`;
-                      }
-                    }
-                    addProgressLog(logMsg);
-                    current++;
-                    syncNext();
-                  } else {
-                    addProgressLog(`ERRO ao exportar ${sheetName}: ${response.error}`);
-                    closeProgressModal();
-                    showToast(`Erro na aba ${sheetName}: ${response.error}`, 'error');
-                    loadPortalData();
-                  }
-                })
-                .catch(function(err) {
-                  addProgressLog(`FALHA crítica de conexão para ${sheetName}: ${err.message}`);
-                  closeProgressModal();
-                  showToast(`Erro na requisição da aba ${sheetName}: ${err.message}`, 'error');
-                  loadPortalData();
-                });
-            } else {
-              addProgressLog("Sincronização bilateral de todas as abas concluída.");
-              setTimeout(function() {
-                closeProgressModal();
-                showToast("Sincronização bilateral concluída com sucesso!", 'success');
-                showToast("Verifique os logs de alteração na planilha oficial para auditar as mudanças.", 'warning');
-                loadPortalData();
-              }, 1500);
+          try {
+            // 1. Criar novo Workbook
+            const wb = XLSX.utils.book_new();
+            
+            // 2. Preparar dados da aba ZDEPARA_EVENTOS
+            // Colunas originais esperadas na planilha corporativa
+            const deparaRows = database.map(item => ({
+              "EMPRESA DE": item.empresaDe || "",
+              "CODIGO DE": item.codigoDe || "",
+              "NOME DE": item.nomeDe || "",
+              "TIPO EVENTO": item.tipoEvento || "",
+              "COLIGADA PARA": item.coligadaPara || "",
+              "CODIGO PARA": item.codigoPara || "",
+              "NOME RM": item.nomeRm || "",
+              "CODIGO PARA FICHA MES 1": item.codigoParaFichaMes1 || "",
+              "CODIGO PARA FICHA MES 2": item.codigoParaFichaMes2 || "",
+              "CODIGO PARA VERBAS FERIAS": item.codigoParaVerbasFerias || "",
+              "SUGESTOES": item.sugestoes || "",
+              "OBSERVACAO": item.observacao || ""
+            }));
+            
+            const wsDepara = XLSX.utils.json_to_sheet(deparaRows);
+            XLSX.utils.book_append_sheet(wb, wsDepara, "ZDEPARA_EVENTOS");
+            
+            // 3. Preparar dados da aba DADOS_RM_EVENTOS
+            const rmRows = rmEvents.map(item => ({
+              "CÓDIGO": item.codigo || "",
+              "DESCRIÇÃO": item.descricao || "",
+              "TIPO EVENTO": item.tipo || ""
+            }));
+            
+            const wsRm = XLSX.utils.json_to_sheet(rmRows);
+            XLSX.utils.book_append_sheet(wb, wsRm, "DADOS_RM_EVENTOS");
+            
+            // 4. Salvar arquivo XLSX
+            let clientKey = SPREADSHEET_ID.toLowerCase();
+            if (SPREADSHEET_ID.includes("docs.google.com")) {
+              const matches = SPREADSHEET_ID.match(/\/d\/([a-zA-Z0-9-_]+)/);
+              if (matches) clientKey = matches[1].toLowerCase();
             }
+            
+            const filename = `DE-PARA-EVENTOS-${clientKey.toUpperCase()}-${new Date().toISOString().slice(0,10)}.xlsx`;
+            XLSX.writeFile(wb, filename);
+            
+            hideLoading();
+            showToast("Planilha gerada e baixada com sucesso!", "success");
+            showToast("Copie as abas do arquivo baixado e cole na Planilha Oficial da TOTVS.", "warning");
+          } catch (err) {
+            hideLoading();
+            showToast("Erro ao gerar Excel: " + err.message, "error");
           }
-          syncNext();
         }
       );
     }
