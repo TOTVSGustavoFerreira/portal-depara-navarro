@@ -1,7 +1,7 @@
 {
   "cliente": "boalocacao",
   "config": {
-    "ultimo_sincronismo": "2026-06-29T20:32:16.668Z",
+    "ultimo_sincronismo": "2026-06-29T20:41:31.957Z",
     "originName": "TESTE -- BOALOCACAO-TESTE PASTA PESSOAL.xlsx",
     "destinationName": "TESTE -- BOALOCACAO-TESTE PASTA TOTVS.xlsx"
   },
@@ -18852,11 +18852,47 @@
       "codigo": "1127",
       "descricao": "PARTICIPACAO NOS LUCROS - (RN) RESCISAO",
       "tipo": "PROVENTO"
+    },
+    {
+      "codigo": "9001",
+      "descricao": "[INCLUSAO MANUAL] # 1ª via cartão hapvida",
+      "tipo": "DESCONTO"
+    },
+    {
+      "codigo": "9002",
+      "descricao": "[INCLUSAO MANUAL] # 1ª via cartão hapvida",
+      "tipo": "DESCONTO"
+    },
+    {
+      "codigo": "9003",
+      "descricao": "[INCLUSAO MANUAL] # 1ª via cartão hapvida",
+      "tipo": "DESCONTO"
+    },
+    {
+      "codigo": "9004",
+      "descricao": "[INCLUSAO MANUAL] # adiantamento de 13º salário (férias)",
+      "tipo": "PROVENTO"
+    },
+    {
+      "codigo": "9005",
+      "descricao": "[INCLUSAO MANUAL] # 1ª via cartão hapvida",
+      "tipo": "DESCONTO"
+    },
+    {
+      "codigo": "9006",
+      "descricao": "[INCLUSAO MANUAL] # 1ª via cartão hapvida",
+      "tipo": "DESCONTO"
+    },
+    {
+      "codigo": "9007",
+      "descricao": "[INCLUSAO MANUAL] # arredondamento (desconto)",
+      "tipo": "DESCONTO"
     }
   ],
   "ZDEPARA_COLIGADAS": [],
   "ZDEPARA_FUNCOES": [],
   "ZDEPARA_SINDICATOS": [],
   "ZDEPARA_SECOES": [],
-  "ZDEPARA_SITUACAO": []
+  "ZDEPARA_SITUACAO": [],
+  "_sha": "52e3268b86264734f0da679f0c01e4d629133b99"
 }
