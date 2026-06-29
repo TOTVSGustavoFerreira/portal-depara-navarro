@@ -2801,7 +2801,7 @@
       if (!desc) return;
       
       closeModal('newRMEventModal');
-      showLoading("Criando novo evento no RM...");
+      showLoading("Criando novo evento e atualizando mapeamento...");
       
       // Encontrar o maior código numérico absoluto (desprezando códigos não numéricos)
       const numericCodes = rmEvents
@@ -2816,36 +2816,56 @@
       
       const newCodeStr = String(nextCode).padStart(4, '0');
       const finalDesc = `[INCLUSAO MANUAL] ${desc}`;
+      const rowNum = activeRowIdForNewEvent;
+      const fieldType = activeFieldTypeForNewEvent;
       
-      commitChangesToGitHub(`Adiciona novo evento RM manual ${newCodeStr}`, () => {
-        // Inserir localmente
+      // Ler os dados atuais da linha em edição ANTES de fechar o modal
+      const item = database.find(i => i.rowNum === rowNum);
+      
+      // COMMIT ÚNICO E ATÔMICO: Salva o novo evento RM + a linha De-Para de uma só vez
+      commitChangesToGitHub(`Cria evento RM manual ${newCodeStr} e mapeia linha ${rowNum}`, () => {
+        // 1. Adicionar o novo evento à base de apoio RM
         const newEv = {
           codigo: newCodeStr,
           descricao: finalDesc,
           tipo: tipo
         };
-        
         rmEvents.push(newEv);
         rawJsonDatabase.DADOS_RM_EVENTOS = rmEvents;
         
-        // Atribuir o novo código na linha e já salvar a linha automaticamente
-        setTimeout(() => {
-          const rowNum = activeRowIdForNewEvent;
-          const fieldId = `edit-${activeFieldTypeForNewEvent}-${rowNum}`;
-          const labelId = `edit-nomeRm-${rowNum}`;
-          
-          const inputEl = document.getElementById(fieldId);
-          const labelEl = document.getElementById(labelId);
-          if (inputEl) inputEl.value = newCodeStr;
-          if (labelEl) labelEl.value = finalDesc;
-          
-          if (activeFieldTypeForNewEvent === "codigoPara") {
-            toggleFichaInputs(rowNum, newCodeStr);
+        // 2. Atualizar a linha De-Para na base de dados local (rawJsonDatabase)
+        if (item) {
+          const idx = database.findIndex(i => i.rowNum === rowNum);
+          if (idx !== -1) {
+            if (fieldType === "codigoPara") {
+              database[idx].codigoPara = newCodeStr;
+              database[idx].nomeRm = finalDesc;
+            } else if (fieldType === "ficha1") {
+              database[idx].codigoParaFichaMes1 = newCodeStr;
+            } else if (fieldType === "ficha2") {
+              database[idx].codigoParaFichaMes2 = newCodeStr;
+            } else if (fieldType === "ferias") {
+              database[idx].codigoParaVerbasFerias = newCodeStr;
+            }
           }
-          
-          // Dispara o salvamento automático da linha
-          saveRowEdition(rowNum);
-        }, 300);
+        }
+        rawJsonDatabase.ZDEPARA_EVENTOS = database;
+        
+        // 3. Atualizar os campos visuais na tela para refletir o mapeamento feito
+        const fieldId = `edit-${fieldType}-${rowNum}`;
+        const labelId = `edit-nomeRm-${rowNum}`;
+        const inputEl = document.getElementById(fieldId);
+        const labelEl = document.getElementById(labelId);
+        if (inputEl) inputEl.value = newCodeStr;
+        if (labelEl) labelEl.value = finalDesc;
+        
+        if (fieldType === "codigoPara") {
+          toggleFichaInputs(rowNum, newCodeStr);
+        }
+        
+        // 4. Fechar a linha de edição (não precisa de segundo salvamento)
+        editingRowNumber = null;
+        expandedRowNumbers.delete(rowNum);
       });
     }
 
@@ -2967,7 +2987,9 @@
         rawJsonDatabase.config = rawJsonDatabase.config || {};
         rawJsonDatabase.config.ultimo_sincronismo = new Date().toISOString();
         
-        const fileContent = JSON.stringify(rawJsonDatabase, null, 2);
+        // Remover o campo interno _sha antes de serializar (não deve ir ao arquivo JSON)
+        const { _sha: _omit, ...cleanDb } = rawJsonDatabase;
+        const fileContent = JSON.stringify(cleanDb, null, 2);
         
         // 3. Fazer requisição PUT para salvar a alteração
         return fetch(url, {
