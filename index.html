@@ -1580,39 +1580,123 @@
       });
     }
 
+    // Cache em memória do banco completo carregado
+    let rawJsonDatabase = {};
+
     function loadPortalData() {
-      showLoading("Carregando base de dados...");
+      showLoading("Carregando base de dados do GitHub...");
       
-      apiGet("getPortalData")
-        .then(function(response) {
+      let clientKey = SPREADSHEET_ID.toLowerCase();
+      if (SPREADSHEET_ID.includes("docs.google.com")) {
+        const matches = SPREADSHEET_ID.match(/\/d\/([a-zA-Z0-9-_]+)/);
+        if (matches) clientKey = matches[1].toLowerCase();
+      }
+
+      fetch(`data/${clientKey}.json`)
+        .then(res => {
+          if (!res.ok) throw new Error("Base de dados do cliente não encontrada ou vazia.");
+          return res.json();
+        })
+        .then(response => {
           hideLoading();
           
-          connectionInfo = response.connection;
+          rawJsonDatabase = response;
+          
+          connectionInfo = {
+            isInstalled: true,
+            originName: response.config?.originName || "GitHub JSON DB",
+            destinationName: response.config?.destinationName || "Google Planilha Oficial",
+            destinationPath: "Exportação via Download"
+          };
           updateFooter();
 
-          if (!response.status.valid) {
-            document.getElementById("mainInterface").style.display = "none";
-            document.getElementById("wizardSetup").style.display = "flex";
-            return;
-          }
-          
           document.getElementById("mainInterface").style.display = "flex";
           document.getElementById("wizardSetup").style.display = "none";
           
-          database = response.data;
-          rmEvents = response.rmEvents;
-          unusedCreatedEvents = response.unusedCreatedEvents;
-          diagnostics = response.diagnostics;
-          stats = response.stats;
+          database = response.ZDEPARA_EVENTOS || [];
+          rmEvents = response.DADOS_RM_EVENTOS || [];
+          unusedCreatedEvents = response.unusedCreatedEvents || [];
+          
+          // Calcular diagnósticos e estatísticas localmente para o portal continuar 100% funcional
+          calculateLocalDiagnosticsAndStats();
           
           renderWarnings();
           updateDashboard();
           applyFilters();
         })
-        .catch(function(err) {
+        .catch(err => {
           hideLoading();
-          showToast("Erro ao conectar à API da Planilha: " + err.message, 'error');
+          showToast("Erro ao carregar dados do GitHub: " + err.message, 'error');
         });
+    }
+
+    function calculateLocalDiagnosticsAndStats() {
+      // 1. Identificar Duplicados
+      const seen = new Set();
+      const dupes = [];
+      database.forEach(item => {
+        const key = `${item.empresaDe}-${item.codigoDe}-${item.tipoEvento}`;
+        if (seen.has(key)) {
+          dupes.push(item.codigoDe);
+        } else {
+          seen.add(key);
+        }
+      });
+      
+      // 2. Identificar Lacunas (Gaps)
+      const numericCodes = database
+        .map(i => parseInt(i.codigoDe, 10))
+        .filter(n => !isNaN(n))
+        .sort((a, b) => a - b);
+      const gaps = [];
+      if (numericCodes.length > 0) {
+        const min = numericCodes[0];
+        const max = numericCodes[numericCodes.length - 1];
+        const fullSet = new Set(numericCodes);
+        for (let i = min; i <= max; i++) {
+          if (!fullSet.has(i)) {
+            gaps.push(String(i).padStart(4, '0'));
+          }
+        }
+      }
+
+      diagnostics = {
+        duplicates: [...new Set(dupes)],
+        gaps: gaps.slice(0, 15), // Limitar exibição a 15 lacunas
+        orphans: []
+      };
+
+      // 3. Gerar estatísticas para o KPI Dashboard
+      const total = database.length;
+      let preenchidos = 0;
+      let naoPreenchidos = 0;
+      let pAnalise = 0;
+      let divergencias = 0;
+
+      database.forEach(item => {
+        const codPara = (item.codigoPara || "").trim();
+        if (codPara === "P/ ANALISE") {
+          pAnalise++;
+        } else if (codPara && !isCodeIgnored(codPara)) {
+          preenchidos++;
+        } else if (!codPara) {
+          naoPreenchidos++;
+        }
+        
+        // Se houver algum evento RM associado com tipo divergente
+        const rmEvent = rmEvents.find(e => e.codigo === codPara);
+        if (rmEvent && rmEvent.tipo !== item.tipoEvento) {
+          divergencias++;
+        }
+      });
+
+      stats = {
+        total: total,
+        preenchidos: preenchidos,
+        naoPreenchidos: naoPreenchidos,
+        pAnalise: pAnalise,
+        divergencias: divergencias
+      };
     }
 
     function showLoading(text) {
