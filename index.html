@@ -1087,6 +1087,29 @@
     </div>
   </div>
 
+  <!-- TELA DE BLOQUEIO POR CHAVE DE ACESSO (PASSKEY LOGIN) -->
+  <div id="passkeyModal" class="modal-overlay" style="display: none; z-index: 30000; background-color: var(--bg-primary);">
+    <div class="modal-card" style="max-width: 420px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); background-color: var(--bg-secondary);">
+      <div style="padding: 32px; text-align: center; display: flex; flex-direction: column; gap: 20px;">
+        <div>
+          <img src="https://midias-sites.totvs.com/marca/wp-content/uploads/2025/11/Vector-3.png.webp" alt="TOTVS" style="width: 64px; height: 64px; margin-bottom: 12px;">
+          <h2 style="color: white; font-weight: 700; font-size: 1.5rem; letter-spacing: 0.5px;">Acesso Restrito</h2>
+          <p style="color: var(--color-text-muted); font-size: 0.85rem; margin-top: 6px;" id="passkeyClientLabel">Mapeamento De-Para</p>
+        </div>
+        
+        <div style="text-align: left; display: flex; flex-direction: column; gap: 8px;">
+          <label for="passkeyInput" style="color: white; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Chave de Acesso do Projeto</label>
+          <input type="password" id="passkeyInput" class="input-field" placeholder="Digite a chave..." style="background-color: var(--bg-primary); border-color: rgba(255,255,255,0.1); color: white; padding: 12px; font-size: 0.95rem;" onkeydown="if(event.key === 'Enter') submitPasskey()">
+          <span id="passkeyErrorMsg" style="color: var(--danger); font-size: 0.75rem; font-weight: 600; display: none;">Chave incorreta ou inválida para este projeto.</span>
+        </div>
+        
+        <button class="row-btn row-btn-primary" style="padding: 12px; font-weight: 600; font-size: 0.95rem; justify-content: center; width: 100%;" onclick="submitPasskey()">
+          Confirmar e Acessar
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- MODAL DE PROGRESSO DA SINCRONIZAÇÃO -->
   <div id="progressModal" class="modal-overlay" style="display: none; z-index: 11000;">
     <div class="modal-card" style="max-width: 480px; text-align: center;">
@@ -1368,11 +1391,16 @@
     let sortColumn = 'rowNum';
     let sortAscending = true;
 
+    let clientPasskey = "";
+
     window.onload = function() {
       if (!SPREADSHEET_ID) {
         showToast("ATENÇÃO: ID da planilha de origem não informado na URL (?id=ID_PLANILHA)", "error");
+        return;
       }
-      loadPortalData();
+      
+      // Validação da Chave de Acesso (Passkey) para Multi-Tenant
+      checkPasskeyAccess();
       
       document.addEventListener('click', function(e) {
         if (!e.target.closest('.autocomplete-wrapper') && !e.target.closest('.autocomplete-td-wrapper')) {
@@ -1380,6 +1408,101 @@
         }
       });
     };
+
+    function checkPasskeyAccess() {
+      // 1. Identificar o cliente a partir do ID da URL (ex: ?id=boalocacao)
+      // Se for uma URL completa de planilha, extraímos o ID do arquivo ou usamos o texto simples
+      let clientKey = SPREADSHEET_ID.toLowerCase();
+      if (SPREADSHEET_ID.includes("docs.google.com")) {
+        const matches = SPREADSHEET_ID.match(/\/d\/([a-zA-Z0-9-_]+)/);
+        if (matches) clientKey = matches[1].toLowerCase();
+      }
+      
+      // 2. Verificar se já temos a chave salva localmente para esse cliente
+      const savedKey = localStorage.getItem(`passkey_${clientKey}`);
+      
+      // 3. Buscar o arquivo data/config_auth.json no repositório para validar
+      showLoading("Validando credenciais...");
+      
+      fetch("data/config_auth.json")
+        .then(res => {
+          if (!res.ok) throw new Error("Não foi possível carregar as credenciais de segurança.");
+          return res.json();
+        })
+        .then(authConfig => {
+          hideLoading();
+          
+          // Encontrar se existe chave cadastrada para esse ID/cliente
+          // Para ser tolerante, procuramos tanto pelo ID cru da URL quanto pelo ID reduzido
+          let expectedKey = "";
+          for (let key in authConfig) {
+            if (clientKey.includes(key) || key.includes(clientKey)) {
+              expectedKey = authConfig[key];
+              document.getElementById("passkeyClientLabel").innerText = `Mapeamento De-Para | Projeto: ${key.toUpperCase()}`;
+              break;
+            }
+          }
+          
+          // Se não houver chave definida para esse cliente, liberamos sem login (retrocompatibilidade)
+          if (!expectedKey) {
+            loadPortalData();
+            return;
+          }
+          
+          if (savedKey === expectedKey) {
+            clientPasskey = savedKey;
+            loadPortalData();
+          } else {
+            // Mostrar modal de login
+            document.getElementById("passkeyModal").style.display = "flex";
+            document.getElementById("passkeyInput").focus();
+          }
+        })
+        .catch(err => {
+          hideLoading();
+          // Fallback caso config_auth.json não esteja na nuvem (primeira carga ou offline)
+          console.warn("Segurança offline/local:", err.message);
+          loadPortalData();
+        });
+    }
+
+    function submitPasskey() {
+      const inputVal = document.getElementById("passkeyInput").value.trim();
+      let clientKey = SPREADSHEET_ID.toLowerCase();
+      if (SPREADSHEET_ID.includes("docs.google.com")) {
+        const matches = SPREADSHEET_ID.match(/\/d\/([a-zA-Z0-9-_]+)/);
+        if (matches) clientKey = matches[1].toLowerCase();
+      }
+      
+      showLoading("Validando chave...");
+      
+      fetch("data/config_auth.json")
+        .then(res => res.json())
+        .then(authConfig => {
+          hideLoading();
+          let expectedKey = "";
+          for (let key in authConfig) {
+            if (clientKey.includes(key) || key.includes(clientKey)) {
+              expectedKey = authConfig[key];
+              break;
+            }
+          }
+          
+          if (inputVal === expectedKey) {
+            localStorage.setItem(`passkey_${clientKey}`, inputVal);
+            clientPasskey = inputVal;
+            document.getElementById("passkeyModal").style.display = "none";
+            document.getElementById("passkeyErrorMsg").style.display = "none";
+            loadPortalData();
+          } else {
+            document.getElementById("passkeyErrorMsg").style.display = "block";
+          }
+        })
+        .catch(err => {
+          hideLoading();
+          showToast("Erro ao validar: " + err.message, "error");
+        });
+    }
 
     function toggleSidebar() {
       const sidebar = document.getElementById("sidebar");
