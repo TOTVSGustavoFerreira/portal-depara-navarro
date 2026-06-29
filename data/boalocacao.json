@@ -1,7 +1,7 @@
 {
   "cliente": "boalocacao",
   "config": {
-    "ultimo_sincronismo": "2026-06-29T20:42:16.149Z",
+    "ultimo_sincronismo": "2026-06-29T20:42:22.239Z",
     "originName": "TESTE -- BOALOCACAO-TESTE PASTA PESSOAL.xlsx",
     "destinationName": "TESTE -- BOALOCACAO-TESTE PASTA TOTVS.xlsx"
   },
@@ -18852,11 +18852,6 @@
       "codigo": "1127",
       "descricao": "PARTICIPACAO NOS LUCROS - (RN) RESCISAO",
       "tipo": "PROVENTO"
-    },
-    {
-      "codigo": "9001",
-      "descricao": "[INCLUSAO MANUAL] # 1ª via cartão hapvida",
-      "tipo": "DESCONTO"
     }
   ],
   "ZDEPARA_COLIGADAS": [],
@@ -18864,5 +18859,5 @@
   "ZDEPARA_SINDICATOS": [],
   "ZDEPARA_SECOES": [],
   "ZDEPARA_SITUACAO": [],
-  "_sha": "05761ebcbc552214ab64a3902004e73099148d36"
+  "_sha": "7fc2c0fe63ac1ab1e7a57f0b996dfeb3ab5ab6f5"
 }
