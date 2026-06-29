@@ -1089,6 +1089,34 @@
     </div>
   </div>
 
+  <!-- MODAL DE CONFIGURAÇÕES DO GITHUB (TOKEN E REPOSITÓRIO) -->
+  <div id="githubConfigModal" class="modal-overlay" style="display: none; z-index: 12000;">
+    <div class="modal-card" style="max-width: 480px;">
+      <div class="modal-header">Configurações de Acesso GitHub</div>
+      <div class="modal-body" style="padding: 24px; gap: 16px;">
+        <p style="font-size: 0.85rem; color: var(--color-text-muted); line-height: 1.4;">
+          Para salvar alterações no portal, você precisa fornecer um Token de Acesso Pessoal (PAT) do GitHub com permissão de gravação (repositório privado). Esse token é armazenado estritamente no seu navegador.
+        </p>
+        <div style="display: flex; flex-direction: column; gap: 6px;">
+          <label style="font-size: 0.8rem; font-weight: 600;">GitHub Token de Acesso Pessoal (PAT)</label>
+          <input type="password" id="ghTokenInput" class="input-field" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 6px;">
+          <label style="font-size: 0.8rem; font-weight: 600;">Proprietário do Repositório (User/Org)</label>
+          <input type="text" id="ghOwnerInput" class="input-field" placeholder="Ex: TOTVSGustavoFerreira">
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 6px;">
+          <label style="font-size: 0.8rem; font-weight: 600;">Nome do Repositório</label>
+          <input type="text" id="ghRepoInput" class="input-field" placeholder="Ex: portal-depara-navarro">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="row-btn" style="background-color: #f1f5f9;" onclick="closeModal('githubConfigModal')">Cancelar</button>
+        <button class="row-btn row-btn-primary" onclick="saveGitHubConfig()">Salvar Configurações</button>
+      </div>
+    </div>
+  </div>
+
   <!-- TELA DE BLOQUEIO POR CHAVE DE ACESSO (PASSKEY LOGIN) -->
   <div id="passkeyModal" class="modal-overlay" style="display: none; z-index: 30000; background-color: var(--bg-primary);">
     <div class="modal-card" style="max-width: 420px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); background-color: var(--bg-secondary);">
@@ -1232,7 +1260,10 @@
           </button>
         </div>
 
-        <div class="user-profile">
+        <div class="user-profile" style="position: relative;">
+          <button onclick="openGitHubConfigModal()" title="Configurações do GitHub" style="background: none; border: none; cursor: pointer; color: var(--color-text-muted); display: flex; align-items: center; justify-content: center; padding: 6px; border-radius: 50%; transition: var(--transition); margin-right: 8px;">
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
           <div class="avatar">AD</div>
           <div>
             <p style="font-size: 0.85rem; font-weight: 600;">Administrador</p>
@@ -2725,40 +2756,49 @@
       closeModal('newRMEventModal');
       showLoading("Criando novo evento no RM...");
       
-      apiPost("createNewRMEvent", { eventData: { nomeDe: desc, tipoEvento: tipo } })
-        .then(function(response) {
-          hideLoading();
-          if (response.success) {
-            rmEvents.push({
-              codigo: response.code,
-              descricao: response.description,
-              tipo: response.type
-            });
-            
-            const fieldId = `edit-${activeFieldTypeForNewEvent}-${activeRowIdForNewEvent}`;
-            document.getElementById(fieldId).value = response.code;
-            
-            let labelId = `edit-nomeRm-${activeRowIdForNewEvent}`;
-            if (activeFieldTypeForNewEvent === "ficha1") labelId = `edit-nomeFicha1-${activeRowIdForNewEvent}`;
-            if (activeFieldTypeForNewEvent === "ficha2") labelId = `edit-nomeFicha2-${activeRowIdForNewEvent}`;
-            if (activeFieldTypeForNewEvent === "ferias") labelId = `edit-nomeFerias-${activeRowIdForNewEvent}`;
-            
-            document.getElementById(labelId).value = response.description;
-            
-            if (activeFieldTypeForNewEvent === "codigoPara") {
-              toggleFichaInputs(activeRowIdForNewEvent, response.code);
-            }
-            
-            showToast(`Evento '${response.description}' criado com sucesso!`, 'success');
-            saveRowEdition(activeRowIdForNewEvent);
-          } else {
-            showToast("Erro ao criar evento: " + response.error, 'error');
+      // Gerar um código sequencial local para o novo evento manual
+      const numericCodes = rmEvents
+        .map(e => parseInt(e.codigo, 10))
+        .filter(n => !isNaN(n))
+        .sort((a,b) => a - b);
+      
+      let nextCode = 9001; // Começar numeração alta para itens manuais
+      if (numericCodes.length > 0) {
+        const lastCode = numericCodes[numericCodes.length - 1];
+        if (lastCode >= 9000) {
+          nextCode = lastCode + 1;
+        }
+      }
+      
+      const newCodeStr = String(nextCode).padStart(4, '0');
+      const finalDesc = `[INCLUSAO MANUAL] ${desc}`;
+      
+      commitChangesToGitHub(`Adiciona novo evento RM manual ${newCodeStr}`, () => {
+        // Inserir localmente
+        const newEv = {
+          codigo: newCodeStr,
+          descricao: finalDesc,
+          tipo: tipo
+        };
+        
+        rmEvents.push(newEv);
+        rawJsonDatabase.DADOS_RM_EVENTOS = rmEvents;
+        
+        // Atribuir o novo código na linha que estava editando
+        setTimeout(() => {
+          const fieldId = `edit-${activeFieldTypeForNewEvent}-${activeRowIdForNewEvent}`;
+          const labelId = `edit-nomeRm-${activeRowIdForNewEvent}`;
+          
+          const inputEl = document.getElementById(fieldId);
+          const labelEl = document.getElementById(labelId);
+          if (inputEl) inputEl.value = newCodeStr;
+          if (labelEl) labelEl.value = finalDesc;
+          
+          if (activeFieldTypeForNewEvent === "codigoPara") {
+            toggleFichaInputs(activeRowIdForNewEvent, newCodeStr);
           }
-        })
-        .catch(function(err) {
-          hideLoading();
-          showToast("Erro de rede: " + err.message, 'error');
-        });
+        }, 300);
+      });
     }
 
     function saveRowEdition(rowNum) {
@@ -2773,7 +2813,7 @@
       
       const applyToAllMatches = document.getElementById(`edit-chkBulk-${rowNum}`)?.checked || false;
       
-      const data = {
+      const updatedData = {
         coligadaPara: item.coligadaPara,
         codigoPara: codigoPara,
         codigoParaFichaMes1: codigoParaFichaMes1,
@@ -2786,23 +2826,36 @@
 
       showLoading("Salvando mapeamento...");
       
-      apiPost("saveEventMapping", { rowNum: rowNum, data: data, applyToAllMatches: applyToAllMatches })
-        .then(function(response) {
-          hideLoading();
-          if (response.success) {
-            editingRowNumber = null;
-            expandedRowNumbers.delete(rowNum);
-            
-            loadPortalData();
-            showToast(response.affectedRows > 1 
-              ? `Mapeamento salvo! Atualizados ${response.affectedRows} eventos com mesmo Nome e Tipo.` 
-              : "Mapeamento salvo com sucesso!", 'success');
-          }
-        })
-        .catch(function(err) {
-          hideLoading();
-          showToast("Erro ao salvar linha: " + err.message, 'error');
-        });
+      commitChangesToGitHub(`Atualiza mapeamento linha ${rowNum} - ${item.nomeDe}`, () => {
+        // 1. Atualizar a linha correspondente
+        const idx = database.findIndex(i => i.rowNum === rowNum);
+        if (idx !== -1) {
+          Object.assign(database[idx], updatedData);
+        }
+        
+        // 2. Se applyToAllMatches for true, aplicar aos demais registros com mesmo Nome e Tipo
+        let affected = 1;
+        if (applyToAllMatches) {
+          database.forEach(otherItem => {
+            if (otherItem.rowNum !== rowNum && 
+                otherItem.nomeDe === item.nomeDe && 
+                otherItem.tipoEvento === item.tipoEvento) {
+              
+              otherItem.codigoPara = codigoPara;
+              otherItem.codigoParaFichaMes1 = codigoParaFichaMes1;
+              otherItem.codigoParaFichaMes2 = codigoParaFichaMes2;
+              otherItem.codigoParaVerbasFerias = codigoParaVerbasFerias;
+              otherItem.observacao = observacao;
+              affected++;
+            }
+          });
+        }
+        
+        rawJsonDatabase.ZDEPARA_EVENTOS = database;
+        
+        editingRowNumber = null;
+        expandedRowNumbers.delete(rowNum);
+      });
     }
   </script>
 </body>
