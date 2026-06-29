@@ -1,7 +1,7 @@
 {
   "cliente": "boalocacao",
   "config": {
-    "ultimo_sincronismo": "2026-06-29T18:29:55.167Z",
+    "ultimo_sincronismo": "2026-06-29T18:38:58.353Z",
     "originName": "TESTE -- BOALOCACAO-TESTE PASTA PESSOAL.xlsx",
     "destinationName": "TESTE -- BOALOCACAO-TESTE PASTA TOTVS.xlsx"
   },
@@ -51,7 +51,7 @@
       "nomeDe": "# adiantamento de 13º salário (férias)",
       "tipoEvento": "P-PROVENTO",
       "coligadaPara": "2",
-      "codigoPara": "0444",
+      "codigoPara": "P/ ANALISE",
       "nomeRm": "ANTECIPACAO PRIMEIRA PARCELA 13º NAS FER",
       "codigoParaFichaMes1": "",
       "NOMERM1": "",
@@ -16920,8 +16920,8 @@
     },
     {
       "codigo": "9004",
-      "descricao": "[INCLUSAO MANUAL] # 1ª via cartão hapvida",
-      "tipo": "DESCONTO"
+      "descricao": "[INCLUSAO MANUAL] # adiantamento de 13º salário (férias)",
+      "tipo": "PROVENTO"
     }
   ],
   "ZDEPARA_COLIGADAS": [],
