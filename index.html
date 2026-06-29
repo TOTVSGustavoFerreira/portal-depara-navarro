@@ -1716,6 +1716,22 @@
         }
       });
 
+      // Calcular dinamicamente a lista de eventos criados manualmente que não estão sendo usados
+      // em nenhuma das colunas (Código Principal, Ficha Mês 1, Ficha Mês 2, Verba Férias)
+      const usedCodesInDatabase = new Set();
+      database.forEach(item => {
+        if (item.codigoPara) usedCodesInDatabase.add(item.codigoPara.trim());
+        if (item.codigoParaFichaMes1) usedCodesInDatabase.add(item.codigoParaFichaMes1.trim());
+        if (item.codigoParaFichaMes2) usedCodesInDatabase.add(item.codigoParaFichaMes2.trim());
+        if (item.codigoParaVerbasFerias) usedCodesInDatabase.add(item.codigoParaVerbasFerias.trim());
+      });
+
+      unusedCreatedEvents = rmEvents.filter(ev => {
+        const isManual = ev.descricao.includes("[INCLUSAO MANUAL]") || ev.descricao.includes("INCLUSAO MANUAL");
+        const isUsed = usedCodesInDatabase.has(ev.codigo.trim());
+        return isManual && !isUsed;
+      });
+
       // 3. Gerar estatísticas para o KPI Dashboard e marcar itens
       const total = database.length;
       let preenchidos = 0;
@@ -2778,59 +2794,7 @@
       document.getElementById(modalId).style.display = "none";
     }
 
-    function submitNewRMEvent() {
-      const desc = document.getElementById("modalDesc").value.trim();
-      const tipo = document.getElementById("modalTipo").value;
-      
-      if (!desc) return;
-      
-      closeModal('newRMEventModal');
-      showLoading("Criando novo evento no RM...");
-      
-      // Gerar um código sequencial local para o novo evento manual
-      const numericCodes = rmEvents
-        .map(e => parseInt(e.codigo, 10))
-        .filter(n => !isNaN(n))
-        .sort((a,b) => a - b);
-      
-      let nextCode = 9001; // Começar numeração alta para itens manuais
-      if (numericCodes.length > 0) {
-        const lastCode = numericCodes[numericCodes.length - 1];
-        if (lastCode >= 9000) {
-          nextCode = lastCode + 1;
-        }
-      }
-      
-      const newCodeStr = String(nextCode).padStart(4, '0');
-      const finalDesc = `[INCLUSAO MANUAL] ${desc}`;
-      
-      commitChangesToGitHub(`Adiciona novo evento RM manual ${newCodeStr}`, () => {
-        // Inserir localmente
-        const newEv = {
-          codigo: newCodeStr,
-          descricao: finalDesc,
-          tipo: tipo
-        };
-        
-        rmEvents.push(newEv);
-        rawJsonDatabase.DADOS_RM_EVENTOS = rmEvents;
-        
-        // Atribuir o novo código na linha que estava editando
-        setTimeout(() => {
-          const fieldId = `edit-${activeFieldTypeForNewEvent}-${activeRowIdForNewEvent}`;
-          const labelId = `edit-nomeRm-${activeRowIdForNewEvent}`;
-          
-          const inputEl = document.getElementById(fieldId);
-          const labelEl = document.getElementById(labelId);
-          if (inputEl) inputEl.value = newCodeStr;
-          if (labelEl) labelEl.value = finalDesc;
-          
-          if (activeFieldTypeForNewEvent === "codigoPara") {
-            toggleFichaInputs(activeRowIdForNewEvent, newCodeStr);
-          }
-        }, 300);
-      });
-    }
+
     function openGitHubConfigModal() {
       document.getElementById("ghTokenInput").value = localStorage.getItem("gh_pat") || "";
       document.getElementById("ghOwnerInput").value = localStorage.getItem("gh_owner") || "TOTVSGustavoFerreira";

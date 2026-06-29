@@ -1716,6 +1716,22 @@
         }
       });
 
+      // Calcular dinamicamente a lista de eventos criados manualmente que não estão sendo usados
+      // em nenhuma das colunas (Código Principal, Ficha Mês 1, Ficha Mês 2, Verba Férias)
+      const usedCodesInDatabase = new Set();
+      database.forEach(item => {
+        if (item.codigoPara) usedCodesInDatabase.add(item.codigoPara.trim());
+        if (item.codigoParaFichaMes1) usedCodesInDatabase.add(item.codigoParaFichaMes1.trim());
+        if (item.codigoParaFichaMes2) usedCodesInDatabase.add(item.codigoParaFichaMes2.trim());
+        if (item.codigoParaVerbasFerias) usedCodesInDatabase.add(item.codigoParaVerbasFerias.trim());
+      });
+
+      unusedCreatedEvents = rmEvents.filter(ev => {
+        const isManual = ev.descricao.includes("[INCLUSAO MANUAL]") || ev.descricao.includes("INCLUSAO MANUAL");
+        const isUsed = usedCodesInDatabase.has(ev.codigo.trim());
+        return isManual && !isUsed;
+      });
+
       // 3. Gerar estatísticas para o KPI Dashboard e marcar itens
       const total = database.length;
       let preenchidos = 0;
