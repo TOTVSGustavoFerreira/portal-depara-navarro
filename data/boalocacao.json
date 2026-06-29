@@ -1,7 +1,7 @@
 {
   "cliente": "boalocacao",
   "config": {
-    "ultimo_sincronismo": "2026-06-29T21:13:05.946Z",
+    "ultimo_sincronismo": "2026-06-29T21:16:43.426Z",
     "originName": "TESTE -- BOALOCACAO-TESTE PASTA PESSOAL.xlsx",
     "destinationName": "TESTE -- BOALOCACAO-TESTE PASTA TOTVS.xlsx"
   },
@@ -46,9 +46,9 @@
       "LOGAUDITORIA": "",
       "observacao": "",
       "sugestoes": "Evento de base de cálculo ou FGTS.",
-      "hasDivergencia": false,
+      "hasDivergencia": true,
       "hasDivergenciaDuplicidade": false,
-      "hasDivergenciaTipo": false
+      "hasDivergenciaTipo": true
     },
     {
       "rowNum": 4,
@@ -57,7 +57,7 @@
       "nomeDe": "# adiantamento de 13º salário (férias)",
       "tipoEvento": "P-PROVENTO",
       "coligadaPara": "2",
-      "codigoPara": "",
+      "codigoPara": "CRIAR",
       "nomeRm": "[INCLUSAO MANUAL] # adiantamento de 13º salário (férias)",
       "codigoParaFichaMes1": "",
       "NOMERM1": "",
