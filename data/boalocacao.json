@@ -1,7 +1,7 @@
 {
   "cliente": "boalocacao",
   "config": {
-    "ultimo_sincronismo": "2026-06-29T19:44:59.383Z",
+    "ultimo_sincronismo": "2026-06-29T19:45:12.747Z",
     "originName": "TESTE -- BOALOCACAO-TESTE PASTA PESSOAL.xlsx",
     "destinationName": "TESTE -- BOALOCACAO-TESTE PASTA TOTVS.xlsx"
   },
@@ -46,9 +46,9 @@
       "LOGAUDITORIA": "",
       "observacao": "",
       "sugestoes": "Evento de base de cálculo ou FGTS.",
-      "hasDivergencia": true,
+      "hasDivergencia": false,
       "hasDivergenciaDuplicidade": false,
-      "hasDivergenciaTipo": true
+      "hasDivergenciaTipo": false
     },
     {
       "rowNum": 4,
@@ -18887,6 +18887,11 @@
       "codigo": "9007",
       "descricao": "[INCLUSAO MANUAL] # arredondamento (desconto)",
       "tipo": "DESCONTO"
+    },
+    {
+      "codigo": "9008",
+      "descricao": "[INCLUSAO MANUAL] # 1ª via cartão hapvida",
+      "tipo": "DESCONTO"
     }
   ],
   "ZDEPARA_COLIGADAS": [],
@@ -18894,5 +18899,5 @@
   "ZDEPARA_SINDICATOS": [],
   "ZDEPARA_SECOES": [],
   "ZDEPARA_SITUACAO": [],
-  "_sha": "aa3dec61b53def4abaed6e54df8ea1840774bd34"
+  "_sha": "81d3cc5ad3eb0d05e0c89d81e61b8ea4a7aa188d"
 }
