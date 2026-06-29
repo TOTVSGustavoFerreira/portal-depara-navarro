@@ -1678,17 +1678,21 @@
       });
       
       // 2. Identificar Lacunas (Gaps)
-      const numericCodes = database
-        .map(i => parseInt(i.codigoDe, 10))
+      // 2. Identificar Lacunas (Gaps) APENAS nos Eventos Criados Manualmente
+      // Os eventos criados manualmente têm o prefixo "[INCLUSAO MANUAL]" na descrição
+      const manualCreatedCodes = rmEvents
+        .filter(ev => ev.descricao.includes("[INCLUSAO MANUAL]"))
+        .map(ev => parseInt(ev.codigo, 10))
         .filter(n => !isNaN(n))
         .sort((a, b) => a - b);
+      
       const gaps = [];
-      if (numericCodes.length > 0) {
-        const min = numericCodes[0];
-        const max = numericCodes[numericCodes.length - 1];
-        const fullSet = new Set(numericCodes);
+      if (manualCreatedCodes.length > 0) {
+        const min = manualCreatedCodes[0];
+        const max = manualCreatedCodes[manualCreatedCodes.length - 1];
+        const manualSet = new Set(manualCreatedCodes);
         for (let i = min; i <= max; i++) {
-          if (!fullSet.has(i)) {
+          if (!manualSet.has(i)) {
             gaps.push(String(i).padStart(4, '0'));
           }
         }
@@ -2883,8 +2887,12 @@
         hideLoading();
         showToast("Dados salvos e commitados no GitHub com sucesso!", "success");
         
-        // Em vez de recarregar tudo do servidor (que pode demorar por causa do cache-deploy do GH Pages),
-        // nós apenas aplicamos a atualização nas variáveis locais e mandamos re-renderizar a tela
+        // A API do GitHub retorna a nova versão do arquivo em response.content.sha.
+        // Nós guardamos esse novo SHA na nossa base para a próxima chamada PUT funcionar de imediato!
+        if (response.content && response.content.sha) {
+          rawJsonDatabase._sha = response.content.sha;
+        }
+        
         calculateLocalDiagnosticsAndStats();
         renderWarnings();
         updateDashboard();
@@ -2922,18 +2930,15 @@
       closeModal('newRMEventModal');
       showLoading("Criando novo evento no RM...");
       
-      // Gerar um código sequencial local para o novo evento manual
+      // Encontrar o maior código numérico absoluto (desprezando códigos não numéricos)
       const numericCodes = rmEvents
         .map(e => parseInt(e.codigo, 10))
         .filter(n => !isNaN(n))
         .sort((a,b) => a - b);
       
-      let nextCode = 9001; // Começar numeração alta para itens manuais
+      let nextCode = 1;
       if (numericCodes.length > 0) {
-        const lastCode = numericCodes[numericCodes.length - 1];
-        if (lastCode >= 9000) {
-          nextCode = lastCode + 1;
-        }
+        nextCode = numericCodes[numericCodes.length - 1] + 1;
       }
       
       const newCodeStr = String(nextCode).padStart(4, '0');
@@ -2950,10 +2955,11 @@
         rmEvents.push(newEv);
         rawJsonDatabase.DADOS_RM_EVENTOS = rmEvents;
         
-        // Atribuir o novo código na linha que estava editando
+        // Atribuir o novo código na linha e já salvar a linha automaticamente
         setTimeout(() => {
-          const fieldId = `edit-${activeFieldTypeForNewEvent}-${activeRowIdForNewEvent}`;
-          const labelId = `edit-nomeRm-${activeRowIdForNewEvent}`;
+          const rowNum = activeRowIdForNewEvent;
+          const fieldId = `edit-${activeFieldTypeForNewEvent}-${rowNum}`;
+          const labelId = `edit-nomeRm-${rowNum}`;
           
           const inputEl = document.getElementById(fieldId);
           const labelEl = document.getElementById(labelId);
@@ -2961,8 +2967,11 @@
           if (labelEl) labelEl.value = finalDesc;
           
           if (activeFieldTypeForNewEvent === "codigoPara") {
-            toggleFichaInputs(activeRowIdForNewEvent, newCodeStr);
+            toggleFichaInputs(rowNum, newCodeStr);
           }
+          
+          // Dispara o salvamento automático da linha
+          saveRowEdition(rowNum);
         }, 300);
       });
     }

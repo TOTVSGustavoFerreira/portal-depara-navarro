@@ -1678,17 +1678,21 @@
       });
       
       // 2. Identificar Lacunas (Gaps)
-      const numericCodes = database
-        .map(i => parseInt(i.codigoDe, 10))
+      // 2. Identificar Lacunas (Gaps) APENAS nos Eventos Criados Manualmente
+      // Os eventos criados manualmente têm o prefixo "[INCLUSAO MANUAL]" na descrição
+      const manualCreatedCodes = rmEvents
+        .filter(ev => ev.descricao.includes("[INCLUSAO MANUAL]"))
+        .map(ev => parseInt(ev.codigo, 10))
         .filter(n => !isNaN(n))
         .sort((a, b) => a - b);
+      
       const gaps = [];
-      if (numericCodes.length > 0) {
-        const min = numericCodes[0];
-        const max = numericCodes[numericCodes.length - 1];
-        const fullSet = new Set(numericCodes);
+      if (manualCreatedCodes.length > 0) {
+        const min = manualCreatedCodes[0];
+        const max = manualCreatedCodes[manualCreatedCodes.length - 1];
+        const manualSet = new Set(manualCreatedCodes);
         for (let i = min; i <= max; i++) {
-          if (!fullSet.has(i)) {
+          if (!manualSet.has(i)) {
             gaps.push(String(i).padStart(4, '0'));
           }
         }
@@ -2753,18 +2757,15 @@
       closeModal('newRMEventModal');
       showLoading("Criando novo evento no RM...");
       
-      // Gerar um código sequencial local para o novo evento manual
+      // Encontrar o maior código numérico absoluto (desprezando códigos não numéricos)
       const numericCodes = rmEvents
         .map(e => parseInt(e.codigo, 10))
         .filter(n => !isNaN(n))
         .sort((a,b) => a - b);
       
-      let nextCode = 9001; // Começar numeração alta para itens manuais
+      let nextCode = 1;
       if (numericCodes.length > 0) {
-        const lastCode = numericCodes[numericCodes.length - 1];
-        if (lastCode >= 9000) {
-          nextCode = lastCode + 1;
-        }
+        nextCode = numericCodes[numericCodes.length - 1] + 1;
       }
       
       const newCodeStr = String(nextCode).padStart(4, '0');
@@ -2781,10 +2782,11 @@
         rmEvents.push(newEv);
         rawJsonDatabase.DADOS_RM_EVENTOS = rmEvents;
         
-        // Atribuir o novo código na linha que estava editando
+        // Atribuir o novo código na linha e já salvar a linha automaticamente
         setTimeout(() => {
-          const fieldId = `edit-${activeFieldTypeForNewEvent}-${activeRowIdForNewEvent}`;
-          const labelId = `edit-nomeRm-${activeRowIdForNewEvent}`;
+          const rowNum = activeRowIdForNewEvent;
+          const fieldId = `edit-${activeFieldTypeForNewEvent}-${rowNum}`;
+          const labelId = `edit-nomeRm-${rowNum}`;
           
           const inputEl = document.getElementById(fieldId);
           const labelEl = document.getElementById(labelId);
@@ -2792,8 +2794,11 @@
           if (labelEl) labelEl.value = finalDesc;
           
           if (activeFieldTypeForNewEvent === "codigoPara") {
-            toggleFichaInputs(activeRowIdForNewEvent, newCodeStr);
+            toggleFichaInputs(rowNum, newCodeStr);
           }
+          
+          // Dispara o salvamento automático da linha
+          saveRowEdition(rowNum);
         }, 300);
       });
     }
@@ -2853,6 +2858,125 @@
         editingRowNumber = null;
         expandedRowNumbers.delete(rowNum);
       });
+    }
+    function openGitHubConfigModal() {
+      document.getElementById("ghTokenInput").value = localStorage.getItem("gh_pat") || "";
+      document.getElementById("ghOwnerInput").value = localStorage.getItem("gh_owner") || "TOTVSGustavoFerreira";
+      document.getElementById("ghRepoInput").value = localStorage.getItem("gh_repo") || "portal-depara-navarro";
+      document.getElementById("githubConfigModal").style.display = "flex";
+    }
+
+    function saveGitHubConfig() {
+      const token = document.getElementById("ghTokenInput").value.trim();
+      const owner = document.getElementById("ghOwnerInput").value.trim();
+      const repo = document.getElementById("ghRepoInput").value.trim();
+      
+      localStorage.setItem("gh_pat", token);
+      localStorage.setItem("gh_owner", owner);
+      localStorage.setItem("gh_repo", repo);
+      
+      closeModal("githubConfigModal");
+      showToast("Configurações do GitHub salvas localmente!", "success");
+    }
+
+    function commitChangesToGitHub(commitMessage, updatedDatabaseCallback) {
+      const pat = localStorage.getItem("gh_pat");
+      const owner = localStorage.getItem("gh_owner") || "TOTVSGustavoFerreira";
+      const repo = localStorage.getItem("gh_repo") || "portal-depara-navarro";
+      
+      if (!pat) {
+        hideLoading();
+        showToast("Por favor, configure o Token de Acesso do GitHub (ícone de engrenagem) para salvar alterações.", "error");
+        openGitHubConfigModal();
+        return;
+      }
+      
+      let clientKey = SPREADSHEET_ID.toLowerCase();
+      if (SPREADSHEET_ID.includes("docs.google.com")) {
+        const matches = SPREADSHEET_ID.match(/\/d\/([a-zA-Z0-9-_]+)/);
+        if (matches) clientKey = matches[1].toLowerCase();
+      }
+      
+      const filePath = `data/${clientKey}.json`;
+      const url = `https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`;
+      
+      // 1. Obter o SHA do arquivo atual no repositório
+      fetch(url, {
+        headers: {
+          "Authorization": `token ${pat}`,
+          "Accept": "application/vnd.github.v3+json"
+        }
+      })
+      .then(res => {
+        if (res.status === 401) throw new Error("Token do GitHub inválido ou expirado.");
+        if (res.status === 404) throw new Error("Arquivo no repositório não encontrado.");
+        return res.json();
+      })
+      .then(fileInfo => {
+        const sha = fileInfo.sha;
+        
+        // 2. Atualizar os dados locais do banco de dados completo na memória
+        updatedDatabaseCallback();
+        rawJsonDatabase.config = rawJsonDatabase.config || {};
+        rawJsonDatabase.config.ultimo_sincronismo = new Date().toISOString();
+        
+        const fileContent = JSON.stringify(rawJsonDatabase, null, 2);
+        
+        // 3. Fazer requisição PUT para salvar a alteração
+        return fetch(url, {
+          method: "PUT",
+          headers: {
+            "Authorization": `token ${pat}`,
+            "Content-Type": "application/json",
+            "Accept": "application/vnd.github.v3+json"
+          },
+          body: JSON.stringify({
+            message: commitMessage,
+            content: btoa(unescape(encodeURIComponent(fileContent))),
+            sha: sha
+          })
+        });
+      })
+      .then(res => {
+        if (!res.ok) return res.json().then(errData => { throw new Error(errData.message); });
+        return res.json();
+      })
+      .then(response => {
+        hideLoading();
+        showToast("Dados salvos e commitados no GitHub com sucesso!", "success");
+        
+        // A API do GitHub retorna a nova versão do arquivo em response.content.sha.
+        // Nós guardamos esse novo SHA na nossa base para a próxima chamada PUT funcionar de imediato!
+        if (response.content && response.content.sha) {
+          rawJsonDatabase._sha = response.content.sha;
+        }
+        
+        calculateLocalDiagnosticsAndStats();
+        renderWarnings();
+        updateDashboard();
+        applyFilters();
+      })
+      .catch(err => {
+        hideLoading();
+        showToast("Erro ao gravar no GitHub: " + err.message, "error");
+      });
+    }
+
+    function deleteManualEvent(code) {
+      showCustomConfirm(
+        "Excluir Evento Manual",
+        `Tem certeza que deseja excluir o evento criado código ${code}?`,
+        function() {
+          closeModal('diagnosticsModal');
+          showLoading("Removendo evento manual...");
+          
+          commitChangesToGitHub(`Exclui evento manual ${code}`, () => {
+            // Remover dos eventos RM cadastrados
+            rmEvents = rmEvents.filter(ev => ev.codigo !== code);
+            rawJsonDatabase.DADOS_RM_EVENTOS = rmEvents;
+          });
+        }
+      );
     }
   </script>
 </body>
