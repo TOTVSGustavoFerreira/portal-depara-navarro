@@ -1,7 +1,7 @@
 {
   "cliente": "boalocacao",
   "config": {
-    "ultimo_sincronismo": "2026-06-29T18:51:15.182Z",
+    "ultimo_sincronismo": "2026-06-29T18:52:36.824Z",
     "originName": "TESTE -- BOALOCACAO-TESTE PASTA PESSOAL.xlsx",
     "destinationName": "TESTE -- BOALOCACAO-TESTE PASTA TOTVS.xlsx"
   },
@@ -16925,6 +16925,11 @@
     },
     {
       "codigo": "9005",
+      "descricao": "[INCLUSAO MANUAL] # 1ª via cartão hapvida",
+      "tipo": "DESCONTO"
+    },
+    {
+      "codigo": "9006",
       "descricao": "[INCLUSAO MANUAL] # 1ª via cartão hapvida",
       "tipo": "DESCONTO"
     }
