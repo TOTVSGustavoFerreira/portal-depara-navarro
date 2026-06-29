@@ -2882,7 +2882,13 @@
       .then(response => {
         hideLoading();
         showToast("Dados salvos e commitados no GitHub com sucesso!", "success");
-        loadPortalData();
+        
+        // Em vez de recarregar tudo do servidor (que pode demorar por causa do cache-deploy do GH Pages),
+        // nós apenas aplicamos a atualização nas variáveis locais e mandamos re-renderizar a tela
+        calculateLocalDiagnosticsAndStats();
+        renderWarnings();
+        updateDashboard();
+        applyFilters();
       })
       .catch(err => {
         hideLoading();
