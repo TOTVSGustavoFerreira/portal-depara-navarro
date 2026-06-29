@@ -1704,7 +1704,19 @@
         orphans: []
       };
 
-      // 3. Gerar estatísticas para o KPI Dashboard
+      // Identificar divergências de tipo e duplicidades
+      // Um nomeDe pode estar mapeado para códigos RM diferentes (duplicidade de mapeamento)
+      const nameToRmCodes = {};
+      database.forEach(item => {
+        const codPara = (item.codigoPara || "").trim();
+        if (codPara && !isCodeIgnored(codPara)) {
+          const key = `${item.nomeDe.toLowerCase()}|${item.tipoEvento}`;
+          if (!nameToRmCodes[key]) nameToRmCodes[key] = new Set();
+          nameToRmCodes[key].add(codPara);
+        }
+      });
+
+      // 3. Gerar estatísticas para o KPI Dashboard e marcar itens
       const total = database.length;
       let preenchidos = 0;
       let naoPreenchidos = 0;
@@ -1713,6 +1725,10 @@
 
       database.forEach(item => {
         const codPara = (item.codigoPara || "").trim();
+        item.hasDivergencia = false;
+        item.hasDivergenciaDuplicidade = false;
+        item.hasDivergenciaTipo = false;
+
         if (codPara === "P/ ANALISE") {
           pAnalise++;
         } else if (codPara && !isCodeIgnored(codPara)) {
@@ -1721,9 +1737,23 @@
           naoPreenchidos++;
         }
         
-        // Se houver algum evento RM associado com tipo divergente
-        const rmEvent = rmEvents.find(e => e.codigo === codPara);
-        if (rmEvent && rmEvent.tipo !== item.tipoEvento) {
+        // Divergência de Tipo
+        const compatibility = checkTypeCompatibility(item.tipoEvento, codPara);
+        if (codPara && !isCodeIgnored(codPara) && !compatibility.isMatch) {
+          item.hasDivergenciaTipo = true;
+          item.hasDivergencia = true;
+        }
+
+        // Divergência de Mapeamentos Duplos
+        if (codPara && !isCodeIgnored(codPara)) {
+          const key = `${item.nomeDe.toLowerCase()}|${item.tipoEvento}`;
+          if (nameToRmCodes[key] && nameToRmCodes[key].size > 1) {
+            item.hasDivergenciaDuplicidade = true;
+            item.hasDivergencia = true;
+          }
+        }
+
+        if (item.hasDivergencia) {
           divergencias++;
         }
       });
@@ -2898,7 +2928,8 @@
       }
       
       const filePath = `data/${clientKey}.json`;
-      const url = `https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`;
+      const timestamp = new Date().getTime();
+      const url = `https://api.github.com/repos/${owner}/${repo}/contents/${filePath}?t=${timestamp}`;
       
       // 1. Obter o SHA do arquivo atual no repositório
       fetch(url, {
