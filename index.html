@@ -432,8 +432,8 @@
     .kpi-total .kpi-value { color: var(--bg-primary); }
     .kpi-total .kpi-icon-container { background-color: #e0f2fe; color: #0284c7; }
     
-    .kpi-mapped .kpi-value { color: var(--success); }
-    .kpi-mapped .kpi-icon-container { background-color: #d1fae5; color: #059669; }
+    .kpi-mapped .kpi-value { color: #0284c7; }
+    .kpi-mapped .kpi-icon-container { background-color: #e0f2fe; color: #0284c7; }
     
     .kpi-unmapped .kpi-value { color: var(--orange); }
     .kpi-unmapped .kpi-icon-container { background-color: #ffedd5; color: #ea580c; }
@@ -615,12 +615,16 @@
 
     /* Row Background Colors */
     tr.row-provento  { background-color: var(--row-provento) !important; }
+    tr.row-nao-importar td { color: #64748b !important; }
+    tr.row-nao-importar td code { color: #64748b !important; }
+    tr.row-nao-importar .badge { opacity: 0.75; }
+    .badge-nao-importar { background-color: #e2e8f0; color: #475569; }
     tr.row-desconto  { background-color: var(--row-desconto) !important; }
     tr.row-base      { background-color: var(--row-base) !important; }
     tr.row-mismatch  { background-color: var(--row-mismatch) !important; }
     tr.row-unmapped  { background-color: var(--row-unmapped) !important; }
     tr.row-panalise  { background-color: var(--row-panalise) !important; }
-    tr.row-neutral   { background-color: #f1f5f9 !important; } /* Soft neutral gray */
+    tr.row-neutral   { background-color: #e8edf3 !important; } /* Darker neutral gray for NAO IMPORTAR */
 
     /* Left highlight borders */
     tr.row-item {
@@ -1392,8 +1396,16 @@
       
       <!-- FOOTER -->
       <footer>
-        <span id="footerConnectionInfo">Planilha Origem: Carregando... | Planilha Destino: Carregando...</span>
-        <span>Portal De-Para TOTVS RM v1.3</span>
+        <span id="footerConnectionInfo" style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+          <span style="display:flex; align-items:center; gap:6px;">📋 <strong id="footerTotal">-</strong> eventos totais</span>
+          <span style="color:#94a3b8;">|</span>
+          <span style="display:flex; align-items:center; gap:6px; color:#10b981;">✔ <strong id="footerMapped">-</strong> mapeados</span>
+          <span style="color:#94a3b8;">|</span>
+          <span style="display:flex; align-items:center; gap:6px; color:#f59e0b;">⏳ <strong id="footerPending">-</strong> em análise</span>
+          <span style="color:#94a3b8;">|</span>
+          <span style="display:flex; align-items:center; gap:6px; color:#ea580c;">⚠ <strong id="footerUnmapped">-</strong> não mapeados</span>
+        </span>
+        <span style="color:#94a3b8;">Portal De-Para TOTVS RM v1.3 — Última sincronização: <strong id="footerLastSync">-</strong></span>
       </footer>
     </div>
   </div>
@@ -1788,21 +1800,22 @@
 
         if (codPara === "P/ ANALISE") {
           pAnalise++;
-        } else if (codPara && !isCodeIgnored(codPara)) {
+        } else if (codPara && !isCodeIgnored(codPara) && !isCodeToCreate(codPara)) {
           preenchidos++;
-        } else if (!codPara) {
-          naoPreenchidos++;
+        } else {
+          // Sem código, NAO IMPORTAR e CRIAR são todos considerados não mapeados
+          if (!codPara || isCodeToCreate(codPara)) naoPreenchidos++;
         }
         
-        // Divergência de Tipo
+        // Divergência de Tipo (só para códigos reais, não CRIAR nem NAO IMPORTAR)
         const compatibility = checkTypeCompatibility(item.tipoEvento, codPara);
-        if (codPara && !isCodeIgnored(codPara) && !compatibility.isMatch) {
+        if (codPara && !isCodeIgnored(codPara) && !isCodeToCreate(codPara) && !compatibility.isMatch) {
           item.hasDivergenciaTipo = true;
           item.hasDivergencia = true;
         }
 
         // Divergência de Mapeamentos Duplos
-        if (codPara && !isCodeIgnored(codPara)) {
+        if (codPara && !isCodeIgnored(codPara) && !isCodeToCreate(codPara)) {
           const key = `${item.nomeDe.toLowerCase()}|${item.tipoEvento}`;
           if (nameToRmCodes[key] && nameToRmCodes[key].size > 1) {
             item.hasDivergenciaDuplicidade = true;
@@ -1852,11 +1865,13 @@
     }
 
     function updateFooter() {
-      const footerElement = document.getElementById("footerConnectionInfo");
-      if (connectionInfo.isInstalled) {
-        footerElement.innerHTML = `Planilha Origem: <strong>${connectionInfo.originName}</strong> | Planilha Destino: <strong>${connectionInfo.destinationName}</strong> (Pasta: <em>${connectionInfo.destinationPath}</em>)`;
-      } else {
-        footerElement.innerText = "Portal De-Para - Aguardando Instalação...";
+      // O rodapé agora exibe um resumo dinâmico dos dados em vez das informações da planilha.
+      // Os campos são preenchidos pelo updateDashboard após calcular os stats.
+      const syncDate = rawJsonDatabase?.config?.ultimo_sincronismo;
+      const syncEl = document.getElementById('footerLastSync');
+      if (syncEl && syncDate) {
+        const d = new Date(syncDate);
+        syncEl.innerText = d.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
       }
     }
 
@@ -2181,6 +2196,17 @@
       document.getElementById("valUnmapped").innerText = stats.naoPreenchidos;
       document.getElementById("valPending").innerText = stats.pAnalise;
       document.getElementById("valDivergent").innerText = stats.divergencias;
+      
+      // Atualiza o rodapé com o resumo dinâmico
+      const ftTotal = document.getElementById('footerTotal');
+      const ftMapped = document.getElementById('footerMapped');
+      const ftPending = document.getElementById('footerPending');
+      const ftUnmapped = document.getElementById('footerUnmapped');
+      if (ftTotal) ftTotal.innerText = stats.total;
+      if (ftMapped) ftMapped.innerText = stats.preenchidos;
+      if (ftPending) ftPending.innerText = stats.pAnalise;
+      if (ftUnmapped) ftUnmapped.innerText = stats.naoPreenchidos;
+      updateFooter();
     }
 
     function handleFilterTypeChange(type) {
@@ -2253,8 +2279,9 @@
       
       filteredData = database.filter(item => {
         // 1. Filtro dos KPIs
-        if (activeKpiFilter === 'mapped' && (!item.codigoPara || item.codigoPara === "P/ ANALISE")) return false;
-        if (activeKpiFilter === 'unmapped' && item.codigoPara) return false;
+        const isMapped = item.codigoPara && !isCodeIgnored(item.codigoPara) && !isCodeToCreate(item.codigoPara);
+        if (activeKpiFilter === 'mapped' && !isMapped) return false;
+        if (activeKpiFilter === 'unmapped' && (isMapped || item.codigoPara)) return false;
         if (activeKpiFilter === 'pending' && item.codigoPara !== "P/ ANALISE") return false;
         if (activeKpiFilter === 'divergent' && !item.hasDivergencia) return false;
         
@@ -2352,6 +2379,20 @@
       return normalized === "NAO IMPORTAR" || normalized === "P/ ANALISE";
     }
 
+    // Retorna true se o código indica que o evento ainda precisa ser criado (não mapeado)
+    function isCodeToCreate(cod) {
+      if (!cod) return false;
+      const norm = String(cod).trim().toUpperCase();
+      return norm === "CRIAR" || norm === "A CRIAR" || norm === "CRIAR EVENTO";
+    }
+
+    // Dado um código de evento RM, retorna a descrição/nome buscando na lista rmEvents
+    function getRmName(cod) {
+      if (!cod || isCodeIgnored(cod) || isCodeToCreate(cod)) return '';
+      const ev = rmEvents.find(e => e.codigo === cod || e.codigo === String(cod).padStart(4, '0'));
+      return ev ? ev.descricao : '';
+    }
+
     function normalizeEventType(type) {
       if (!type) return "";
       type = type.toUpperCase().replace(/\s/g, "");
@@ -2413,11 +2454,13 @@
         if (tipoNorm.includes("PROVENTO")) typeBadge = "badge-prov";
         else if (tipoNorm.includes("DESCONTO")) typeBadge = "badge-desc";
         
-        if (isCodeIgnored(item.codigoPara)) {
+        if (isCodeToCreate(item.codigoPara)) {
+          rowColorClass = "row-unmapped"; // CRIAR = não mapeado → laranja
+        } else if (isCodeIgnored(item.codigoPara)) {
           if (String(item.codigoPara).toUpperCase().includes("ANALISE")) {
             rowColorClass = "row-panalise";
           } else {
-            rowColorClass = "row-neutral";
+            rowColorClass = "row-neutral row-nao-importar";
           }
         } else if (!item.codigoPara) {
           rowColorClass = "row-unmapped"; 
@@ -2431,12 +2474,15 @@
         let mapBadge = "badge-mapped";
         let statusLabel = item.nomeRm || "MAPEADO";
         
-        if (isCodeIgnored(item.codigoPara)) {
+        if (isCodeToCreate(item.codigoPara)) {
+          mapBadge = "badge-unmapped";
+          statusLabel = "CRIAR";
+        } else if (isCodeIgnored(item.codigoPara)) {
           if (String(item.codigoPara).toUpperCase().includes("ANALISE")) {
             mapBadge = "badge-panalise";
             statusLabel = "P/ ANÁLISE";
           } else {
-            mapBadge = "badge-mapped";
+            mapBadge = "badge-nao-importar";
             statusLabel = "NÃO IMPORTAR";
           }
         } else if (!item.codigoPara) {
@@ -2608,15 +2654,15 @@
                   <div class="detail-grid">
                     <div class="detail-field-group">
                       <span class="detail-label">Ficha Mês 1</span>
-                      <div class="detail-value">${item.codigoParaFichaMes1 ? `${item.codigoParaFichaMes1} - ${item.nomeRmFichaMes1}` : '-'}</div>
+                      <div class="detail-value">${item.codigoParaFichaMes1 ? `${item.codigoParaFichaMes1}${getRmName(item.codigoParaFichaMes1) ? ' - ' + getRmName(item.codigoParaFichaMes1) : ''}` : '-'}</div>
                     </div>
                     <div class="detail-field-group">
                       <span class="detail-label">Ficha Mês 2</span>
-                      <div class="detail-value">${item.codigoParaFichaMes2 ? `${item.codigoParaFichaMes2} - ${item.nomeRmFichaMes2}` : '-'}</div>
+                      <div class="detail-value">${item.codigoParaFichaMes2 ? `${item.codigoParaFichaMes2}${getRmName(item.codigoParaFichaMes2) ? ' - ' + getRmName(item.codigoParaFichaMes2) : ''}` : '-'}</div>
                     </div>
                     <div class="detail-field-group">
                       <span class="detail-label">Verbas Férias</span>
-                      <div class="detail-value">${item.codigoParaVerbasFerias ? `${item.codigoParaVerbasFerias} - ${item.nomeRmVerbasFerias}` : '-'}</div>
+                      <div class="detail-value">${item.codigoParaVerbasFerias ? `${item.codigoParaVerbasFerias}${getRmName(item.codigoParaVerbasFerias) ? ' - ' + getRmName(item.codigoParaVerbasFerias) : ''}` : '-'}</div>
                     </div>
                     <div class="detail-field-group">
                       <span class="detail-label">Observações</span>
