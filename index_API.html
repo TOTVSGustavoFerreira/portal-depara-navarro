@@ -2282,7 +2282,7 @@
         // 1. Filtro dos KPIs
         const isMapped = item.codigoPara && !isCodeIgnored(item.codigoPara) && !isCodeToCreate(item.codigoPara);
         if (activeKpiFilter === 'mapped' && !isMapped) return false;
-        if (activeKpiFilter === 'unmapped' && (isMapped || item.codigoPara)) return false;
+        if (activeKpiFilter === 'unmapped' && (isMapped || (item.codigoPara && !isCodeToCreate(item.codigoPara)))) return false;
         if (activeKpiFilter === 'pending' && item.codigoPara !== "P/ ANALISE") return false;
         if (activeKpiFilter === 'divergent' && !item.hasDivergencia) return false;
         
@@ -2303,8 +2303,9 @@
           return item.tipoEvento.toLowerCase().includes(val.replace("b-", ""));
         }
         else if (type === 'status') {
-          if (val === 'mapeado') return item.codigoPara && item.codigoPara !== "P/ ANALISE";
-          if (val === 'nao_mapeado') return !item.codigoPara;
+          const isMapped = item.codigoPara && !isCodeIgnored(item.codigoPara) && !isCodeToCreate(item.codigoPara);
+          if (val === 'mapeado') return isMapped;
+          if (val === 'nao_mapeado') return !item.codigoPara || isCodeToCreate(item.codigoPara);
           if (val === 'p_analise') return item.codigoPara === "P/ ANALISE";
         }
         else if (type === 'coligadaPara') {
