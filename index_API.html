@@ -615,16 +615,16 @@
 
     /* Row Background Colors */
     tr.row-provento  { background-color: var(--row-provento) !important; }
+    tr.row-nao-importar td { color: #64748b !important; }
+    tr.row-nao-importar td code { color: #64748b !important; }
+    tr.row-nao-importar .badge { opacity: 0.75; }
+    .badge-nao-importar { background-color: #e2e8f0; color: #475569; }
     tr.row-desconto  { background-color: var(--row-desconto) !important; }
     tr.row-base      { background-color: var(--row-base) !important; }
     tr.row-mismatch  { background-color: var(--row-mismatch) !important; }
     tr.row-unmapped  { background-color: var(--row-unmapped) !important; }
     tr.row-panalise  { background-color: var(--row-panalise) !important; }
     tr.row-neutral   { background-color: #e8edf3 !important; } /* Darker neutral gray for NAO IMPORTAR */
-    tr.row-nao-importar td { color: #64748b !important; }
-    tr.row-nao-importar td code { color: #64748b !important; }
-    tr.row-nao-importar .badge { opacity: 0.75; }
-    .badge-nao-importar { background-color: #e2e8f0; color: #475569; }
 
     /* Left highlight borders */
     tr.row-item {
@@ -1180,12 +1180,20 @@
     </div>
     
     <div class="sidebar-menu-wrapper">
-      <div class="menu-category">Menu Mapeamentos</div>
+      <div class="menu-category">Menu Principal</div>
+      
+      <!-- ITEM HOME -->
+      <div class="menu-item active" id="menu-item-home" style="cursor: pointer;" onclick="switchModule('home')">
+        <div class="menu-item-link-content">
+          <svg viewBox="0 0 24 24" fill="currentColor" style="width: 18px; height: 18px;"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+          <span class="menu-text">Início</span>
+        </div>
+      </div>
       
       <!-- HIERARQUIA ZDEPARA -->
-      <div class="menu-item active" style="cursor: pointer;" onclick="toggleSubmenuTree()">
+      <div class="menu-item" id="menu-item-zdepara-root" style="cursor: pointer;" onclick="toggleSubmenuTree()">
         <div class="menu-item-link-content">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 14l4-4-4-4v3H5v2h14v3zM5 18v-3h14v-2H5v-3l-4 4 4 4z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor" style="width: 18px; height: 18px;"><path d="M19 14l4-4-4-4v3H5v2h14v3zM5 18v-3h14v-2H5v-3l-4 4 4 4z"/></svg>
           <span class="menu-text">ZDEPARA</span>
         </div>
         <span class="menu-text sort-indicator" id="submenuTreeArrow" style="font-size:0.6rem; margin-right: 4px;">▼</span>
@@ -1193,36 +1201,51 @@
       
       <!-- SUB-ITENS HIERÁRQUICOS -->
       <div id="submenuTreeList" class="submenu-list">
-        <a class="menu-item active" style="font-size: 0.85rem; padding: 8px 12px;">
+        <a class="menu-item" id="menu-item-eventos" onclick="switchModule('eventos')" style="font-size: 0.85rem; padding: 8px 12px; cursor: pointer;">
           <div class="menu-item-link-content">
             <svg viewBox="0 0 24 24" style="width: 18px; height: 18px;"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
             <span class="menu-text">Eventos</span>
           </div>
         </a>
-        <a class="menu-item disabled" onclick="showSoonAlert('Coligada')" style="font-size: 0.85rem; padding: 8px 12px;">
+        <a class="menu-item" id="menu-item-coligadas" onclick="switchModule('coligadas')" style="font-size: 0.85rem; padding: 8px 12px; cursor: pointer;">
           <div class="menu-item-link-content">
             <svg viewBox="0 0 24 24" style="width: 18px; height: 18px;"><path d="M12 7V3H2v18h20V7H12zM6 19H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4V9h2v2zm0-4H4V5h2v2zm4 12H8v-2h2v2zm0-4H8v-2h2v2zm0-4H8V9h2v2zm0-4H8V5h2v2zm10 12h-8v-2h2v-2h-2v-2h2v-2h-2V9h8v10zm-2-8h-2v2h2v-2zm0 4h-2v2h2v-2z"/></svg>
             <span class="menu-text">Coligada</span>
           </div>
         </a>
-        <a class="menu-item disabled" onclick="showSoonAlert('Funções')" style="font-size: 0.85rem; padding: 8px 12px;">
+        <a class="menu-item" id="menu-item-funcoes" onclick="switchModule('funcoes')" style="font-size: 0.85rem; padding: 8px 12px; cursor: pointer;">
           <div class="menu-item-link-content">
             <svg viewBox="0 0 24 24" style="width: 18px; height: 18px;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H7c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.04-.42 1.99-1.07 2.75z"/></svg>
             <span class="menu-text">Funções</span>
           </div>
         </a>
-        <a class="menu-item disabled" onclick="showSoonAlert('Sindicatos')" style="font-size: 0.85rem; padding: 8px 12px;">
+        <a class="menu-item" id="menu-item-sindicatos" onclick="switchModule('sindicatos')" style="font-size: 0.85rem; padding: 8px 12px; cursor: pointer;">
           <div class="menu-item-link-content">
             <svg viewBox="0 0 24 24" style="width: 18px; height: 18px;"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 8 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
             <span class="menu-text">Sindicatos</span>
           </div>
         </a>
-        <a class="menu-item disabled" onclick="showSoonAlert('Seções')" style="font-size: 0.85rem; padding: 8px 12px;">
+        <a class="menu-item" id="menu-item-secoes" onclick="switchModule('secoes')" style="font-size: 0.85rem; padding: 8px 12px; cursor: pointer;">
           <div class="menu-item-link-content">
             <svg viewBox="0 0 24 24" style="width: 18px; height: 18px;"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H8V4h12v12z"/></svg>
             <span class="menu-text">Seções</span>
           </div>
         </a>
+        <a class="menu-item" id="menu-item-situacao" onclick="switchModule('situacao')" style="font-size: 0.85rem; padding: 8px 12px; cursor: pointer;">
+          <div class="menu-item-link-content">
+            <svg viewBox="0 0 24 24" style="width: 18px; height: 18px;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+            <span class="menu-text">Situação</span>
+          </div>
+        </a>
+      </div>
+
+      <div class="menu-category">Administração</div>
+      <!-- ITEM CONFIGURAÇÕES E INTEGRAÇÃO -->
+      <div class="menu-item" id="menu-item-config" style="cursor: pointer;" onclick="switchModule('config')">
+        <div class="menu-item-link-content">
+          <svg viewBox="0 0 24 24" fill="currentColor" style="width: 18px; height: 18px;"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+          <span class="menu-text">Configuração / Excel</span>
+        </div>
       </div>
     </div>
     
@@ -1248,26 +1271,11 @@
     <div id="mainInterface" style="display: flex; flex-direction: column; flex-grow: 1; overflow: hidden;">
       <header>
         <div class="header-title-container">
-          <h1 id="titleHeader">ZDEPARA_EVENTOS</h1>
-          <p>Mapeamento de eventos legados com validação sequencial e relatórios de auditoria</p>
+          <h1 id="titleHeader">Painel de Controle</h1>
+          <p id="subtitleHeader">Mapeamento de eventos legados com validação sequencial e relatórios de auditoria</p>
         </div>
         
-        <!-- BOTÕES DE IMPORTAR E EXPORTAR -->
-        <div class="connection-buttons">
-          <button class="btn-import" onclick="triggerImport()" title="Importa as informações oficiais da TOTVS por cima da planilha de origem">
-            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M4 16v-1a7 7 0 1114 0v1M12 2v10m-3-3l3 3 3-3"/></svg>
-            Importar da TOTVS
-          </button>
-          <button class="btn-sync" onclick="triggerExport()" title="Exporta os de-para locais para a planilha corporativa oficial">
-            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M4 16v-1a7 7 0 1114 0v1M12 12V2m-3 3l3-3 3 3"/></svg>
-            Sincronizar com TOTVS
-          </button>
-        </div>
-
         <div class="user-profile" style="position: relative;">
-          <button onclick="openGitHubConfigModal()" title="Configurações do GitHub" style="background: none; border: none; cursor: pointer; color: var(--color-text-muted); display: flex; align-items: center; justify-content: center; padding: 6px; border-radius: 50%; transition: var(--transition); margin-right: 8px;">
-            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg>
-          </button>
           <div class="avatar">AD</div>
           <div>
             <p style="font-size: 0.85rem; font-weight: 600;">Administrador</p>
@@ -1288,116 +1296,219 @@
           <button class="row-btn" style="padding: 4px 12px; font-size: 0.75rem; background:#fff; border-color:#f43f5e; color:#e11d48; border-radius:6px; font-weight: 600;" onclick="showInconsistenciesPanel()">Ver Lista</button>
         </div>
 
-        <!-- KPI MINI DASHBOARD -->
-        <section class="kpi-container" id="kpiContainer">
-          <div class="kpi-card kpi-total" id="kpiCardTotal" onclick="toggleKpiFilter('all')">
-            <div class="kpi-text-area">
-              <div class="kpi-label">Total Eventos</div>
-              <div class="kpi-value" id="valTotal">0</div>
-            </div>
-            <div class="kpi-icon-container">
-              <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
-            </div>
-          </div>
-          <div class="kpi-card kpi-mapped" id="kpiCardMapped" onclick="toggleKpiFilter('mapped')">
-            <div class="kpi-text-area">
-              <div class="kpi-label">Mapeados</div>
-              <div class="kpi-value" id="valMapped">0</div>
-            </div>
-            <div class="kpi-icon-container">
-              <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-            </div>
-          </div>
-          <div class="kpi-card kpi-unmapped" id="kpiCardUnmapped" onclick="toggleKpiFilter('unmapped')">
-            <div class="kpi-text-area">
-              <div class="kpi-label">Não Mapeados</div>
-              <div class="kpi-value" id="valUnmapped">0</div>
-            </div>
-            <div class="kpi-icon-container">
-              <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
-            </div>
-          </div>
-          <div class="kpi-card kpi-pending" id="kpiCardPending" onclick="toggleKpiFilter('pending')">
-            <div class="kpi-text-area">
-              <div class="kpi-label">P/ Análise</div>
-              <div class="kpi-value" id="valPending">0</div>
-            </div>
-            <div class="kpi-icon-container">
-              <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M11 18h2v-2h-2v2zm1-16C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-14c-2.21 0-4 1.79-4 4h2c0-1.1.9-2 2-2s2 .9 2 2c0 2-3 1.75-3 5h2c0-2.25 3-2.5 3-5 0-2.21-1.79-4-4-4z"/></svg>
-            </div>
-          </div>
-          <div class="kpi-card kpi-divergence" id="kpiCardDivergent" onclick="toggleKpiFilter('divergent')">
-            <div class="kpi-text-area">
-              <div class="kpi-label">Divergências</div>
-              <div class="kpi-value" id="valDivergent" style="color: var(--magenta);">0</div>
-            </div>
-            <div class="kpi-icon-container" style="background-color: #fce7f3; color: var(--magenta);">
-              <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
-            </div>
-          </div>
-        </section>
-
-        <!-- FILTERS -->
-        <section class="filter-panel">
-          <div class="filter-label">
-            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg>
-            Filtrar Dados:
-          </div>
-          <div class="filter-group">
-            <select id="filterTypeDropdown" class="filter-select" onchange="handleFilterTypeChange(this.value)">
-              <option value="global">Busca Geral</option>
-              <option value="empresaDe">Empresa Origem</option>
-              <option value="tipoEvento">Tipo Evento</option>
-              <option value="status">Status Mapeamento</option>
-              <option value="coligadaPara">Coligada RM</option>
-              <option value="codigoPara">Código RM</option>
-              <option value="nomeRm">Nome RM</option>
-              <option value="temObservacao">Com Observação?</option>
-            </select>
+        <!-- 1. HOME VIEW (PAINEL INICIAL) -->
+        <div id="homeView" style="display: flex; flex-direction: column; gap: 24px; width: 100%;">
+          <div class="table-card" style="padding: 24px;">
+            <h2 style="font-weight: 700; color: var(--bg-primary); margin-bottom: 8px; display:flex; align-items:center; gap:8px;">
+              <span>👋 Bem-vindo ao Portal De-Para TOTVS RM</span>
+            </h2>
+            <p style="color: var(--color-text-muted); font-size: 0.95rem; margin-bottom: 24px;">
+              Selecione um projeto na URL ou utilize a aba <strong>Configuração / Excel</strong> para importar uma planilha completa de mapeamentos. Veja abaixo o status de progresso do projeto atual:
+            </p>
             
-            <div class="filter-value-container" id="filterValueContainer">
-              <input type="text" id="filterValueInput" class="input-field" placeholder="Digite o termo para buscar..." oninput="applyFilters()">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
+              <!-- CARD EVENTOS -->
+              <div class="kpi-card" style="border-left: 5px solid var(--color-primary); cursor: pointer;" onclick="switchModule('eventos')">
+                <div class="kpi-text-area">
+                  <div class="kpi-label">Progresso Eventos</div>
+                  <div class="kpi-value" id="homeProgressEventos" style="font-size: 1.5rem; margin-top: 8px;">0 / 0 (0%)</div>
+                </div>
+                <div class="kpi-icon-container" style="background-color: #e0f2fe; color: #0284c7;">📋</div>
+              </div>
+              <!-- CARD COLIGADAS -->
+              <div class="kpi-card" style="border-left: 5px solid #10b981; cursor: pointer;" onclick="switchModule('coligadas')">
+                <div class="kpi-text-area">
+                  <div class="kpi-label">Progresso Coligadas</div>
+                  <div class="kpi-value" id="homeProgressColigadas" style="font-size: 1.5rem; margin-top: 8px;">0 / 0 (0%)</div>
+                </div>
+                <div class="kpi-icon-container" style="background-color: #d1fae5; color: #059669;">🏢</div>
+              </div>
+              <!-- CARD FUNÇÕES -->
+              <div class="kpi-card" style="border-left: 5px solid #6366f1; cursor: pointer;" onclick="switchModule('funcoes')">
+                <div class="kpi-text-area">
+                  <div class="kpi-label">Progresso Funções</div>
+                  <div class="kpi-value" id="homeProgressFuncoes" style="font-size: 1.5rem; margin-top: 8px;">0 / 0 (0%)</div>
+                </div>
+                <div class="kpi-icon-container" style="background-color: #e0e7ff; color: #4f46e5;">👤</div>
+              </div>
+              <!-- CARD SINDICATOS -->
+              <div class="kpi-card" style="border-left: 5px solid #ec4899; cursor: pointer;" onclick="switchModule('sindicatos')">
+                <div class="kpi-text-area">
+                  <div class="kpi-label">Progresso Sindicatos</div>
+                  <div class="kpi-value" id="homeProgressSindicatos" style="font-size: 1.5rem; margin-top: 8px;">0 / 0 (0%)</div>
+                </div>
+                <div class="kpi-icon-container" style="background-color: #fce7f3; color: #db2777;">🤝</div>
+              </div>
+              <!-- CARD SEÇÕES -->
+              <div class="kpi-card" style="border-left: 5px solid #f59e0b; cursor: pointer;" onclick="switchModule('secoes')">
+                <div class="kpi-text-area">
+                  <div class="kpi-label">Progresso Seções</div>
+                  <div class="kpi-value" id="homeProgressSecoes" style="font-size: 1.5rem; margin-top: 8px;">0 / 0 (0%)</div>
+                </div>
+                <div class="kpi-icon-container" style="background-color: #fef3c7; color: #d97706;">📁</div>
+              </div>
+              <!-- CARD SITUAÇÃO -->
+              <div class="kpi-card" style="border-left: 5px solid #8b5cf6; cursor: pointer;" onclick="switchModule('situacao')">
+                <div class="kpi-text-area">
+                  <div class="kpi-label">Progresso Situação</div>
+                  <div class="kpi-value" id="homeProgressSituacao" style="font-size: 1.5rem; margin-top: 8px;">0 / 0 (0%)</div>
+                </div>
+                <div class="kpi-icon-container" style="background-color: #f5f3ff; color: #7c3aed;">⏳</div>
+              </div>
             </div>
           </div>
-        </section>
+        </div>
 
-        <!-- MASTER TABLE CARD -->
-        <section class="table-card">
-          <div class="table-header-bar">
-            <div class="table-title">
-              <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
-              Tabela De-Para Mapeamentos
+        <!-- 2. DE-PARA VIEW (TELA PRINCIPAL RENDERIZADA DINAMICAMENTE) -->
+        <div id="deparaView" style="display: none; flex-direction: column; gap: 20px; width: 100%;">
+          <!-- KPI MINI DASHBOARD -->
+          <section class="kpi-container" id="kpiContainer">
+            <div class="kpi-card kpi-total" id="kpiCardTotal" onclick="toggleKpiFilter('all')">
+              <div class="kpi-text-area">
+                <div class="kpi-label" id="kpiLabelTotal">Total Itens</div>
+                <div class="kpi-value" id="valTotal">0</div>
+              </div>
+              <div class="kpi-icon-container">
+                <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+              </div>
             </div>
-            <div style="font-size: 0.82rem; color: var(--color-text-muted);" id="tableCount">0 registros</div>
-          </div>
+            <div class="kpi-card kpi-mapped" id="kpiCardMapped" onclick="toggleKpiFilter('mapped')">
+              <div class="kpi-text-area">
+                <div class="kpi-label">Mapeados</div>
+                <div class="kpi-value" id="valMapped">0</div>
+              </div>
+              <div class="kpi-icon-container">
+                <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+              </div>
+            </div>
+            <div class="kpi-card kpi-unmapped" id="kpiCardUnmapped" onclick="toggleKpiFilter('unmapped')">
+              <div class="kpi-text-area">
+                <div class="kpi-label">Não Mapeados</div>
+                <div class="kpi-value" id="valUnmapped">0</div>
+              </div>
+              <div class="kpi-icon-container">
+                <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+              </div>
+            </div>
+            <div class="kpi-card kpi-pending" id="kpiCardPending" onclick="toggleKpiFilter('pending')">
+              <div class="kpi-text-area">
+                <div class="kpi-label">P/ Análise</div>
+                <div class="kpi-value" id="valPending">0</div>
+              </div>
+              <div class="kpi-icon-container">
+                <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M11 18h2v-2h-2v2zm1-16C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-14c-2.21 0-4 1.79-4 4h2c0-1.1.9-2 2-2s2 .9 2 2c0 2-3 1.75-3 5h2c0-2.25 3-2.5 3-5 0-2.21-1.79-4-4-4z"/></svg>
+              </div>
+            </div>
+            <div class="kpi-card kpi-divergence" id="kpiCardDivergent" onclick="toggleKpiFilter('divergent')">
+              <div class="kpi-text-area">
+                <div class="kpi-label">Divergências</div>
+                <div class="kpi-value" id="valDivergent" style="color: var(--magenta);">0</div>
+              </div>
+              <div class="kpi-icon-container" style="background-color: #fce7f3; color: var(--magenta);">
+                <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+              </div>
+            </div>
+          </section>
 
-          <div class="scrollable-table-wrapper" id="scrollableTableWrapper" onscroll="handleTableScroll()">
-            <table id="mainTable">
-              <thead>
-                <tr>
-                  <th class="sortable col-empresa-orig" onclick="toggleSort('empresaDe')">Emp. Origem<span class="sort-indicator" id="sort-empresaDe"></span></th>
-                  <th class="sortable col-codigo-orig" onclick="toggleSort('codigoDe')">Cód. Origem<span class="sort-indicator" id="sort-codigoDe"></span></th>
-                  <th class="sortable col-nome-orig" onclick="toggleSort('nomeDe')">Nome Origem<span class="sort-indicator" id="sort-nomeDe"></span></th>
-                  <th class="sortable col-tipo-orig" onclick="toggleSort('tipoEvento')">Tipo Evento<span class="sort-indicator" id="sort-tipoEvento"></span></th>
-                  <th class="sortable col-coligada-rm" onclick="toggleSort('coligadaPara')">Colig. RM<span class="sort-indicator" id="sort-coligadaPara"></span></th>
-                  <th class="sortable col-codigo-rm" onclick="toggleSort('codigoPara')">Cód. RM<span class="sort-indicator" id="sort-codigoPara"></span></th>
-                  <th class="sortable col-nome-rm" onclick="toggleSort('nomeRm')">Nome RM / Tipo RM<span class="sort-indicator" id="sort-nomeRm"></span></th>
-                  <th class="col-acoes">Ações</th>
-                </tr>
-              </thead>
-              <tbody id="tableBody">
-                <!-- Rendered Dynamically -->
-              </tbody>
-            </table>
+          <!-- FILTERS -->
+          <section class="filter-panel">
+            <div class="filter-label">
+              <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg>
+              Filtrar Dados:
+            </div>
+            <div class="filter-group">
+              <select id="filterTypeDropdown" class="filter-select" onchange="handleFilterTypeChange(this.value)">
+                <!-- Opções serão renderizadas dinamicamente de acordo com a aba/módulo -->
+              </select>
+              
+              <div class="filter-value-container" id="filterValueContainer">
+                <input type="text" id="filterValueInput" class="input-field" placeholder="Digite o termo para buscar..." oninput="applyFilters()">
+              </div>
+            </div>
+          </section>
+
+          <!-- MASTER TABLE CARD -->
+          <section class="table-card">
+            <div class="table-header-bar">
+              <div class="table-title" id="tableTitleText">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+                Tabela De-Para Mapeamentos
+              </div>
+              <div style="font-size: 0.82rem; color: var(--color-text-muted);" id="tableCount">0 registros</div>
+            </div>
+
+            <div class="scrollable-table-wrapper" id="scrollableTableWrapper" onscroll="handleTableScroll()">
+              <table id="mainTable">
+                <thead id="mainTableHead">
+                  <!-- Rendered Dynamically -->
+                </thead>
+                <tbody id="tableBody">
+                  <!-- Rendered Dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+
+        <!-- 3. CONFIG VIEW (GITHUB CONFIGS + LOCAL EXCEL IMPORT/EXPORT) -->
+        <div id="configView" style="display: none; flex-direction: column; gap: 20px; width: 100%;">
+          <div class="table-card" style="padding: 24px;">
+            <h2 style="font-weight: 700; color: var(--bg-primary); margin-bottom: 12px; display:flex; align-items:center; gap:8px;">
+              <span>⚙️ Configuração do GitHub & Integração Excel</span>
+            </h2>
+            <p style="color: var(--color-text-muted); font-size: 0.92rem; margin-bottom: 24px;">
+              Configure a conexão segura do portal com o repositório no GitHub para salvar as alterações em tempo real, ou realize cargas em lote por meio de arquivos Excel (.xlsx).
+            </p>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-bottom: 32px; border-bottom: 1px solid #f1f5f9; padding-bottom: 32px;">
+              <div>
+                <h3 style="font-weight:600; font-size:1.1rem; color:var(--bg-primary); margin-bottom:16px;">Integração com Planilhas Locais</h3>
+                <p style="font-size:0.88rem; color:var(--color-text-muted); margin-bottom:20px; line-height:1.4;">
+                  Você pode exportar a base de dados completa do projeto ativo com todas as abas estruturadas ou importar uma planilha preenchida local para povoamento e sincronismo em lote.
+                </p>
+                <div style="display:flex; gap:12px;">
+                  <button class="row-btn row-btn-primary" style="padding: 10px 20px;" onclick="triggerExport()">
+                    📥 Exportar para Excel
+                  </button>
+                  <button class="row-btn row-btn-secondary" style="padding: 10px 20px;" onclick="document.getElementById('importExcelInput').click()">
+                    📤 Importar Planilha
+                  </button>
+                  <input type="file" id="importExcelInput" style="display:none;" accept=".xlsx, .xls" onchange="handleExcelImport(event)">
+                </div>
+              </div>
+              
+              <div>
+                <h3 style="font-weight:600; font-size:1.1rem; color:var(--bg-primary); margin-bottom:16px;">Parâmetros da API do GitHub</h3>
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                  <div class="detail-field-group">
+                    <span class="detail-label" style="font-size:0.75rem;">Personal Access Token (PAT)</span>
+                    <input type="password" id="ghTokenInput" class="input-field" placeholder="ghp_..." style="padding: 8px 12px; font-size: 0.85rem;">
+                  </div>
+                  <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+                    <div class="detail-field-group">
+                      <span class="detail-label" style="font-size:0.75rem;">Proprietário / Organização</span>
+                      <input type="text" id="ghOwnerInput" class="input-field" placeholder="Ex: TOTVSGustavoFerreira" style="padding: 8px 12px; font-size: 0.85rem;">
+                    </div>
+                    <div class="detail-field-group">
+                      <span class="detail-label" style="font-size:0.75rem;">Nome do Repositório</span>
+                      <input type="text" id="ghRepoInput" class="input-field" placeholder="Ex: portal-depara-navarro" style="padding: 8px 12px; font-size: 0.85rem;">
+                    </div>
+                  </div>
+                  <div style="margin-top: 8px;">
+                    <button class="row-btn row-btn-primary" style="padding: 8px 20px;" onclick="saveGitHubConfig()">Salvar Parâmetros</button>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-        </section>
+        </div>
 
       </div>
       
       <!-- FOOTER -->
       <footer>
         <span id="footerConnectionInfo" style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
-          <span style="display:flex; align-items:center; gap:6px;">📋 <strong id="footerTotal">-</strong> eventos totais</span>
+          <span style="display:flex; align-items:center; gap:6px; color:#64748b;">🚫 <strong id="footerIgnored">-</strong> não importar</span>
           <span style="color:#94a3b8;">|</span>
           <span style="display:flex; align-items:center; gap:6px; color:#10b981;">✔ <strong id="footerMapped">-</strong> mapeados</span>
           <span style="color:#94a3b8;">|</span>
@@ -1437,6 +1548,7 @@
     let sortAscending = true;
 
     let clientPasskey = "";
+    let currentModule = 'home'; // Roteamento padrão inicial
 
     window.onload = function() {
       if (!SPREADSHEET_ID) {
@@ -1446,6 +1558,9 @@
       
       // Validação da Chave de Acesso (Passkey) para Multi-Tenant
       checkPasskeyAccess();
+      
+      // Forçar inicialização da aba correta
+      switchModule('home');
       
       document.addEventListener('click', function(e) {
         if (!e.target.closest('.autocomplete-wrapper') && !e.target.closest('.autocomplete-td-wrapper')) {
@@ -1694,21 +1809,19 @@
             destinationName: response.config?.destinationName || "Google Planilha Oficial",
             destinationPath: "Exportação via Download"
           };
-          updateFooter();
 
           document.getElementById("mainInterface").style.display = "flex";
           document.getElementById("wizardSetup").style.display = "none";
           
-          database = response.ZDEPARA_EVENTOS || [];
+          // rmEvents e dados de apoio globais
           rmEvents = response.DADOS_RM_EVENTOS || [];
           unusedCreatedEvents = [];
           
-          // Calcular diagnósticos e estatísticas localmente para o portal continuar 100% funcional
-          calculateLocalDiagnosticsAndStats();
+          // Forçar renderização do módulo ativo
+          switchModule(currentModule);
           
-          renderWarnings();
-          updateDashboard();
-          applyFilters();
+          // Carregar os progressos na home
+          updateHomeProgress();
         })
         .catch(err => {
           hideLoading();
@@ -1716,116 +1829,429 @@
         });
     }
 
+    function switchModule(moduleName) {
+      currentModule = moduleName;
+      editingRowNumber = null;
+      expandedRowNumbers.clear();
+      activeKpiFilter = 'all';
+      
+      // Atualizar classe ativa na barra lateral
+      document.querySelectorAll('.sidebar .menu-item').forEach(el => el.classList.remove('active'));
+      
+      // Marcar menu ativo
+      const activeMenuItem = document.getElementById(`menu-item-${moduleName}`);
+      if (activeMenuItem) {
+        activeMenuItem.classList.add('active');
+      }
+      
+      // Controlar exibição das views
+      if (moduleName === 'home') {
+        document.getElementById('homeView').style.display = 'flex';
+        document.getElementById('deparaView').style.display = 'none';
+        document.getElementById('configView').style.display = 'none';
+        updateHomeProgress();
+      } 
+      else if (moduleName === 'config') {
+        document.getElementById('homeView').style.display = 'none';
+        document.getElementById('deparaView').style.display = 'none';
+        document.getElementById('configView').style.display = 'flex';
+        loadConfigInputs();
+      } 
+      else {
+        document.getElementById('homeView').style.display = 'none';
+        document.getElementById('deparaView').style.display = 'flex';
+        document.getElementById('configView').style.display = 'none';
+        
+        // Carrega dados da aba selecionada
+        setupModuleDatabase(moduleName);
+      }
+    }
 
+    function loadConfigInputs() {
+      document.getElementById("ghTokenInput").value = localStorage.getItem("gh_pat") || "";
+      document.getElementById("ghOwnerInput").value = localStorage.getItem("gh_owner") || "TOTVSGustavoFerreira";
+      document.getElementById("ghRepoInput").value = localStorage.getItem("gh_repo") || "portal-depara-navarro";
+    }
+
+    function updateHomeProgress() {
+      if (!rawJsonDatabase) return;
+      
+      const modules = [
+        { key: 'ZDEPARA_EVENTOS', elId: 'homeProgressEventos' },
+        { key: 'ZDEPARA_COLIGADAS', elId: 'homeProgressColigadas' },
+        { key: 'ZDEPARA_FUNCOES', elId: 'homeProgressFuncoes' },
+        { key: 'ZDEPARA_SINDICATOS', elId: 'homeProgressSindicatos' },
+        { key: 'ZDEPARA_SECOES', elId: 'homeProgressSecoes' },
+        { key: 'ZDEPARA_SITUACAO', elId: 'homeProgressSituacao' }
+      ];
+      
+      modules.forEach(m => {
+        const arr = rawJsonDatabase[m.key] || [];
+        const total = arr.length;
+        let mapped = 0;
+        
+        arr.forEach(item => {
+          // Diferentes formas de identificar mapeamento para cada aba
+          if (m.key === 'ZDEPARA_EVENTOS') {
+            if (item.codigoPara && !isCodeIgnored(item.codigoPara) && !isCodeToCreate(item.codigoPara)) mapped++;
+          } else if (m.key === 'ZDEPARA_COLIGADAS') {
+            if (item.CODCOLIGADA) mapped++;
+          } else if (m.key === 'ZDEPARA_SITUACAO') {
+            if (item.CODSITUACAO_PARA) mapped++;
+          } else {
+            if (item.CODIGO_PARA && !isCodeIgnored(item.CODIGO_PARA) && !isCodeToCreate(item.CODIGO_PARA)) mapped++;
+          }
+        });
+        
+        const pct = total > 0 ? Math.round((mapped / total) * 100) : 0;
+        const el = document.getElementById(m.elId);
+        if (el) el.innerText = `${mapped} / ${total} (${pct}%)`;
+      });
+    }
+
+    function setupModuleDatabase(moduleName) {
+      if (!rawJsonDatabase) return;
+      
+      // Títulos e cabeçalhos dinâmicos
+      const titleHeader = document.getElementById("titleHeader");
+      const subtitleHeader = document.getElementById("subtitleHeader");
+      const tableTitleText = document.getElementById("tableTitleText");
+      const mainTableHead = document.getElementById("mainTableHead");
+      const filterTypeDropdown = document.getElementById("filterTypeDropdown");
+      const kpiLabelTotal = document.getElementById("kpiLabelTotal");
+      
+      let headerHtml = "";
+      let filterOptionsHtml = "";
+      
+      if (moduleName === 'eventos') {
+        titleHeader.innerText = "ZDEPARA_EVENTOS";
+        subtitleHeader.innerText = "Mapeamento de eventos legados com validação sequencial e relatórios de auditoria";
+        tableTitleText.innerHTML = `<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg> Tabela De-Para Eventos`;
+        kpiLabelTotal.innerText = "Total Eventos";
+        
+        database = rawJsonDatabase.ZDEPARA_EVENTOS || [];
+        
+        headerHtml = `
+          <tr>
+            <th class="sortable col-empresa-orig" onclick="toggleSort('empresaDe')">Emp. Origem<span class="sort-indicator" id="sort-empresaDe"></span></th>
+            <th class="sortable col-codigo-orig" onclick="toggleSort('codigoDe')">Cód. Origem<span class="sort-indicator" id="sort-codigoDe"></span></th>
+            <th class="sortable col-nome-orig" onclick="toggleSort('nomeDe')">Nome Origem<span class="sort-indicator" id="sort-nomeDe"></span></th>
+            <th class="sortable col-tipo-orig" onclick="toggleSort('tipoEvento')">Tipo Evento<span class="sort-indicator" id="sort-tipoEvento"></span></th>
+            <th class="sortable col-coligada-rm" onclick="toggleSort('coligadaPara')">Colig. RM<span class="sort-indicator" id="sort-coligadaPara"></span></th>
+            <th class="sortable col-codigo-rm" onclick="toggleSort('codigoPara')">Cód. RM<span class="sort-indicator" id="sort-codigoPara"></span></th>
+            <th class="sortable col-nome-rm" onclick="toggleSort('nomeRm')">Nome RM / Tipo RM<span class="sort-indicator" id="sort-nomeRm"></span></th>
+            <th class="col-acoes">Ações</th>
+          </tr>
+        `;
+        
+        filterOptionsHtml = `
+          <option value="global">Busca Geral</option>
+          <option value="empresaDe">Empresa Origem</option>
+          <option value="tipoEvento">Tipo Evento</option>
+          <option value="status">Status Mapeamento</option>
+          <option value="coligadaPara">Coligada RM</option>
+          <option value="codigoPara">Código RM</option>
+          <option value="nomeRm">Nome RM</option>
+          <option value="temObservacao">Com Observação?</option>
+        `;
+      } 
+      else if (moduleName === 'coligadas') {
+        titleHeader.innerText = "ZDEPARA_COLIGADAS";
+        subtitleHeader.innerText = "Mapeamento das Coligadas / Empresas do cliente para o RM";
+        tableTitleText.innerHTML = `<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg> Tabela De-Para Coligadas`;
+        kpiLabelTotal.innerText = "Total Coligadas";
+        
+        database = rawJsonDatabase.ZDEPARA_COLIGADAS || [];
+        
+        headerHtml = `
+          <tr>
+            <th class="sortable" onclick="toggleSort('EMP_CODIGO')">Cód. Origem<span class="sort-indicator" id="sort-EMP_CODIGO"></span></th>
+            <th class="sortable" onclick="toggleSort('NOME')">Nome Origem<span class="sort-indicator" id="sort-NOME"></span></th>
+            <th class="sortable" onclick="toggleSort('RAZAO SOCIAL')">Razão Social<span class="sort-indicator" id="sort-RAZAO SOCIAL"></span></th>
+            <th class="sortable" onclick="toggleSort('CNPJ')">CNPJ<span class="sort-indicator" id="sort-CNPJ"></span></th>
+            <th class="sortable" onclick="toggleSort('CODCOLIGADA')">Coligada RM<span class="sort-indicator" id="sort-CODCOLIGADA"></span></th>
+            <th class="col-acoes">Ações</th>
+          </tr>
+        `;
+        
+        filterOptionsHtml = `
+          <option value="global">Busca Geral</option>
+          <option value="nome">Nome Origem</option>
+          <option value="cnpj">CNPJ</option>
+          <option value="codColigada">Código RM</option>
+        `;
+      } 
+      else if (moduleName === 'funcoes') {
+        titleHeader.innerText = "ZDEPARA_FUNCOES";
+        subtitleHeader.innerText = "Mapeamento das Funções / Cargos legados para o RM";
+        tableTitleText.innerHTML = `<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg> Tabela De-Para Funções`;
+        kpiLabelTotal.innerText = "Total Funções";
+        
+        database = rawJsonDatabase.ZDEPARA_FUNCOES || [];
+        
+        headerHtml = `
+          <tr>
+            <th class="sortable" onclick="toggleSort('EMPRESA_DE')">Empresa Origem<span class="sort-indicator" id="sort-EMPRESA_DE"></span></th>
+            <th class="sortable" onclick="toggleSort('CODIGO_DE')">Cód. Origem<span class="sort-indicator" id="sort-CODIGO_DE"></span></th>
+            <th class="sortable" onclick="toggleSort('NOME_DE')">Nome Função Origem<span class="sort-indicator" id="sort-NOME_DE"></span></th>
+            <th class="sortable" onclick="toggleSort('CBO')">CBO<span class="sort-indicator" id="sort-CBO"></span></th>
+            <th class="sortable" onclick="toggleSort('COLIGADA_PARA')">Coligada RM<span class="sort-indicator" id="sort-COLIGADA_PARA"></span></th>
+            <th class="sortable" onclick="toggleSort('CODIGO_PARA')">Função RM<span class="sort-indicator" id="sort-CODIGO_PARA"></span></th>
+            <th class="col-acoes">Ações</th>
+          </tr>
+        `;
+        
+        filterOptionsHtml = `
+          <option value="global">Busca Geral</option>
+          <option value="nomeDe">Nome Função</option>
+          <option value="cbo">CBO</option>
+          <option value="codigoPara">Código RM</option>
+        `;
+      } 
+      else if (moduleName === 'sindicatos') {
+        titleHeader.innerText = "ZDEPARA_SINDICATOS";
+        subtitleHeader.innerText = "Mapeamento dos Sindicatos legados para o RM";
+        tableTitleText.innerHTML = `<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg> Tabela De-Para Sindicatos`;
+        kpiLabelTotal.innerText = "Total Sindicatos";
+        
+        database = rawJsonDatabase.ZDEPARA_SINDICATOS || [];
+        
+        headerHtml = `
+          <tr>
+            <th class="sortable" onclick="toggleSort('EMPRESA_DE')">Empresa Origem<span class="sort-indicator" id="sort-EMPRESA_DE"></span></th>
+            <th class="sortable" onclick="toggleSort('CODIGO_DE')">Cód. Origem<span class="sort-indicator" id="sort-CODIGO_DE"></span></th>
+            <th class="sortable" onclick="toggleSort('NOME_DE')">Nome Sindicato<span class="sort-indicator" id="sort-NOME_DE"></span></th>
+            <th class="sortable" onclick="toggleSort('CNPJ')">CNPJ<span class="sort-indicator" id="sort-CNPJ"></span></th>
+            <th class="sortable" onclick="toggleSort('COLIGADA_PARA')">Coligada RM<span class="sort-indicator" id="sort-COLIGADA_PARA"></span></th>
+            <th class="sortable" onclick="toggleSort('CODIGO_PARA')">Sindicato RM<span class="sort-indicator" id="sort-CODIGO_PARA"></span></th>
+            <th class="col-acoes">Ações</th>
+          </tr>
+        `;
+        
+        filterOptionsHtml = `
+          <option value="global">Busca Geral</option>
+          <option value="nomeDe">Nome Sindicato</option>
+          <option value="cnpj">CNPJ</option>
+          <option value="codigoPara">Código RM</option>
+        `;
+      } 
+      else if (moduleName === 'secoes') {
+        titleHeader.innerText = "ZDEPARA_SECOES";
+        subtitleHeader.innerText = "Mapeamento da estrutura de Seções e Departamentos legados para o RM";
+        tableTitleText.innerHTML = `<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg> Tabela De-Para Seções`;
+        kpiLabelTotal.innerText = "Total Seções";
+        
+        database = rawJsonDatabase.ZDEPARA_SECOES || [];
+        
+        headerHtml = `
+          <tr>
+            <th class="sortable" onclick="toggleSort('EMPRESA_DE')">Empresa Origem<span class="sort-indicator" id="sort-EMPRESA_DE"></span></th>
+            <th class="sortable" onclick="toggleSort('FILIAL_DE')">Filial Origem<span class="sort-indicator" id="sort-FILIAL_DE"></span></th>
+            <th class="sortable" onclick="toggleSort('CODIGO_DE')">Cód. Origem<span class="sort-indicator" id="sort-CODIGO_DE"></span></th>
+            <th class="sortable" onclick="toggleSort('NOME_DE')">Nome Seção<span class="sort-indicator" id="sort-NOME_DE"></span></th>
+            <th class="sortable" onclick="toggleSort('COLIGADA_PARA')">Colig. RM<span class="sort-indicator" id="sort-COLIGADA_PARA"></span></th>
+            <th class="sortable" onclick="toggleSort('FILIAL_PARA')">Filial RM<span class="sort-indicator" id="sort-FILIAL_PARA"></span></th>
+            <th class="sortable" onclick="toggleSort('CODIGO_PARA')">Seção RM<span class="sort-indicator" id="sort-CODIGO_PARA"></span></th>
+            <th class="col-acoes">Ações</th>
+          </tr>
+        `;
+        
+        filterOptionsHtml = `
+          <option value="global">Busca Geral</option>
+          <option value="nomeDe">Nome Seção</option>
+          <option value="codigoPara">Código RM</option>
+        `;
+      } 
+      else if (moduleName === 'situacao') {
+        titleHeader.innerText = "ZDEPARA_SITUACAO";
+        subtitleHeader.innerText = "Mapeamento das Situações Cadastrais legadas para o RM";
+        tableTitleText.innerHTML = `<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg> Tabela De-Para Situação`;
+        kpiLabelTotal.innerText = "Total Situações";
+        
+        database = rawJsonDatabase.ZDEPARA_SITUACAO || [];
+        
+        headerHtml = `
+          <tr>
+            <th class="sortable" onclick="toggleSort('CODIGO_DE')">Código Origem<span class="sort-indicator" id="sort-CODIGO_DE"></span></th>
+            <th class="sortable" onclick="toggleSort('NOME_DE')">Situação Origem<span class="sort-indicator" id="sort-NOME_DE"></span></th>
+            <th class="sortable" onclick="toggleSort('CODSITUACAO_PARA')">Situação RM<span class="sort-indicator" id="sort-CODSITUACAO_PARA"></span></th>
+            <th class="sortable" onclick="toggleSort('CODMOTIVO_PARA')">Motivo RM<span class="sort-indicator" id="sort-CODMOTIVO_PARA"></span></th>
+            <th class="sortable" onclick="toggleSort('CODSITUACAO_RETORNO_PARA')">Sit. Retorno RM<span class="sort-indicator" id="sort-CODSITUACAO_RETORNO_PARA"></span></th>
+            <th class="sortable" onclick="toggleSort('CODMOTIVO_RETORNO_PARA')">Motivo Retorno RM<span class="sort-indicator" id="sort-CODMOTIVO_RETORNO_PARA"></span></th>
+            <th class="col-acoes">Ações</th>
+          </tr>
+        `;
+        
+        filterOptionsHtml = `
+          <option value="global">Busca Geral</option>
+          <option value="nomeDe">Situação Origem</option>
+        `;
+      }
+      
+      mainTableHead.innerHTML = headerHtml;
+      filterTypeDropdown.innerHTML = filterOptionsHtml;
+      
+      calculateLocalDiagnosticsAndStats();
+      renderWarnings();
+      updateDashboard();
+      applyFilters();
+    }
 
     function calculateLocalDiagnosticsAndStats() {
-      // 1. Identificar Duplicados
+      // 1. Diagnósticos padrão (Duplicados gerais)
       const seen = new Set();
       const dupes = [];
       database.forEach(item => {
-        const key = `${item.empresaDe}-${item.codigoDe}-${item.tipoEvento}`;
+        let key = "";
+        if (currentModule === 'eventos') {
+          key = `${item.empresaDe}-${item.codigoDe}-${item.tipoEvento}`;
+        } else if (currentModule === 'coligadas') {
+          key = `${item.EMP_CODIGO}`;
+        } else if (currentModule === 'situacao') {
+          key = `${item.CODIGO_DE}`;
+        } else {
+          key = `${item.EMPRESA_DE || item['EMPRESA _DE'] || ''}-${item.CODIGO_DE}`;
+        }
         if (seen.has(key)) {
-          dupes.push(item.codigoDe);
+          dupes.push(item.CODIGO_DE || item.codigoDe || item.EMP_CODIGO);
         } else {
           seen.add(key);
         }
       });
       
-      // 2. Identificar Lacunas (Gaps)
-      // 2. Identificar Lacunas (Gaps) APENAS nos Eventos Criados Manualmente
-      // Os eventos criados manualmente têm o prefixo "[INCLUSAO MANUAL]" na descrição
-      const manualCreatedCodes = rmEvents
-        .filter(ev => ev.descricao.includes("[INCLUSAO MANUAL]"))
-        .map(ev => parseInt(ev.codigo, 10))
-        .filter(n => !isNaN(n))
-        .sort((a, b) => a - b);
-      
-      const gaps = [];
-      if (manualCreatedCodes.length > 0) {
-        const min = manualCreatedCodes[0];
-        const max = manualCreatedCodes[manualCreatedCodes.length - 1];
-        const manualSet = new Set(manualCreatedCodes);
-        for (let i = min; i <= max; i++) {
-          if (!manualSet.has(i)) {
-            gaps.push(String(i).padStart(4, '0'));
-          }
-        }
-      }
-
       diagnostics = {
         duplicates: [...new Set(dupes)],
-        gaps: gaps.slice(0, 15), // Limitar exibição a 15 lacunas
+        gaps: [],
         orphans: []
       };
 
-      // Identificar divergências de tipo e duplicidades
-      // Um nomeDe pode estar mapeado para códigos RM diferentes (duplicidade de mapeamento)
-      const nameToRmCodes = {};
-      database.forEach(item => {
-        const codPara = (item.codigoPara || "").trim();
-        if (codPara && !isCodeIgnored(codPara)) {
-          const key = `${item.nomeDe.toLowerCase()}|${item.tipoEvento}`;
-          if (!nameToRmCodes[key]) nameToRmCodes[key] = new Set();
-          nameToRmCodes[key].add(codPara);
+      // Lacunas e itens não usados apenas para Eventos (módulo original)
+      if (currentModule === 'eventos') {
+        const manualCreatedCodes = rmEvents
+          .filter(ev => ev.descricao.includes("[INCLUSAO MANUAL]"))
+          .map(ev => parseInt(ev.codigo, 10))
+          .filter(n => !isNaN(n))
+          .sort((a, b) => a - b);
+        
+        const gaps = [];
+        if (manualCreatedCodes.length > 0) {
+          const min = manualCreatedCodes[0];
+          const max = manualCreatedCodes[manualCreatedCodes.length - 1];
+          const manualSet = new Set(manualCreatedCodes);
+          for (let i = min; i <= max; i++) {
+            if (!manualSet.has(i)) {
+              gaps.push(String(i).padStart(4, '0'));
+            }
+          }
         }
-      });
+        diagnostics.gaps = gaps.slice(0, 15);
+      }
 
-      // Calcular dinamicamente a lista de eventos criados manualmente que não estão sendo usados
-      // em nenhuma das colunas (Código Principal, Ficha Mês 1, Ficha Mês 2, Verba Férias)
-      const usedCodesInDatabase = new Set();
-      database.forEach(item => {
-        if (item.codigoPara) usedCodesInDatabase.add(item.codigoPara.trim());
-        if (item.codigoParaFichaMes1) usedCodesInDatabase.add(item.codigoParaFichaMes1.trim());
-        if (item.codigoParaFichaMes2) usedCodesInDatabase.add(item.codigoParaFichaMes2.trim());
-        if (item.codigoParaVerbasFerias) usedCodesInDatabase.add(item.codigoParaVerbasFerias.trim());
-      });
-
-      unusedCreatedEvents = rmEvents.filter(ev => {
-        const isManual = ev.descricao.includes("[INCLUSAO MANUAL]") || ev.descricao.includes("INCLUSAO MANUAL");
-        const isUsed = usedCodesInDatabase.has(ev.codigo.trim());
-        return isManual && !isUsed;
-      });
-
-      // 3. Gerar estatísticas para o KPI Dashboard e marcar itens
+      // 2. Estatísticas do Módulo Corrente
       const total = database.length;
       let preenchidos = 0;
       let naoPreenchidos = 0;
       let pAnalise = 0;
       let divergencias = 0;
 
+      // Mapas de divergência
+      const nameToDestCodes = {}; // Para duplicidades de destino por nome de origem
+      const cnpjToColigadaDest = {}; // Raiz CNPJ -> CODCOLIGADA
+
+      if (currentModule === 'coligadas') {
+        database.forEach(item => {
+          const cnpjLimpo = (item.CNPJ || "").replace(/\D/g, "").slice(0, 8); // Raiz de 8 dígitos
+          const coligadaDest = (item.CODCOLIGADA || "").trim();
+          if (cnpjLimpo && coligadaDest) {
+            if (!cnpjToColigadaDest[cnpjLimpo]) cnpjToColigadaDest[cnpjLimpo] = new Set();
+            cnpjToColigadaDest[cnpjLimpo].add(coligadaDest);
+          }
+        });
+      } else {
+        database.forEach(item => {
+          const destCode = ((currentModule === 'situacao' ? item.CODSITUACAO_PARA : item.CODIGO_PARA) || "").trim();
+          const origName = ((item.NOME_DE || item.NOME || item.nomeDe || "")).toLowerCase().trim();
+          if (destCode && !isCodeIgnored(destCode) && !isCodeToCreate(destCode) && origName) {
+            if (!nameToDestCodes[origName]) nameToDestCodes[origName] = new Set();
+            nameToDestCodes[origName].add(destCode);
+          }
+        });
+      }
+
       database.forEach(item => {
-        const codPara = (item.codigoPara || "").trim();
         item.hasDivergencia = false;
         item.hasDivergenciaDuplicidade = false;
         item.hasDivergenciaTipo = false;
 
-        if (codPara === "P/ ANALISE") {
-          pAnalise++;
-        } else if (codPara && !isCodeIgnored(codPara) && !isCodeToCreate(codPara)) {
-          preenchidos++;
-        } else {
-          // Sem código, NAO IMPORTAR e CRIAR são todos considerados não mapeados
-          if (!codPara || isCodeToCreate(codPara)) naoPreenchidos++;
-        }
-        
-        // Divergência de Tipo (só para códigos reais, não CRIAR nem NAO IMPORTAR)
-        const compatibility = checkTypeCompatibility(item.tipoEvento, codPara);
-        if (codPara && !isCodeIgnored(codPara) && !isCodeToCreate(codPara) && !compatibility.isMatch) {
-          item.hasDivergenciaTipo = true;
-          item.hasDivergencia = true;
-        }
-
-        // Divergência de Mapeamentos Duplos
-        if (codPara && !isCodeIgnored(codPara) && !isCodeToCreate(codPara)) {
-          const key = `${item.nomeDe.toLowerCase()}|${item.tipoEvento}`;
-          if (nameToRmCodes[key] && nameToRmCodes[key].size > 1) {
-            item.hasDivergenciaDuplicidade = true;
-            item.hasDivergencia = true;
+        if (currentModule === 'coligadas') {
+          const codColigada = (item.CODCOLIGADA || "").trim();
+          if (codColigada) {
+            preenchidos++;
+            // Validar divergência de CNPJ (mesma raiz para coligadas diferentes)
+            const cnpjLimpo = (item.CNPJ || "").replace(/\D/g, "").slice(0, 8);
+            if (cnpjLimpo && cnpjToColigadaDest[cnpjLimpo] && cnpjToColigadaDest[cnpjLimpo].size > 1) {
+              item.hasDivergencia = true;
+              item.hasDivergenciaDuplicidade = true;
+              divergencias++;
+            }
+          } else {
+            naoPreenchidos++;
           }
-        }
+        } 
+        else if (currentModule === 'situacao') {
+          const codSituacao = (item.CODSITUACAO_PARA || "").trim();
+          if (codSituacao) {
+            preenchidos++;
+          } else {
+            naoPreenchidos++;
+          }
+          // Situação não possui divergências por padrão
+        } 
+        else if (currentModule === 'secoes') {
+          const codSecao = (item.CODIGO_PARA || "").trim();
+          if (codSecao === "P/ ANALISE") {
+            pAnalise++;
+          } else if (codSecao) {
+            preenchidos++;
+          } else {
+            naoPreenchidos++;
+          }
+          // Seções não possui KPIs de divergência por padrão
+        } 
+        else {
+          // Eventos, Funções, Sindicatos
+          const codPara = ((currentModule === 'eventos' ? item.codigoPara : item.CODIGO_PARA) || "").trim();
+          
+          if (codPara === "P/ ANALISE") {
+            pAnalise++;
+          } else if (codPara && !isCodeIgnored(codPara) && !isCodeToCreate(codPara)) {
+            preenchidos++;
+          } else {
+            if (!codPara || isCodeToCreate(codPara)) naoPreenchidos++;
+          }
 
-        if (item.hasDivergencia) {
-          divergencias++;
+          // Validações de divergência
+          if (codPara && !isCodeIgnored(codPara) && !isCodeToCreate(codPara)) {
+            // Divergência de Tipo (Apenas em Eventos)
+            if (currentModule === 'eventos') {
+              const compatibility = checkTypeCompatibility(item.tipoEvento, codPara);
+              if (!compatibility.isMatch) {
+                item.hasDivergenciaTipo = true;
+                item.hasDivergencia = true;
+              }
+            }
+
+            // Divergência de Mapeamentos Duplos por Nome
+            const origName = ((item.NOME_DE || item.NOME || item.nomeDe || "")).toLowerCase().trim();
+            if (origName && nameToDestCodes[origName] && nameToDestCodes[origName].size > 1) {
+              item.hasDivergenciaDuplicidade = true;
+              item.hasDivergencia = true;
+            }
+          }
+
+          if (item.hasDivergencia) {
+            divergencias++;
+          }
         }
       });
 
@@ -2081,108 +2507,68 @@
     }
 
     function triggerImport() {
-      showCustomConfirm(
-        "Importar da TOTVS",
-        "Isso importará os dados da Planilha Oficial da TOTVS por cima da Planilha Origem atual. Continuar?",
-        function() {
-          const sheets = ["ZDEPARA_EVENTOS", "DADOS_RM_EVENTOS"];
-          showProgressModal("Importando Dados da TOTVS");
-          addProgressLog("Iniciando fluxo de importação...");
-          
-          let current = 0;
-          function importNext() {
-            if (current < sheets.length) {
-              const sheetName = sheets[current];
-              updateProgressModal(current + 1, sheets.length, sheetName);
-              addProgressLog(`Requisitando importação da aba: ${sheetName}...`);
-              
-              apiGet("importSingleSheet", { sheetName: sheetName })
-                .then(function(response) {
-                  if (response.success) {
-                    addProgressLog(`Aba ${sheetName} importada com sucesso: ${response.message || ''}`);
-                    current++;
-                    importNext();
-                  } else {
-                    addProgressLog(`ERRO ao importar ${sheetName}: ${response.error}`);
-                    closeProgressModal();
-                    showToast(`Erro na aba ${sheetName}: ${response.error}`, 'error');
-                    loadPortalData();
-                  }
-                })
-                .catch(function(err) {
-                  addProgressLog(`FALHA crítica de conexão para ${sheetName}: ${err.message}`);
-                  closeProgressModal();
-                  showToast(`Erro na requisição da aba ${sheetName}: ${err.message}`, 'error');
-                  loadPortalData();
-                });
-            } else {
-              addProgressLog("Importação de todas as abas concluída.");
-              setTimeout(function() {
-                closeProgressModal();
-                showToast("Importação bilateral concluída com sucesso!", 'success');
-                loadPortalData();
-              }, 1200);
-            }
-          }
-          importNext();
-        }
-      );
+      // Rotina de importação via API do Google desativada em favor da importação direta de arquivos Excel no painel.
+      showToast("Use o botão 'Importar Planilha' na aba Configuração / Excel para enviar seus arquivos locais.", "info");
     }
 
     function triggerExport() {
+      if (!rawJsonDatabase) {
+        showToast("Carregando base de dados...", "error");
+        return;
+      }
+      
       showCustomConfirm(
         "Exportar Planilha Oficial",
-        "Deseja exportar e baixar a base de dados atualizada em formato Excel (.xlsx)?",
+        "Deseja exportar e baixar a base de dados atualizada contendo todas as 14 abas no formato Excel (.xlsx)?",
         function() {
           showLoading("Gerando arquivo Excel...");
           
           try {
-            // 1. Criar novo Workbook
             const wb = XLSX.utils.book_new();
             
-            // 2. Preparar dados da aba ZDEPARA_EVENTOS
-            // Colunas originais esperadas na planilha corporativa
-            const deparaRows = database.map(item => ({
-              "EMPRESA DE": item.empresaDe || "",
-              "CODIGO DE": item.codigoDe || "",
-              "NOME DE": item.nomeDe || "",
-              "TIPO EVENTO": item.tipoEvento || "",
-              "COLIGADA PARA": item.coligadaPara || "",
-              "CODIGO PARA": item.codigoPara || "",
-              "NOME RM": item.nomeRm || "",
-              "CODIGO PARA FICHA MES 1": item.codigoParaFichaMes1 || "",
-              "CODIGO PARA FICHA MES 2": item.codigoParaFichaMes2 || "",
-              "CODIGO PARA VERBAS FERIAS": item.codigoParaVerbasFerias || "",
-              "SUGESTOES": item.sugestoes || "",
-              "OBSERVACAO": item.observacao || ""
-            }));
+            // Abas mapeadas do portal
+            const abasMap = [
+              { key: 'ZDEPARA_EVENTOS', name: 'ZDEPARA_EVENTOS' },
+              { key: 'ZDEPARA_COLIGADAS', name: 'ZDEPARA_COLIGADAS' },
+              { key: 'ZDEPARA_FUNCOES', name: 'ZDEPARA_FUNCOES' },
+              { key: 'ZDEPARA_SINDICATOS', name: 'ZDEPARA_SINDICATOS' },
+              { key: 'ZDEPARA_SECOES', name: 'ZDEPARA_SECOES' },
+              { key: 'ZDEPARA_BANCOS', name: 'ZDEPARA_BANCOS' },
+              { key: 'ZDEPARA_SITUACAO', name: 'ZDEPARA_SITUACAO' },
+              { key: 'ZDEPARA_HORARIO', name: 'ZDEPARA_HORARIO' },
+              { key: 'ZDEPARA_MOTIVO_FUNCAO', name: 'ZDEPARA_MOTIVO_FUNCAO' },
+              { key: 'ZDEPARA_MOTIVO_SALARIO', name: 'ZDEPARA_MOTIVO_SALARIO' },
+              { key: 'ZDEPARA_MOTIVO_SECAO', name: 'ZDEPARA_MOTIVO_SECAO' },
+              { key: 'DADOS_RM_EVENTOS', name: 'DADOS_RM_EVENTOS' },
+              { key: 'DADOS_RM_SITUACAO', name: 'DADOS_RM_SITUACAO' },
+              { key: 'DADOS_RM_MOTIVOS', name: 'DADOS_RM_MOTIVOS' }
+            ];
+
+            abasMap.forEach(aba => {
+              const rows = rawJsonDatabase[aba.key] || [];
+              const ws = XLSX.utils.json_to_sheet(rows);
+              XLSX.utils.book_append_sheet(wb, ws, aba.name);
+            });
             
-            const wsDepara = XLSX.utils.json_to_sheet(deparaRows);
-            XLSX.utils.book_append_sheet(wb, wsDepara, "ZDEPARA_EVENTOS");
-            
-            // 3. Preparar dados da aba DADOS_RM_EVENTOS
-            const rmRows = rmEvents.map(item => ({
-              "CÓDIGO": item.codigo || "",
-              "DESCRIÇÃO": item.descricao || "",
-              "TIPO EVENTO": item.tipo || ""
-            }));
-            
-            const wsRm = XLSX.utils.json_to_sheet(rmRows);
-            XLSX.utils.book_append_sheet(wb, wsRm, "DADOS_RM_EVENTOS");
-            
-            // 4. Salvar arquivo XLSX
+            // 4. Salvar arquivo XLSX com padrão de nome
             let clientKey = SPREADSHEET_ID.toLowerCase();
             if (SPREADSHEET_ID.includes("docs.google.com")) {
               const matches = SPREADSHEET_ID.match(/\/d\/([a-zA-Z0-9-_]+)/);
               if (matches) clientKey = matches[1].toLowerCase();
             }
             
-            const filename = `DE-PARA-EVENTOS-${clientKey.toUpperCase()}-${new Date().toISOString().slice(0,10)}.xlsx`;
+            // Gerar data formato DDMMAA (ex: 300626)
+            const d = new Date();
+            const dia = String(d.getDate()).padStart(2, '0');
+            const mes = String(d.getMonth() + 1).padStart(2, '0');
+            const ano = String(d.getFullYear()).slice(-2);
+            const dataStr = `${dia}${mes}${ano}`;
+
+            const filename = `000-ZDEPARA - ${clientKey.toUpperCase()} - ${dataStr}.xlsx`;
             XLSX.writeFile(wb, filename);
             
             hideLoading();
             showToast("Planilha gerada e baixada com sucesso!", "success");
-            showToast("Copie as abas do arquivo baixado e cole na Planilha Oficial da TOTVS.", "warning");
           } catch (err) {
             hideLoading();
             showToast("Erro ao gerar Excel: " + err.message, "error");
@@ -2191,22 +2577,120 @@
       );
     }
 
+    function handleExcelImport(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      showLoading("Processando planilha importada...");
+      const reader = new FileReader();
+      
+      reader.onload = function(e) {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          
+          if (!rawJsonDatabase) rawJsonDatabase = {};
+          
+          const abasToImport = [
+            { name: 'ZDEPARA_EVENTOS', key: 'ZDEPARA_EVENTOS' },
+            { name: 'ZDEPARA_COLIGADAS', key: 'ZDEPARA_COLIGADAS' },
+            { name: 'ZDEPARA_FUNCOES', key: 'ZDEPARA_FUNCOES' },
+            { name: 'ZDEPARA_SINDICATOS', key: 'ZDEPARA_SINDICATOS' },
+            { name: 'ZDEPARA_SECOES', key: 'ZDEPARA_SECOES' },
+            { name: 'ZDEPARA_BANCOS', key: 'ZDEPARA_BANCOS' },
+            { name: 'ZDEPARA_SITUACAO', key: 'ZDEPARA_SITUACAO' },
+            { name: 'ZDEPARA_HORARIO', key: 'ZDEPARA_HORARIO' },
+            { name: 'ZDEPARA_MOTIVO_FUNCAO', key: 'ZDEPARA_MOTIVO_FUNCAO' },
+            { name: 'ZDEPARA_MOTIVO_SALARIO', key: 'ZDEPARA_MOTIVO_SALARIO' },
+            { name: 'ZDEPARA_MOTIVO_SECAO', key: 'ZDEPARA_MOTIVO_SECAO' },
+            { name: 'DADOS_RM_EVENTOS', key: 'DADOS_RM_EVENTOS' },
+            { name: 'DADOS_RM_SITUACAO', key: 'DADOS_RM_SITUACAO' },
+            { name: 'DADOS_RM_MOTIVOS', key: 'DADOS_RM_MOTIVOS' }
+          ];
+
+          let importedSheets = 0;
+          abasToImport.forEach(aba => {
+            const ws = workbook.Sheets[aba.name];
+            if (ws) {
+              const json = XLSX.utils.sheet_to_json(ws);
+              
+              // Adicionar numeração sequencial das linhas para controle interno de edição
+              json.forEach((item, index) => {
+                item.rowNum = index + 1;
+              });
+              
+              rawJsonDatabase[aba.key] = json;
+              importedSheets++;
+            }
+          });
+
+          if (importedSheets === 0) {
+            hideLoading();
+            showToast("Nenhuma aba mapeada válida encontrada no arquivo enviado.", "error");
+            return;
+          }
+
+          // Persistir no GitHub de uma só vez
+          commitChangesToGitHub(`Importação bilateral completa via arquivo local Excel - ${file.name}`, () => {
+            hideLoading();
+            showToast(`Sucesso! ${importedSheets} abas importadas e sincronizadas no GitHub.`, "success");
+            switchModule(currentModule);
+          });
+          
+        } catch (err) {
+          hideLoading();
+          showToast("Erro ao processar importação: " + err.message, "error");
+        }
+      };
+
+      reader.readAsArrayBuffer(file);
+      // Limpar input
+      event.target.value = "";
+    }
+
     function updateDashboard() {
+      // Contar dinamicamente registros que são NAO IMPORTAR para o footer
+      let ignoredCount = 0;
+      database.forEach(item => {
+        const cod = ((currentModule === 'eventos' ? item.codigoPara : item.CODIGO_PARA) || "").trim();
+        if (cod === "NAO IMPORTAR") ignoredCount++;
+      });
+
       document.getElementById("valTotal").innerText = stats.total;
       document.getElementById("valMapped").innerText = stats.preenchidos;
       document.getElementById("valUnmapped").innerText = stats.naoPreenchidos;
       document.getElementById("valPending").innerText = stats.pAnalise;
       document.getElementById("valDivergent").innerText = stats.divergencias;
       
+      // Controlar visibilidade de cards baseados no módulo ativo
+      const pendingCard = document.getElementById("kpiCardPending");
+      const divergentCard = document.getElementById("kpiCardDivergent");
+      
+      // Seções e Situação não possuem divergências
+      if (currentModule === 'secoes' || currentModule === 'situacao') {
+        divergentCard.style.display = 'none';
+      } else {
+        divergentCard.style.display = 'flex';
+      }
+
+      // Coligadas e Situação não possuem "P/ Análise"
+      if (currentModule === 'coligadas' || currentModule === 'situacao') {
+        pendingCard.style.display = 'none';
+      } else {
+        pendingCard.style.display = 'flex';
+      }
+      
       // Atualiza o rodapé com o resumo dinâmico
-      const ftTotal = document.getElementById('footerTotal');
+      const ftIgnored = document.getElementById('footerIgnored');
       const ftMapped = document.getElementById('footerMapped');
       const ftPending = document.getElementById('footerPending');
       const ftUnmapped = document.getElementById('footerUnmapped');
-      if (ftTotal) ftTotal.innerText = stats.total;
+      
+      if (ftIgnored) ftIgnored.innerText = ignoredCount;
       if (ftMapped) ftMapped.innerText = stats.preenchidos;
       if (ftPending) ftPending.innerText = stats.pAnalise;
       if (ftUnmapped) ftUnmapped.innerText = stats.naoPreenchidos;
+      
       updateFooter();
     }
 
@@ -2279,47 +2763,98 @@
       const val = valueInput ? valueInput.value.toLowerCase().trim() : "";
       
       filteredData = database.filter(item => {
-        // 1. Filtro dos KPIs
-        const isMapped = item.codigoPara && !isCodeIgnored(item.codigoPara) && !isCodeToCreate(item.codigoPara);
+        // 1. Filtro dos KPIs baseado no módulo ativo
+        let isMapped = false;
+        let destCode = "";
+        let isPending = false;
+        
+        if (currentModule === 'eventos') {
+          destCode = (item.codigoPara || "").trim();
+          isMapped = destCode && !isCodeIgnored(destCode) && !isCodeToCreate(destCode);
+          isPending = destCode === "P/ ANALISE";
+        } else if (currentModule === 'coligadas') {
+          destCode = (item.CODCOLIGADA || "").trim();
+          isMapped = !!destCode;
+          isPending = false;
+        } else if (currentModule === 'situacao') {
+          destCode = (item.CODSITUACAO_PARA || "").trim();
+          isMapped = !!destCode;
+          isPending = false;
+        } else {
+          // Funcoes, Sindicatos, Secoes
+          destCode = (item.CODIGO_PARA || "").trim();
+          isMapped = destCode && !isCodeIgnored(destCode) && !isCodeToCreate(destCode);
+          isPending = destCode === "P/ ANALISE";
+        }
+        
         if (activeKpiFilter === 'mapped' && !isMapped) return false;
-        if (activeKpiFilter === 'unmapped' && (isMapped || (item.codigoPara && !isCodeToCreate(item.codigoPara)))) return false;
-        if (activeKpiFilter === 'pending' && item.codigoPara !== "P/ ANALISE") return false;
+        if (activeKpiFilter === 'unmapped') {
+          if (currentModule === 'coligadas' || currentModule === 'situacao') {
+            if (isMapped) return false;
+          } else {
+            if (isMapped || (destCode && destCode !== "CRIAR" && destCode !== "A CRIAR" && destCode !== "CRIAR EVENTO")) return false;
+          }
+        }
+        if (activeKpiFilter === 'pending' && !isPending) return false;
         if (activeKpiFilter === 'divergent' && !item.hasDivergencia) return false;
         
         // 2. Filtro de Input do Usuário
         if (!val) return true;
         
         if (type === 'global') {
-          return item.empresaDe.toLowerCase().includes(val) ||
-                 item.codigoDe.toLowerCase().includes(val) ||
-                 item.nomeDe.toLowerCase().includes(val) ||
-                 item.codigoPara.toLowerCase().includes(val) ||
-                 item.nomeRm.toLowerCase().includes(val);
+          // Busca geral customizada por tipo de módulo
+          if (currentModule === 'eventos') {
+            return (item.empresaDe || "").toLowerCase().includes(val) ||
+                   (item.codigoDe || "").toLowerCase().includes(val) ||
+                   (item.nomeDe || "").toLowerCase().includes(val) ||
+                   (item.codigoPara || "").toLowerCase().includes(val) ||
+                   (item.nomeRm || "").toLowerCase().includes(val);
+          } else if (currentModule === 'coligadas') {
+            return (item.EMP_CODIGO || "").toLowerCase().includes(val) ||
+                   (item.NOME || "").toLowerCase().includes(val) ||
+                   (item['RAZAO SOCIAL'] || "").toLowerCase().includes(val) ||
+                   (item.CNPJ || "").toLowerCase().includes(val) ||
+                   (item.CODCOLIGADA || "").toLowerCase().includes(val);
+          } else if (currentModule === 'situacao') {
+            return (item.CODIGO_DE || "").toLowerCase().includes(val) ||
+                   (item.NOME_DE || "").toLowerCase().includes(val) ||
+                   (item.CODSITUACAO_PARA || "").toLowerCase().includes(val) ||
+                   (item.CODMOTIVO_PARA || "").toLowerCase().includes(val);
+          } else {
+            return (item.EMPRESA_DE || item['EMPRESA _DE'] || "").toLowerCase().includes(val) ||
+                   (item.CODIGO_DE || "").toLowerCase().includes(val) ||
+                   (item.NOME_DE || "").toLowerCase().includes(val) ||
+                   (item.CODIGO_PARA || "").toLowerCase().includes(val);
+          }
         }
         else if (type === 'empresaDe') {
-          return item.empresaDe.toLowerCase() === val;
+          const emp = item.empresaDe || item.EMPRESA_DE || item['EMPRESA _DE'] || item.EMP_CODIGO || "";
+          return String(emp).toLowerCase() === val;
         }
         else if (type === 'tipoEvento') {
-          return item.tipoEvento.toLowerCase().includes(val.replace("b-", ""));
+          return (item.tipoEvento || "").toLowerCase().includes(val.replace("b-", ""));
         }
         else if (type === 'status') {
-          const isMapped = item.codigoPara && !isCodeIgnored(item.codigoPara) && !isCodeToCreate(item.codigoPara);
           if (val === 'mapeado') return isMapped;
-          if (val === 'nao_mapeado') return !item.codigoPara || isCodeToCreate(item.codigoPara);
-          if (val === 'p_analise') return item.codigoPara === "P/ ANALISE";
+          if (val === 'nao_mapeado') return !isMapped;
+          if (val === 'p_analise') return isPending;
         }
-        else if (type === 'coligadaPara') {
-          return item.coligadaPara.toLowerCase().includes(val);
+        else if (type === 'coligadaPara' || type === 'coligadaDest') {
+          const col = item.coligadaPara || item.COLIGADA_PARA || item.CODCOLIGADA || "";
+          return String(col).toLowerCase().includes(val);
         }
-        else if (type === 'codigoPara') {
-          return item.codigoPara.toLowerCase().includes(val);
+        else if (type === 'codigoPara' || type === 'codColigada') {
+          return String(destCode).toLowerCase().includes(val);
         }
-        else if (type === 'nomeRm') {
-          return item.nomeRm.toLowerCase().includes(val);
+        else if (type === 'nomeRm' || type === 'nome') {
+          const name = item.nomeRm || item.NOME || item.NOME_DE || "";
+          return String(name).toLowerCase().includes(val);
         }
-        else if (type === 'temObservacao') {
-          if (val === 'sim') return item.observacao.trim().length > 0;
-          if (val === 'nao') return item.observacao.trim().length === 0;
+        else if (type === 'cnpj') {
+          return (item.CNPJ || "").toLowerCase().includes(val);
+        }
+        else if (type === 'cbo') {
+          return (item.CBO || "").toLowerCase().includes(val);
         }
         
         return true;
@@ -2441,6 +2976,12 @@
       }
       
       const itemsToRender = filteredData.slice(0, renderedCount);
+      
+      // Se não for o módulo de eventos, delegar para a renderização genérica inteligente
+      if (currentModule !== 'eventos') {
+        renderGenericTableContent(tbody, itemsToRender);
+        return;
+      }
       
       itemsToRender.forEach(item => {
         const isEditing = editingRowNumber === item.rowNum;
@@ -2601,7 +3142,7 @@
                     </div>
                     <div class="detail-field-group">
                       <span class="detail-label">Ficha Mês 1 - Nome RM</span>
-                      <input type="text" id="edit-nomeFicha1-${item.rowNum}" class="input-field" value="${item.nomeRmFichaMes1}" disabled>
+                      <input type="text" id="edit-nomeFicha1-${item.rowNum}" class="input-field" value="${getRmName(item.codigoParaFichaMes1) || ''}" disabled>
                     </div>
                     
                     <div class="detail-field-group autocomplete-wrapper">
@@ -2611,7 +3152,7 @@
                     </div>
                     <div class="detail-field-group">
                       <span class="detail-label">Ficha Mês 2 - Nome RM</span>
-                      <input type="text" id="edit-nomeFicha2-${item.rowNum}" class="input-field" value="${item.nomeRmFichaMes2}" disabled>
+                      <input type="text" id="edit-nomeFicha2-${item.rowNum}" class="input-field" value="${getRmName(item.codigoParaFichaMes2) || ''}" disabled>
                     </div>
 
                     <div class="detail-field-group autocomplete-wrapper">
@@ -2621,7 +3162,7 @@
                     </div>
                     <div class="detail-field-group">
                       <span class="detail-label">Verba Férias - Nome RM</span>
-                      <input type="text" id="edit-nomeFerias-${item.rowNum}" class="input-field" value="${item.nomeRmVerbasFerias}" disabled>
+                      <input type="text" id="edit-nomeFerias-${item.rowNum}" class="input-field" value="${getRmName(item.codigoParaVerbasFerias) || ''}" disabled>
                     </div>
                   </div>
                   
@@ -2677,6 +3218,260 @@
           }
           
           detailTr.innerHTML = contentHtml;
+          tbody.appendChild(detailTr);
+        }
+      });
+    }
+
+    function renderGenericTableContent(tbody, itemsToRender) {
+      itemsToRender.forEach(item => {
+        const isEditing = editingRowNumber === item.rowNum;
+        const isExpanded = expandedRowNumbers.has(item.rowNum);
+        
+        let rowColorClass = "row-base";
+        let trHtml = "";
+        
+        // 1. Identificar Status/Badge do Destino para colorir a linha
+        let destCode = "";
+        if (currentModule === 'coligadas') {
+          destCode = (item.CODCOLIGADA || "").trim();
+        } else if (currentModule === 'situacao') {
+          destCode = (item.CODSITUACAO_PARA || "").trim();
+        } else {
+          destCode = (item.CODIGO_PARA || "").trim();
+        }
+
+        let mapBadge = "badge-mapped";
+        let statusLabel = destCode || "MAPEADO";
+        
+        if (isCodeToCreate(destCode)) {
+          rowColorClass = "row-unmapped";
+          mapBadge = "badge-unmapped";
+          statusLabel = "CRIAR";
+        } else if (isCodeIgnored(destCode)) {
+          if (String(destCode).toUpperCase().includes("ANALISE")) {
+            rowColorClass = "row-panalise";
+            mapBadge = "badge-panalise";
+            statusLabel = "P/ ANÁLISE";
+          } else {
+            rowColorClass = "row-neutral row-nao-importar";
+            mapBadge = "badge-nao-importar";
+            statusLabel = "NÃO IMPORTAR";
+          }
+        } else if (!destCode) {
+          rowColorClass = "row-unmapped";
+          mapBadge = "badge-unmapped";
+          statusLabel = "PENDENTE";
+        } else if (item.hasDivergencia) {
+          rowColorClass = "row-mismatch";
+          mapBadge = "badge-divergent";
+          statusLabel = "DIVERGÊNCIA";
+        }
+
+        const tr = document.createElement("tr");
+        tr.className = `row-item ${rowColorClass} ${isEditing ? 'row-editing' : ''} ${isExpanded ? 'row-expanded' : ''}`;
+        
+        // 2. Montar Colunas baseadas no módulo ativo
+        if (isEditing) {
+          if (currentModule === 'coligadas') {
+            trHtml = `
+              <td><code>${item.EMP_CODIGO || ''}</code></td>
+              <td>${item.NOME || ''}</td>
+              <td>${item['RAZAO SOCIAL'] || ''}</td>
+              <td>${item.CNPJ || ''}</td>
+              <td style="overflow: visible;">
+                <input type="text" id="edit-CODCOLIGADA-${item.rowNum}" class="input-field" style="padding: 6px; font-size: 0.8rem;" value="${item.CODCOLIGADA || ''}" autocomplete="off">
+              </td>
+              <td class="col-acoes">
+                <div class="action-icons">
+                  <button class="action-icon-btn" onclick="saveRowEdition(${item.rowNum})" title="Salvar Alterações" style="color: var(--success);"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></button>
+                  <button class="action-icon-btn" onclick="cancelRowEdition()" title="Cancelar" style="color: var(--danger);"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
+                </div>
+              </td>
+            `;
+          } 
+          else if (currentModule === 'funcoes') {
+            trHtml = `
+              <td><code>${item.EMPRESA_DE || ''}</code></td>
+              <td><code>${item.CODIGO_DE || ''}</code></td>
+              <td>${item.NOME_DE || ''}</td>
+              <td><code>${item.CBO || ''}</code></td>
+              <td>
+                <input type="text" id="edit-COLIGADA_PARA-${item.rowNum}" class="input-field" style="padding: 6px; font-size: 0.8rem;" value="${item.COLIGADA_PARA || '1'}">
+              </td>
+              <td style="overflow: visible;">
+                <input type="text" id="edit-CODIGO_PARA-${item.rowNum}" class="input-field" style="padding: 6px; font-size: 0.8rem;" value="${item.CODIGO_PARA || ''}">
+              </td>
+              <td class="col-acoes">
+                <div class="action-icons">
+                  <button class="action-icon-btn" onclick="saveRowEdition(${item.rowNum})" title="Salvar Alterações" style="color: var(--success);"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></button>
+                  <button class="action-icon-btn" onclick="cancelRowEdition()" title="Cancelar" style="color: var(--danger);"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
+                </div>
+              </td>
+            `;
+          } 
+          else if (currentModule === 'sindicatos') {
+            trHtml = `
+              <td><code>${item.EMPRESA_DE || item['EMPRESA _DE'] || ''}</code></td>
+              <td><code>${item.CODIGO_DE || ''}</code></td>
+              <td>${item.NOME_DE || ''}</td>
+              <td>${item.CNPJ || ''}</td>
+              <td>
+                <input type="text" id="edit-COLIGADA_PARA-${item.rowNum}" class="input-field" style="padding: 6px; font-size: 0.8rem;" value="${item.COLIGADA_PARA || '1'}">
+              </td>
+              <td style="overflow: visible;">
+                <input type="text" id="edit-CODIGO_PARA-${item.rowNum}" class="input-field" style="padding: 6px; font-size: 0.8rem;" value="${item.CODIGO_PARA || ''}">
+              </td>
+              <td class="col-acoes">
+                <div class="action-icons">
+                  <button class="action-icon-btn" onclick="saveRowEdition(${item.rowNum})" title="Salvar Alterações" style="color: var(--success);"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></button>
+                  <button class="action-icon-btn" onclick="cancelRowEdition()" title="Cancelar" style="color: var(--danger);"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
+                </div>
+              </td>
+            `;
+          } 
+          else if (currentModule === 'secoes') {
+            trHtml = `
+              <td><code>${item.EMPRESA_DE || ''}</code></td>
+              <td><code>${item.FILIAL_DE || ''}</code></td>
+              <td><code>${item.CODIGO_DE || ''}</code></td>
+              <td>${item.NOME_DE || ''}</td>
+              <td>
+                <input type="text" id="edit-COLIGADA_PARA-${item.rowNum}" class="input-field" style="padding: 6px; font-size: 0.8rem;" value="${item.COLIGADA_PARA || '1'}">
+              </td>
+              <td>
+                <input type="text" id="edit-FILIAL_PARA-${item.rowNum}" class="input-field" style="padding: 6px; font-size: 0.8rem;" value="${item.FILIAL_PARA || ''}">
+              </td>
+              <td style="overflow: visible;">
+                <input type="text" id="edit-CODIGO_PARA-${item.rowNum}" class="input-field" style="padding: 6px; font-size: 0.8rem;" value="${item.CODIGO_PARA || ''}">
+              </td>
+              <td class="col-acoes">
+                <div class="action-icons">
+                  <button class="action-icon-btn" onclick="saveRowEdition(${item.rowNum})" title="Salvar Alterações" style="color: var(--success);"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></button>
+                  <button class="action-icon-btn" onclick="cancelRowEdition()" title="Cancelar" style="color: var(--danger);"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
+                </div>
+              </td>
+            `;
+          } 
+          else if (currentModule === 'situacao') {
+            trHtml = `
+              <td><code>${item.CODIGO_DE || ''}</code></td>
+              <td>${item.NOME_DE || ''}</td>
+              <td>
+                <input type="text" id="edit-CODSITUACAO_PARA-${item.rowNum}" class="input-field" style="padding: 6px; font-size: 0.8rem;" value="${item.CODSITUACAO_PARA || ''}">
+              </td>
+              <td>
+                <input type="text" id="edit-CODMOTIVO_PARA-${item.rowNum}" class="input-field" style="padding: 6px; font-size: 0.8rem;" value="${item.CODMOTIVO_PARA || ''}">
+              </td>
+              <td>
+                <input type="text" id="edit-CODSITUACAO_RETORNO_PARA-${item.rowNum}" class="input-field" style="padding: 6px; font-size: 0.8rem;" value="${item.CODSITUACAO_RETORNO_PARA || ''}">
+              </td>
+              <td>
+                <input type="text" id="edit-CODMOTIVO_RETORNO_PARA-${item.rowNum}" class="input-field" style="padding: 6px; font-size: 0.8rem;" value="${item.CODMOTIVO_RETORNO_PARA || ''}">
+              </td>
+              <td class="col-acoes">
+                <div class="action-icons">
+                  <button class="action-icon-btn" onclick="saveRowEdition(${item.rowNum})" title="Salvar Alterações" style="color: var(--success);"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></button>
+                  <button class="action-icon-btn" onclick="cancelRowEdition()" title="Cancelar" style="color: var(--danger);"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
+                </div>
+              </td>
+            `;
+          }
+        } 
+        else {
+          // Linha de Exibição normal
+          const arrowSymbol = isExpanded ? "▲" : "▼";
+          
+          let actionButtons = `
+            <div class="action-icons">
+              <button class="action-icon-btn" onclick="toggleRowExpansion(${item.rowNum})" title="Ver Detalhes">
+                <span style="font-size: 0.8rem;">${arrowSymbol}</span>
+              </button>
+              <button class="action-icon-btn" onclick="startRowEdition(${item.rowNum})" title="Editar Mapeamento">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+              </button>
+            </div>
+          `;
+          
+          let badgeDest = `<span class="badge ${mapBadge}">${statusLabel}</span>`;
+
+          if (currentModule === 'coligadas') {
+            trHtml = `
+              <td onclick="toggleRowExpansion(${item.rowNum})"><code>${item.EMP_CODIGO || ''}</code></td>
+              <td onclick="toggleRowExpansion(${item.rowNum})">${item.NOME || ''}</td>
+              <td onclick="toggleRowExpansion(${item.rowNum})">${item['RAZAO SOCIAL'] || ''}</td>
+              <td onclick="toggleRowExpansion(${item.rowNum})">${item.CNPJ || ''}</td>
+              <td onclick="toggleRowExpansion(${item.rowNum})">${badgeDest}</td>
+              <td>${actionButtons}</td>
+            `;
+          } 
+          else if (currentModule === 'funcoes') {
+            trHtml = `
+              <td onclick="toggleRowExpansion(${item.rowNum})"><code>${item.EMPRESA_DE || ''}</code></td>
+              <td onclick="toggleRowExpansion(${item.rowNum})"><code>${item.CODIGO_DE || ''}</code></td>
+              <td onclick="toggleRowExpansion(${item.rowNum})">${item.NOME_DE || ''}</td>
+              <td onclick="toggleRowExpansion(${item.rowNum})"><code>${item.CBO || ''}</code></td>
+              <td onclick="toggleRowExpansion(${item.rowNum})">${item.COLIGADA_PARA || ''}</td>
+              <td onclick="toggleRowExpansion(${item.rowNum})">${badgeDest}</td>
+              <td>${actionButtons}</td>
+            `;
+          } 
+          else if (currentModule === 'sindicatos') {
+            trHtml = `
+              <td onclick="toggleRowExpansion(${item.rowNum})"><code>${item.EMPRESA_DE || item['EMPRESA _DE'] || ''}</code></td>
+              <td onclick="toggleRowExpansion(${item.rowNum})"><code>${item.CODIGO_DE || ''}</code></td>
+              <td onclick="toggleRowExpansion(${item.rowNum})">${item.NOME_DE || ''}</td>
+              <td onclick="toggleRowExpansion(${item.rowNum})">${item.CNPJ || ''}</td>
+              <td onclick="toggleRowExpansion(${item.rowNum})">${item.COLIGADA_PARA || ''}</td>
+              <td onclick="toggleRowExpansion(${item.rowNum})">${badgeDest}</td>
+              <td>${actionButtons}</td>
+            `;
+          } 
+          else if (currentModule === 'secoes') {
+            trHtml = `
+              <td onclick="toggleRowExpansion(${item.rowNum})"><code>${item.EMPRESA_DE || ''}</code></td>
+              <td onclick="toggleRowExpansion(${item.rowNum})"><code>${item.FILIAL_DE || ''}</code></td>
+              <td onclick="toggleRowExpansion(${item.rowNum})"><code>${item.CODIGO_DE || ''}</code></td>
+              <td onclick="toggleRowExpansion(${item.rowNum})">${item.NOME_DE || ''}</td>
+              <td onclick="toggleRowExpansion(${item.rowNum})">${item.COLIGADA_PARA || ''}</td>
+              <td onclick="toggleRowExpansion(${item.rowNum})"><code>${item.FILIAL_PARA || ''}</code></td>
+              <td onclick="toggleRowExpansion(${item.rowNum})">${badgeDest}</td>
+              <td>${actionButtons}</td>
+            `;
+          } 
+          else if (currentModule === 'situacao') {
+            trHtml = `
+              <td onclick="toggleRowExpansion(${item.rowNum})"><code>${item.CODIGO_DE || ''}</code></td>
+              <td onclick="toggleRowExpansion(${item.rowNum})">${item.NOME_DE || ''}</td>
+              <td onclick="toggleRowExpansion(${item.rowNum})"><code>${item.CODSITUACAO_PARA || ''}</code></td>
+              <td onclick="toggleRowExpansion(${item.rowNum})"><code>${item.CODMOTIVO_PARA || ''}</code></td>
+              <td onclick="toggleRowExpansion(${item.rowNum})"><code>${item.CODSITUACAO_RETORNO_PARA || ''}</code></td>
+              <td onclick="toggleRowExpansion(${item.rowNum})">${badgeDest}</td>
+              <td>${actionButtons}</td>
+            `;
+          }
+        }
+
+        tr.innerHTML = trHtml;
+        tbody.appendChild(tr);
+
+        // 3. Renderizar Sub-linha de Detalhes expandida
+        if (isExpanded) {
+          const detailTr = document.createElement("tr");
+          detailTr.className = "row-expanded-detail";
+          
+          let colsCount = 6;
+          if (currentModule === 'funcoes' || currentModule === 'sindicatos' || currentModule === 'secoes') colsCount = 7;
+          
+          detailTr.innerHTML = `
+            <td colspan="${colsCount}">
+              <div class="detail-subrow-content">
+                <p style="margin: 0; font-size: 0.85rem; color: var(--color-text-muted);">
+                  📍 Sem detalhes adicionais cadastrados para este de-para. As alterações principais devem ser feitas clicando no ícone de edição.
+                </p>
+              </div>
+            </td>
+          `;
           tbody.appendChild(detailTr);
         }
       });
@@ -2883,137 +3678,7 @@
       document.getElementById(modalId).style.display = "none";
     }
 
-    function submitNewRMEvent() {
-      const desc = document.getElementById("modalDesc").value.trim();
-      const tipo = document.getElementById("modalTipo").value;
-      
-      if (!desc) return;
-      
-      closeModal('newRMEventModal');
-      showLoading("Criando novo evento e atualizando mapeamento...");
-      
-      // Encontrar o maior código numérico absoluto (desprezando códigos não numéricos)
-      const numericCodes = rmEvents
-        .map(e => parseInt(e.codigo, 10))
-        .filter(n => !isNaN(n))
-        .sort((a,b) => a - b);
-      
-      let nextCode = 1;
-      if (numericCodes.length > 0) {
-        nextCode = numericCodes[numericCodes.length - 1] + 1;
-      }
-      
-      const newCodeStr = String(nextCode).padStart(4, '0');
-      const finalDesc = `[INCLUSAO MANUAL] ${desc}`;
-      const rowNum = activeRowIdForNewEvent;
-      const fieldType = activeFieldTypeForNewEvent;
-      
-      // Ler os dados atuais da linha em edição ANTES de fechar o modal
-      const item = database.find(i => i.rowNum === rowNum);
-      
-      // COMMIT ÚNICO E ATÔMICO: Salva o novo evento RM + a linha De-Para de uma só vez
-      commitChangesToGitHub(`Cria evento RM manual ${newCodeStr} e mapeia linha ${rowNum}`, () => {
-        // 1. Adicionar o novo evento à base de apoio RM
-        const newEv = {
-          codigo: newCodeStr,
-          descricao: finalDesc,
-          tipo: tipo
-        };
-        rmEvents.push(newEv);
-        rawJsonDatabase.DADOS_RM_EVENTOS = rmEvents;
-        
-        // 2. Atualizar a linha De-Para na base de dados local (rawJsonDatabase)
-        if (item) {
-          const idx = database.findIndex(i => i.rowNum === rowNum);
-          if (idx !== -1) {
-            if (fieldType === "codigoPara") {
-              database[idx].codigoPara = newCodeStr;
-              database[idx].nomeRm = finalDesc;
-            } else if (fieldType === "ficha1") {
-              database[idx].codigoParaFichaMes1 = newCodeStr;
-            } else if (fieldType === "ficha2") {
-              database[idx].codigoParaFichaMes2 = newCodeStr;
-            } else if (fieldType === "ferias") {
-              database[idx].codigoParaVerbasFerias = newCodeStr;
-            }
-          }
-        }
-        rawJsonDatabase.ZDEPARA_EVENTOS = database;
-        
-        // 3. Atualizar os campos visuais na tela para refletir o mapeamento feito
-        const fieldId = `edit-${fieldType}-${rowNum}`;
-        const labelId = `edit-nomeRm-${rowNum}`;
-        const inputEl = document.getElementById(fieldId);
-        const labelEl = document.getElementById(labelId);
-        if (inputEl) inputEl.value = newCodeStr;
-        if (labelEl) labelEl.value = finalDesc;
-        
-        if (fieldType === "codigoPara") {
-          toggleFichaInputs(rowNum, newCodeStr);
-        }
-        
-        // 4. Fechar a linha de edição (não precisa de segundo salvamento)
-        editingRowNumber = null;
-        expandedRowNumbers.delete(rowNum);
-      });
-    }
 
-    function saveRowEdition(rowNum) {
-      const item = database.find(i => i.rowNum === rowNum);
-      if (!item) return;
-      
-      const codigoPara = document.getElementById(`edit-codigoPara-${rowNum}`).value;
-      const codigoParaFichaMes1 = document.getElementById(`edit-ficha1-${rowNum}`).value;
-      const codigoParaFichaMes2 = document.getElementById(`edit-ficha2-${rowNum}`).value;
-      const codigoParaVerbasFerias = document.getElementById(`edit-ferias-${rowNum}`).value;
-      const observacao = document.getElementById(`edit-obs-${rowNum}`).value;
-      
-      const applyToAllMatches = document.getElementById(`edit-chkBulk-${rowNum}`)?.checked || false;
-      
-      const updatedData = {
-        coligadaPara: item.coligadaPara,
-        codigoPara: codigoPara,
-        codigoParaFichaMes1: codigoParaFichaMes1,
-        codigoParaFichaMes2: codigoParaFichaMes2,
-        codigoParaVerbasFerias: codigoParaVerbasFerias,
-        observacao: observacao,
-        nomeDe: item.nomeDe,
-        tipoEvento: item.tipoEvento
-      };
-
-      showLoading("Salvando mapeamento...");
-      
-      commitChangesToGitHub(`Atualiza mapeamento linha ${rowNum} - ${item.nomeDe}`, () => {
-        // 1. Atualizar a linha correspondente
-        const idx = database.findIndex(i => i.rowNum === rowNum);
-        if (idx !== -1) {
-          Object.assign(database[idx], updatedData);
-        }
-        
-        // 2. Se applyToAllMatches for true, aplicar aos demais registros com mesmo Nome e Tipo
-        let affected = 1;
-        if (applyToAllMatches) {
-          database.forEach(otherItem => {
-            if (otherItem.rowNum !== rowNum && 
-                otherItem.nomeDe === item.nomeDe && 
-                otherItem.tipoEvento === item.tipoEvento) {
-              
-              otherItem.codigoPara = codigoPara;
-              otherItem.codigoParaFichaMes1 = codigoParaFichaMes1;
-              otherItem.codigoParaFichaMes2 = codigoParaFichaMes2;
-              otherItem.codigoParaVerbasFerias = codigoParaVerbasFerias;
-              otherItem.observacao = observacao;
-              affected++;
-            }
-          });
-        }
-        
-        rawJsonDatabase.ZDEPARA_EVENTOS = database;
-        
-        editingRowNumber = null;
-        expandedRowNumbers.delete(rowNum);
-      });
-    }
     function openGitHubConfigModal() {
       document.getElementById("ghTokenInput").value = localStorage.getItem("gh_pat") || "";
       document.getElementById("ghOwnerInput").value = localStorage.getItem("gh_owner") || "TOTVSGustavoFerreira";
@@ -3165,6 +3830,217 @@
           });
         }
       );
+    }
+
+    function submitNewRMEvent() {
+      const desc = document.getElementById("modalDesc").value.trim();
+      const tipo = document.getElementById("modalTipo").value;
+      
+      if (!desc) return;
+      
+      closeModal('newRMEventModal');
+      showLoading("Criando novo evento e atualizando mapeamento...");
+      
+      // Encontrar o maior código numérico absoluto (desprezando códigos não numéricos)
+      const numericCodes = rmEvents
+        .map(e => parseInt(e.codigo, 10))
+        .filter(n => !isNaN(n))
+        .sort((a,b) => a - b);
+      
+      let nextCode = 1;
+      if (numericCodes.length > 0) {
+        nextCode = numericCodes[numericCodes.length - 1] + 1;
+      }
+      
+      const newCodeStr = String(nextCode).padStart(4, '0');
+      const finalDesc = `[INCLUSAO MANUAL] ${desc}`;
+      const rowNum = activeRowIdForNewEvent;
+      const fieldType = activeFieldTypeForNewEvent;
+      
+      // Ler os dados atuais da linha em edição ANTES de fechar o modal
+      const item = database.find(i => i.rowNum === rowNum);
+      
+      // COMMIT ÚNICO E ATÔMICO: Salva o novo evento RM + a linha De-Para de uma só vez
+      commitChangesToGitHub(`Cria evento RM manual ${newCodeStr} e mapeia linha ${rowNum}`, () => {
+        // 1. Adicionar o novo evento à base de apoio RM
+        const newEv = {
+          codigo: newCodeStr,
+          descricao: finalDesc,
+          tipo: tipo
+        };
+        rmEvents.push(newEv);
+        rawJsonDatabase.DADOS_RM_EVENTOS = rmEvents;
+        
+        // 2. Atualizar a linha De-Para na base de dados local (rawJsonDatabase)
+        if (item) {
+          const idx = database.findIndex(i => i.rowNum === rowNum);
+          if (idx !== -1) {
+            if (fieldType === "codigoPara") {
+              database[idx].codigoPara = newCodeStr;
+              database[idx].nomeRm = finalDesc;
+            } else if (fieldType === "ficha1") {
+              database[idx].codigoParaFichaMes1 = newCodeStr;
+            } else if (fieldType === "ficha2") {
+              database[idx].codigoParaFichaMes2 = newCodeStr;
+            } else if (fieldType === "ferias") {
+              database[idx].codigoParaVerbasFerias = newCodeStr;
+            }
+          }
+        }
+        rawJsonDatabase.ZDEPARA_EVENTOS = database;
+        
+        // 3. Atualizar os campos visuais na tela para refletir o mapeamento feito
+        const fieldId = `edit-${fieldType}-${rowNum}`;
+        const labelId = `edit-nomeRm-${rowNum}`;
+        const inputEl = document.getElementById(fieldId);
+        const labelEl = document.getElementById(labelId);
+        if (inputEl) inputEl.value = newCodeStr;
+        if (labelEl) labelEl.value = finalDesc;
+        
+        if (fieldType === "codigoPara") {
+          toggleFichaInputs(rowNum, newCodeStr);
+        }
+        
+        // 4. Fechar a linha de edição (não precisa de segundo salvamento)
+        editingRowNumber = null;
+        expandedRowNumbers.delete(rowNum);
+      });
+    }
+
+    function saveRowEdition(rowNum) {
+      const item = database.find(i => i.rowNum === rowNum);
+      if (!item) return;
+      
+      let updatedData = {};
+      let commitMessage = `Atualiza de-para linha ${rowNum}`;
+      
+      if (currentModule === 'eventos') {
+        const codigoPara = document.getElementById(`edit-codigoPara-${rowNum}`).value;
+        const codigoParaFichaMes1 = document.getElementById(`edit-ficha1-${rowNum}`).value;
+        const codigoParaFichaMes2 = document.getElementById(`edit-ficha2-${rowNum}`).value;
+        const codigoParaVerbasFerias = document.getElementById(`edit-ferias-${rowNum}`).value;
+        const observacao = document.getElementById(`edit-obs-${rowNum}`).value;
+        const applyToAllMatches = document.getElementById(`edit-chkBulk-${rowNum}`)?.checked || false;
+        
+        updatedData = {
+          coligadaPara: item.coligadaPara,
+          codigoPara: codigoPara,
+          codigoParaFichaMes1: codigoParaFichaMes1,
+          codigoParaFichaMes2: codigoParaFichaMes2,
+          codigoParaVerbasFerias: codigoParaVerbasFerias,
+          observacao: observacao
+        };
+
+        commitMessage = `Atualiza mapeamento eventos linha ${rowNum} - ${item.nomeDe}`;
+
+        showLoading("Salvando mapeamento...");
+        commitChangesToGitHub(commitMessage, () => {
+          const idx = database.findIndex(i => i.rowNum === rowNum);
+          if (idx !== -1) {
+            Object.assign(database[idx], updatedData);
+          }
+          
+          if (applyToAllMatches) {
+            database.forEach(otherItem => {
+              if (otherItem.rowNum !== rowNum && 
+                  otherItem.nomeDe === item.nomeDe && 
+                  otherItem.tipoEvent === item.tipoEvento) {
+                otherItem.codigoPara = codigoPara;
+                otherItem.codigoParaFichaMes1 = codigoParaFichaMes1;
+                otherItem.codigoParaFichaMes2 = codigoParaFichaMes2;
+                otherItem.codigoParaVerbasFerias = codigoParaVerbasFerias;
+                otherItem.observacao = observacao;
+              }
+            });
+          }
+          rawJsonDatabase.ZDEPARA_EVENTOS = database;
+          editingRowNumber = null;
+          expandedRowNumbers.delete(rowNum);
+        });
+      } 
+      else if (currentModule === 'coligadas') {
+        const codColigada = document.getElementById(`edit-CODCOLIGADA-${rowNum}`).value;
+        updatedData = { CODCOLIGADA: codColigada };
+        commitMessage = `Atualiza coligada linha ${rowNum} - ${item.NOME}`;
+
+        showLoading("Salvando coligada...");
+        commitChangesToGitHub(commitMessage, () => {
+          const idx = database.findIndex(i => i.rowNum === rowNum);
+          if (idx !== -1) Object.assign(database[idx], updatedData);
+          rawJsonDatabase.ZDEPARA_COLIGADAS = database;
+          editingRowNumber = null;
+          expandedRowNumbers.delete(rowNum);
+        });
+      } 
+      else if (currentModule === 'funcoes') {
+        const coligadaPara = document.getElementById(`edit-COLIGADA_PARA-${rowNum}`).value;
+        const codigoPara = document.getElementById(`edit-CODIGO_PARA-${rowNum}`).value;
+        updatedData = { COLIGADA_PARA: coligadaPara, CODIGO_PARA: codigoPara };
+        commitMessage = `Atualiza função linha ${rowNum} - ${item.NOME_DE}`;
+
+        showLoading("Salvando função...");
+        commitChangesToGitHub(commitMessage, () => {
+          const idx = database.findIndex(i => i.rowNum === rowNum);
+          if (idx !== -1) Object.assign(database[idx], updatedData);
+          rawJsonDatabase.ZDEPARA_FUNCOES = database;
+          editingRowNumber = null;
+          expandedRowNumbers.delete(rowNum);
+        });
+      } 
+      else if (currentModule === 'sindicatos') {
+        const coligadaPara = document.getElementById(`edit-COLIGADA_PARA-${rowNum}`).value;
+        const codigoPara = document.getElementById(`edit-CODIGO_PARA-${rowNum}`).value;
+        updatedData = { COLIGADA_PARA: coligadaPara, CODIGO_PARA: codigoPara };
+        commitMessage = `Atualiza sindicato linha ${rowNum} - ${item.NOME_DE}`;
+
+        showLoading("Salvando sindicato...");
+        commitChangesToGitHub(commitMessage, () => {
+          const idx = database.findIndex(i => i.rowNum === rowNum);
+          if (idx !== -1) Object.assign(database[idx], updatedData);
+          rawJsonDatabase.ZDEPARA_SINDICATOS = database;
+          editingRowNumber = null;
+          expandedRowNumbers.delete(rowNum);
+        });
+      } 
+      else if (currentModule === 'secoes') {
+        const coligadaPara = document.getElementById(`edit-COLIGADA_PARA-${rowNum}`).value;
+        const filialPara = document.getElementById(`edit-FILIAL_PARA-${rowNum}`).value;
+        const codigoPara = document.getElementById(`edit-CODIGO_PARA-${rowNum}`).value;
+        updatedData = { COLIGADA_PARA: coligadaPara, FILIAL_PARA: filialPara, CODIGO_PARA: codigoPara };
+        commitMessage = `Atualiza seção linha ${rowNum} - ${item.NOME_DE}`;
+
+        showLoading("Salvando seção...");
+        commitChangesToGitHub(commitMessage, () => {
+          const idx = database.findIndex(i => i.rowNum === rowNum);
+          if (idx !== -1) Object.assign(database[idx], updatedData);
+          rawJsonDatabase.ZDEPARA_SECOES = database;
+          editingRowNumber = null;
+          expandedRowNumbers.delete(rowNum);
+        });
+      } 
+      else if (currentModule === 'situacao') {
+        const codSituacao = document.getElementById(`edit-CODSITUACAO_PARA-${rowNum}`).value;
+        const codMotivo = document.getElementById(`edit-CODMOTIVO_PARA-${rowNum}`).value;
+        const codRetorno = document.getElementById(`edit-CODSITUACAO_RETORNO_PARA-${rowNum}`).value;
+        const codMotivoRet = document.getElementById(`edit-CODMOTIVO_RETORNO_PARA-${rowNum}`).value;
+        
+        updatedData = { 
+          CODSITUACAO_PARA: codSituacao, 
+          CODMOTIVO_PARA: codMotivo,
+          CODSITUACAO_RETORNO_PARA: codRetorno,
+          CODMOTIVO_RETORNO_PARA: codMotivoRet
+        };
+        commitMessage = `Atualiza situação linha ${rowNum} - ${item.NOME_DE}`;
+
+        showLoading("Salvando situação...");
+        commitChangesToGitHub(commitMessage, () => {
+          const idx = database.findIndex(i => i.rowNum === rowNum);
+          if (idx !== -1) Object.assign(database[idx], updatedData);
+          rawJsonDatabase.ZDEPARA_SITUACAO = database;
+          editingRowNumber = null;
+          expandedRowNumbers.delete(rowNum);
+        });
+      }
     }
   </script>
 </body>
