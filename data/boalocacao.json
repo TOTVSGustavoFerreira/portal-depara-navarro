@@ -61,7 +61,7 @@
       "observacao": "",
       "SUGESTOES": "",
       "sugestoes": "",
-      "nomeRm": "DIF. MEDIA COMISSAO FERIAS VENC",
+      "nomeRm": "",
       "hasDivergencia": false,
       "hasDivergenciaDuplicidade": false,
       "hasDivergenciaTipo": false
@@ -171,7 +171,7 @@
       "NOME_DE": "# arredondamento (desconto)",
       "TIPO_EVENTO": "D-DESCONTO",
       "COLIGADA_PARA": "1",
-      "CODIGO_PARA": "CRIAR",
+      "CODIGO_PARA": "NAO IMPORTAR",
       "NOME_RM": "",
       "CODIGO_PARA_FICHA_MES1": "",
       "NOME_RM_1": "",
@@ -185,7 +185,7 @@
       "nomeDe": "# arredondamento (desconto)",
       "tipoEvento": "D-DESCONTO",
       "coligadaPara": "1",
-      "codigoPara": "CRIAR",
+      "codigoPara": "NAO IMPORTAR",
       "codigoParaFichaMes1": "",
       "codigoParaFichaMes2": "",
       "codigoParaVerbasFerias": "",
@@ -33440,6 +33440,6 @@
   "DADOS_RM_MOTIVOS": [],
   "DADOS_RM_SECOES": [],
   "config": {
-    "ultimo_sincronismo": "2026-07-02T21:43:07.624Z"
+    "ultimo_sincronismo": "2026-07-02T21:44:47.515Z"
   }
 }
