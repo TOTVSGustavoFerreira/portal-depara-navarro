@@ -28,10 +28,10 @@
       "observacao": "",
       "SUGESTOES": "",
       "sugestoes": "",
-      "nomeRm": "DIF. SALARIAL",
-      "hasDivergencia": true,
+      "nomeRm": "DESC. 2A VIA PASSCARD",
+      "hasDivergencia": false,
       "hasDivergenciaDuplicidade": false,
-      "hasDivergenciaTipo": true
+      "hasDivergenciaTipo": false
     },
     {
       "EMPRESA_DE": "0004",
@@ -39,7 +39,7 @@
       "NOME_DE": "# adiantamento base de cálculo",
       "TIPO_EVENTO": "B-BASE",
       "COLIGADA_PARA": "1",
-      "CODIGO_PARA": "",
+      "CODIGO_PARA": "0122",
       "NOME_RM": "",
       "CODIGO_PARA_FICHA_MES1": "",
       "NOME_RM_1": "",
@@ -53,7 +53,7 @@
       "nomeDe": "# adiantamento base de cálculo",
       "tipoEvento": "B-BASE",
       "coligadaPara": "1",
-      "codigoPara": "",
+      "codigoPara": "0122",
       "codigoParaFichaMes1": "",
       "codigoParaFichaMes2": "",
       "codigoParaVerbasFerias": "",
@@ -33441,6 +33441,6 @@
   "DADOS_RM_MOTIVOS": [],
   "DADOS_RM_SECOES": [],
   "config": {
-    "ultimo_sincronismo": "2026-07-02T18:38:08.765Z"
+    "ultimo_sincronismo": "2026-07-02T18:39:01.516Z"
   }
 }
