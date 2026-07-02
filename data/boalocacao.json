@@ -86,7 +86,7 @@
       "nomeDe": "# adiantamento de 13º salário (férias)",
       "tipoEvento": "P-PROVENTO",
       "coligadaPara": "2",
-      "codigoPara": "1129",
+      "codigoPara": "P/ ANALISE",
       "codigoParaFichaMes1": "",
       "codigoParaFichaMes2": "",
       "codigoParaVerbasFerias": "",
@@ -94,7 +94,7 @@
       "observacao": "",
       "SUGESTOES": "",
       "sugestoes": "",
-      "nomeRm": "[INCLUSAO MANUAL] # adiantamento de 13º salário (férias)",
+      "nomeRm": "",
       "hasDivergencia": false,
       "hasDivergenciaDuplicidade": false,
       "hasDivergenciaTipo": false
@@ -33424,28 +33424,22 @@
       "nat_esocial": "1300-PLR - Participação em Lucros ou Resultados"
     },
     {
-      "CODIGO": "1128",
-      "DESCRICAO": "[INCLUSAO MANUAL] # adiantamento de 13º salário (férias)",
-      "TIPOEVENTO": "PROVENTO",
-      "VALHORDIAREF": "N ENCONTRADO",
-      "NAT_ESOCIAL": "N ENCONTRADO",
-      "rowNum": 921,
-      "codigo": "1128",
-      "descricao": "[INCLUSAO MANUAL] # adiantamento de 13º salário (férias)",
-      "tipo": "PROVENTO",
-      "valhordiaref": "N ENCONTRADO",
-      "nat_esocial": "N ENCONTRADO"
-    },
-    {
       "codigo": "1129",
       "descricao": "[INCLUSAO MANUAL] # adiantamento de 13º salário (férias)",
-      "tipo": "PROVENTO"
+      "tipo": "PROVENTO",
+      "CODIGO": "1129",
+      "DESCRICAO": "[INCLUSAO MANUAL] # adiantamento de 13º salário (férias)",
+      "TIPOEVENTO": "PROVENTO",
+      "VALHORDIAREF": "",
+      "valhordiaref": "",
+      "NAT_ESOCIAL": "",
+      "nat_esocial": ""
     }
   ],
   "DADOS_RM_SITUACAO": [],
   "DADOS_RM_MOTIVOS": [],
   "DADOS_RM_SECOES": [],
   "config": {
-    "ultimo_sincronismo": "2026-07-02T18:40:37.545Z"
+    "ultimo_sincronismo": "2026-07-02T21:38:35.945Z"
   }
 }
