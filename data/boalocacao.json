@@ -20,7 +20,7 @@
       "nomeDe": "# 1ª via cartão hapvida",
       "tipoEvento": "D-DESCONTO",
       "coligadaPara": "1",
-      "codigoPara": "",
+      "codigoPara": "P/ ANALISE",
       "codigoParaFichaMes1": "",
       "codigoParaFichaMes2": "",
       "codigoParaVerbasFerias": "",
@@ -33441,6 +33441,6 @@
   "DADOS_RM_MOTIVOS": [],
   "DADOS_RM_SECOES": [],
   "config": {
-    "ultimo_sincronismo": "2026-07-02T16:30:19.259Z"
+    "ultimo_sincronismo": "2026-07-02T16:31:01.479Z"
   }
 }
