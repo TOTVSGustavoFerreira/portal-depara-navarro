@@ -61,10 +61,10 @@
       "observacao": "",
       "SUGESTOES": "",
       "sugestoes": "",
-      "nomeRm": "",
-      "hasDivergencia": false,
+      "nomeRm": "DIF. MEDIA COMISSAO FERIAS VENC",
+      "hasDivergencia": true,
       "hasDivergenciaDuplicidade": false,
-      "hasDivergenciaTipo": false
+      "hasDivergenciaTipo": true
     },
     {
       "EMPRESA_DE": "0015",
@@ -86,7 +86,7 @@
       "nomeDe": "# adiantamento de 13º salário (férias)",
       "tipoEvento": "P-PROVENTO",
       "coligadaPara": "2",
-      "codigoPara": "P/ ANALISE",
+      "codigoPara": "1129",
       "codigoParaFichaMes1": "",
       "codigoParaFichaMes2": "",
       "codigoParaVerbasFerias": "",
@@ -94,7 +94,7 @@
       "observacao": "",
       "SUGESTOES": "",
       "sugestoes": "",
-      "nomeRm": "",
+      "nomeRm": "[INCLUSAO MANUAL] # adiantamento de 13º salário (férias)",
       "hasDivergencia": false,
       "hasDivergenciaDuplicidade": false,
       "hasDivergenciaTipo": false
@@ -33435,12 +33435,17 @@
       "tipo": "PROVENTO",
       "valhordiaref": "N ENCONTRADO",
       "nat_esocial": "N ENCONTRADO"
+    },
+    {
+      "codigo": "1129",
+      "descricao": "[INCLUSAO MANUAL] # adiantamento de 13º salário (férias)",
+      "tipo": "PROVENTO"
     }
   ],
   "DADOS_RM_SITUACAO": [],
   "DADOS_RM_MOTIVOS": [],
   "DADOS_RM_SECOES": [],
   "config": {
-    "ultimo_sincronismo": "2026-07-02T18:39:01.516Z"
+    "ultimo_sincronismo": "2026-07-02T18:40:37.545Z"
   }
 }
