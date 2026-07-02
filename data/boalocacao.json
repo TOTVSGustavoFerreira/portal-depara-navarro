@@ -62,9 +62,9 @@
       "SUGESTOES": "",
       "sugestoes": "",
       "nomeRm": "DIF. MEDIA COMISSAO FERIAS VENC",
-      "hasDivergencia": true,
+      "hasDivergencia": false,
       "hasDivergenciaDuplicidade": false,
-      "hasDivergenciaTipo": true
+      "hasDivergenciaTipo": false
     },
     {
       "EMPRESA_DE": "0015",
@@ -72,7 +72,7 @@
       "NOME_DE": "# adiantamento de 13º salário (férias)",
       "TIPO_EVENTO": "P-PROVENTO",
       "COLIGADA_PARA": "2",
-      "CODIGO_PARA": "P/ ANALISE",
+      "CODIGO_PARA": "",
       "NOME_RM": "[INCLUSAO MANUAL] # adiantamento de 13º salário (férias)",
       "CODIGO_PARA_FICHA_MES1": "",
       "NOME_RM_1": "",
@@ -86,7 +86,7 @@
       "nomeDe": "# adiantamento de 13º salário (férias)",
       "tipoEvento": "P-PROVENTO",
       "coligadaPara": "2",
-      "codigoPara": "P/ ANALISE",
+      "codigoPara": "",
       "codigoParaFichaMes1": "",
       "codigoParaFichaMes2": "",
       "codigoParaVerbasFerias": "",
@@ -33440,6 +33440,6 @@
   "DADOS_RM_MOTIVOS": [],
   "DADOS_RM_SECOES": [],
   "config": {
-    "ultimo_sincronismo": "2026-07-02T21:42:59.198Z"
+    "ultimo_sincronismo": "2026-07-02T21:43:07.624Z"
   }
 }
