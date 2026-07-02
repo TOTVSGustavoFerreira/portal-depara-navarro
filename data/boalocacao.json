@@ -1,7 +1,7 @@
 {
   "cliente": "boalocacao",
   "config": {
-    "ultimo_sincronismo": "2026-06-30T13:18:35.164Z",
+    "ultimo_sincronismo": "2026-07-01T23:20:29.441Z",
     "originName": "TESTE -- BOALOCACAO-TESTE PASTA PESSOAL.xlsx",
     "destinationName": "TESTE -- BOALOCACAO-TESTE PASTA TOTVS.xlsx"
   },
@@ -57,7 +57,7 @@
       "nomeDe": "# adiantamento de 13º salário (férias)",
       "tipoEvento": "P-PROVENTO",
       "coligadaPara": "2",
-      "codigoPara": "0111",
+      "codigoPara": "P/ ANALISE",
       "nomeRm": "[INCLUSAO MANUAL] # adiantamento de 13º salário (férias)",
       "codigoParaFichaMes1": "",
       "NOMERM1": "",
