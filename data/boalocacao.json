@@ -20,7 +20,7 @@
       "nomeDe": "# 1ª via cartão hapvida",
       "tipoEvento": "D-DESCONTO",
       "coligadaPara": "1",
-      "codigoPara": "0047",
+      "codigoPara": "",
       "codigoParaFichaMes1": "",
       "codigoParaFichaMes2": "",
       "codigoParaVerbasFerias": "",
@@ -1142,7 +1142,7 @@
       "nomeDe": "# partic.dos trab.nos result.emp",
       "tipoEvento": "P-PROVENTO",
       "coligadaPara": "1",
-      "codigoPara": "P/ ANALISE",
+      "codigoPara": "0174",
       "codigoParaFichaMes1": "",
       "codigoParaFichaMes2": "",
       "codigoParaVerbasFerias": "",
@@ -33441,6 +33441,6 @@
   "DADOS_RM_MOTIVOS": [],
   "DADOS_RM_SECOES": [],
   "config": {
-    "ultimo_sincronismo": "2026-07-02T13:07:30.518Z"
+    "ultimo_sincronismo": "2026-07-02T16:29:53.831Z"
   }
 }
