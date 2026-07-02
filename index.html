@@ -1954,6 +1954,89 @@
           });
         }
       });
+
+      // 3. Normalizar bases de apoio DADOS_RM_* para manter consistência nas buscas e chaves do portal
+      if (db.DADOS_RM_EVENTOS && Array.isArray(db.DADOS_RM_EVENTOS)) {
+        db.DADOS_RM_EVENTOS.forEach(item => {
+          const cod = String(item.CODIGO !== undefined ? item.CODIGO : (item.codigo !== undefined ? item.codigo : "")).trim();
+          item.CODIGO = cod;
+          item.codigo = cod;
+
+          const desc = String(item.DESCRICAO !== undefined ? item.DESCRICAO : (item.descricao !== undefined ? item.descricao : "")).trim();
+          item.DESCRICAO = desc;
+          item.descricao = desc;
+
+          const tipo = String(item.TIPOEVENTO !== undefined ? item.TIPOEVENTO : (item.tipo !== undefined ? item.tipo : "")).trim();
+          item.TIPOEVENTO = tipo;
+          item.tipo = tipo;
+
+          const valref = String(item.VALHORDIAREF !== undefined ? item.VALHORDIAREF : (item.valhordiaref !== undefined ? item.valhordiaref : "")).trim();
+          item.VALHORDIAREF = valref;
+          item.valhordiaref = valref;
+
+          const nat = String(item.NAT_ESOCIAL !== undefined ? item.NAT_ESOCIAL : (item.nat_esocial !== undefined ? item.nat_esocial : "")).trim();
+          item.NAT_ESOCIAL = nat;
+          item.nat_esocial = nat;
+        });
+        
+        // Sincronizar rmEvents global
+        rmEvents = db.DADOS_RM_EVENTOS;
+      }
+
+      if (db.DADOS_RM_SITUACAO && Array.isArray(db.DADOS_RM_SITUACAO)) {
+        db.DADOS_RM_SITUACAO.forEach(item => {
+          const cod = String(item.CODCLIENTE !== undefined ? item.CODCLIENTE : (item.codcliente !== undefined ? item.codcliente : "")).trim();
+          item.CODCLIENTE = cod;
+          item.codcliente = cod;
+
+          const desc = String(item.DESCRICAO !== undefined ? item.DESCRICAO : (item.descricao !== undefined ? item.descricao : "")).trim();
+          item.DESCRICAO = desc;
+          item.descricao = desc;
+        });
+      }
+
+      if (db.DADOS_RM_MOTIVOS && Array.isArray(db.DADOS_RM_MOTIVOS)) {
+        db.DADOS_RM_MOTIVOS.forEach(item => {
+          const cod = String(item.CODCLIENTE !== undefined ? item.CODCLIENTE : (item.codcliente !== undefined ? item.codcliente : "")).trim();
+          item.CODCLIENTE = cod;
+          item.codcliente = cod;
+
+          const desc = String(item.DESCRICAO !== undefined ? item.DESCRICAO : (item.descricao !== undefined ? item.descricao : "")).trim();
+          item.DESCRICAO = desc;
+          item.descricao = desc;
+        });
+      }
+
+      if (db.DADOS_RM_SECOES && Array.isArray(db.DADOS_RM_SECOES)) {
+        db.DADOS_RM_SECOES.forEach(item => {
+          const col = String(item.COLIGADA !== undefined ? item.COLIGADA : (item.coligada !== undefined ? item.coligada : "")).trim();
+          item.COLIGADA = col;
+          item.coligada = col;
+
+          const fil = String(item.FILIAL !== undefined ? item.FILIAL : (item.filial !== undefined ? item.filial : "")).trim();
+          item.FILIAL = fil;
+          item.filial = fil;
+
+          const sec = String(item.COD_SECAO !== undefined ? item.COD_SECAO : (item.cod_secao !== undefined ? item.cod_secao : "")).trim();
+          item.COD_SECAO = sec;
+          item.cod_secao = sec;
+
+          const desc = String(item.DESCRICAO !== undefined ? item.DESCRICAO : (item.descricao !== undefined ? item.descricao : "")).trim();
+          item.DESCRICAO = desc;
+          item.descricao = desc;
+
+          const set = String(item.SETOR !== undefined ? item.SETOR : (item.setor !== undefined ? item.setor : "")).trim();
+          item.SETOR = set;
+          item.setor = set;
+        });
+      }
+      
+      // Recalcular os nomes de ZDEPARA_EVENTOS após normalizar as tabelas de apoio
+      if (db.ZDEPARA_EVENTOS && Array.isArray(db.ZDEPARA_EVENTOS)) {
+        db.ZDEPARA_EVENTOS.forEach(item => {
+          item.nomeRm = getRmName(item.codigoPara);
+        });
+      }
     }
 
     function switchModule(moduleName) {
