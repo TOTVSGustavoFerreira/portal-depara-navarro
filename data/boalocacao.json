@@ -6,7 +6,7 @@
       "NOME_DE": "# 1ª via cartão hapvida",
       "TIPO_EVENTO": "D-DESCONTO",
       "COLIGADA_PARA": "1",
-      "CODIGO_PARA": "0047",
+      "CODIGO_PARA": "",
       "NOME_RM": "DIF. SALARIAL",
       "CODIGO_PARA_FICHA_MES1": "",
       "NOME_RM_1": "",
@@ -20,7 +20,7 @@
       "nomeDe": "# 1ª via cartão hapvida",
       "tipoEvento": "D-DESCONTO",
       "coligadaPara": "1",
-      "codigoPara": "0047",
+      "codigoPara": "",
       "codigoParaFichaMes1": "",
       "codigoParaFichaMes2": "",
       "codigoParaVerbasFerias": "",
@@ -33440,6 +33440,6 @@
   "DADOS_RM_MOTIVOS": [],
   "DADOS_RM_SECOES": [],
   "config": {
-    "ultimo_sincronismo": "2026-07-02T21:38:35.945Z"
+    "ultimo_sincronismo": "2026-07-02T21:42:47.586Z"
   }
 }
