@@ -28,7 +28,7 @@
       "observacao": "",
       "SUGESTOES": "",
       "sugestoes": "",
-      "nomeRm": "DESC. 2A VIA PASSCARD",
+      "nomeRm": "",
       "hasDivergencia": false,
       "hasDivergenciaDuplicidade": false,
       "hasDivergenciaTipo": false
@@ -39,7 +39,7 @@
       "NOME_DE": "# adiantamento base de cálculo",
       "TIPO_EVENTO": "B-BASE",
       "COLIGADA_PARA": "1",
-      "CODIGO_PARA": "0122",
+      "CODIGO_PARA": "",
       "NOME_RM": "",
       "CODIGO_PARA_FICHA_MES1": "",
       "NOME_RM_1": "",
@@ -53,7 +53,7 @@
       "nomeDe": "# adiantamento base de cálculo",
       "tipoEvento": "B-BASE",
       "coligadaPara": "1",
-      "codigoPara": "0122",
+      "codigoPara": "",
       "codigoParaFichaMes1": "",
       "codigoParaFichaMes2": "",
       "codigoParaVerbasFerias": "",
@@ -33440,6 +33440,6 @@
   "DADOS_RM_MOTIVOS": [],
   "DADOS_RM_SECOES": [],
   "config": {
-    "ultimo_sincronismo": "2026-07-02T21:42:47.586Z"
+    "ultimo_sincronismo": "2026-07-02T21:42:59.198Z"
   }
 }
