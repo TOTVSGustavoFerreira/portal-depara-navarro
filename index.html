@@ -1885,47 +1885,53 @@
       // 1. Normalizar ZDEPARA_EVENTOS de forma robusta e agressiva
       if (db.ZDEPARA_EVENTOS && Array.isArray(db.ZDEPARA_EVENTOS)) {
         db.ZDEPARA_EVENTOS.forEach(item => {
-          const valEmpresa = String(item.EMPRESA_DE !== undefined ? item.EMPRESA_DE : (item.empresaDe !== undefined ? item.empresaDe : "")).trim();
+          const getVal = (v1, v2) => {
+            const s1 = String(v1 !== undefined && v1 !== null ? v1 : "").trim();
+            const s2 = String(v2 !== undefined && v2 !== null ? v2 : "").trim();
+            return s1 !== "" ? s1 : s2;
+          };
+
+          const valEmpresa = getVal(item.EMPRESA_DE, item.empresaDe);
           item.EMPRESA_DE = valEmpresa;
           item.empresaDe = valEmpresa;
           
-          const valCodigo = String(item.CODIGO_DE !== undefined ? item.CODIGO_DE : (item.codigoDe !== undefined ? item.codigoDe : "")).trim();
+          const valCodigo = getVal(item.CODIGO_DE, item.codigoDe);
           item.CODIGO_DE = valCodigo;
           item.codigoDe = valCodigo;
           
-          const valNomeDe = String(item.NOME_DE !== undefined ? item.NOME_DE : (item.nomeDe !== undefined ? item.nomeDe : "")).trim();
+          const valNomeDe = getVal(item.NOME_DE, item.nomeDe);
           item.NOME_DE = valNomeDe;
           item.nomeDe = valNomeDe;
           
-          const valTipo = String(item.TIPO_EVENTO !== undefined ? item.TIPO_EVENTO : (item.tipoEvento !== undefined ? item.tipoEvento : "")).trim();
+          const valTipo = getVal(item.TIPO_EVENTO, item.tipoEvento);
           item.TIPO_EVENTO = valTipo;
           item.tipoEvento = valTipo;
           
-          const valColigada = String(item.COLIGADA_PARA !== undefined ? item.COLIGADA_PARA : (item.coligadaPara !== undefined ? item.coligadaPara : "")).trim();
+          const valColigada = getVal(item.COLIGADA_PARA, item.coligadaPara);
           item.COLIGADA_PARA = valColigada;
           item.coligadaPara = valColigada;
           
-          const valCodigoPara = String(item.CODIGO_PARA !== undefined ? item.CODIGO_PARA : (item.codigoPara !== undefined ? item.codigoPara : "")).trim();
+          const valCodigoPara = getVal(item.CODIGO_PARA, item.codigoPara);
           item.CODIGO_PARA = valCodigoPara;
           item.codigoPara = valCodigoPara;
           
-          const valFicha1 = String(item.CODIGO_PARA_FICHA_MES1 !== undefined ? item.CODIGO_PARA_FICHA_MES1 : (item.codigoParaFichaMes1 !== undefined ? item.codigoParaFichaMes1 : "")).trim();
+          const valFicha1 = getVal(item.CODIGO_PARA_FICHA_MES1, item.codigoParaFichaMes1);
           item.CODIGO_PARA_FICHA_MES1 = valFicha1;
           item.codigoParaFichaMes1 = valFicha1;
           
-          const valFicha2 = String(item.CODIGO_PARA_FICHA_MES2 !== undefined ? item.CODIGO_PARA_FICHA_MES2 : (item.codigoParaFichaMes2 !== undefined ? item.codigoParaFichaMes2 : "")).trim();
+          const valFicha2 = getVal(item.CODIGO_PARA_FICHA_MES2, item.codigoParaFichaMes2);
           item.CODIGO_PARA_FICHA_MES2 = valFicha2;
           item.codigoParaFichaMes2 = valFicha2;
           
-          const valFerias = String(item.CODIGO_PARA_VERBAS_FERIAS !== undefined ? item.CODIGO_PARA_VERBAS_FERIAS : (item.codigoParaVerbasFerias !== undefined ? item.codigoParaVerbasFerias : "")).trim();
+          const valFerias = getVal(item.CODIGO_PARA_VERBAS_FERIAS, item.codigoParaVerbasFerias);
           item.CODIGO_PARA_VERBAS_FERIAS = valFerias;
           item.codigoParaVerbasFerias = valFerias;
           
-          const valObs = String(item.OBSERVACAO !== undefined ? item.OBSERVACAO : (item.observacao !== undefined ? item.observacao : "")).trim();
+          const valObs = getVal(item.OBSERVACAO, item.observacao);
           item.OBSERVACAO = valObs;
           item.observacao = valObs;
           
-          const valSug = String(item.SUGESTOES !== undefined ? item.SUGESTOES : (item.sugestoes !== undefined ? item.sugestoes : "")).trim();
+          const valSug = getVal(item.SUGESTOES, item.sugestoes);
           item.SUGESTOES = valSug;
           item.sugestoes = valSug;
 
@@ -3004,7 +3010,9 @@
             const dia = String(d.getDate()).padStart(2, '0');
             const mes = String(d.getMonth() + 1).padStart(2, '0');
             const ano = String(d.getFullYear()).slice(-2);
-            const dataStr = `${dia}${mes}${ano}`;
+            const hora = String(d.getHours()).padStart(2, '0');
+            const min = String(d.getMinutes()).padStart(2, '0');
+            const dataStr = `${dia}${mes}${ano}_${hora}${min}`;
  
             const filename = `000-ZDEPARA - ${clientKey.toUpperCase()} - ${dataStr}.xlsx`;
             XLSX.writeFile(wb, filename);
@@ -4674,11 +4682,17 @@
         
         updatedData = {
           coligadaPara: item.coligadaPara,
+          COLIGADA_PARA: item.coligadaPara,
           codigoPara: codigoPara,
+          CODIGO_PARA: codigoPara,
           codigoParaFichaMes1: codigoParaFichaMes1,
+          CODIGO_PARA_FICHA_MES1: codigoParaFichaMes1,
           codigoParaFichaMes2: codigoParaFichaMes2,
+          CODIGO_PARA_FICHA_MES2: codigoParaFichaMes2,
           codigoParaVerbasFerias: codigoParaVerbasFerias,
-          observacao: observacao
+          CODIGO_PARA_VERBAS_FERIAS: codigoParaVerbasFerias,
+          observacao: observacao,
+          OBSERVACAO: observacao
         };
 
         commitMessage = `Atualiza mapeamento eventos linha ${rowNum} - ${item.nomeDe}`;
@@ -4694,12 +4708,17 @@
             database.forEach(otherItem => {
               if (otherItem.rowNum !== rowNum && 
                   otherItem.nomeDe === item.nomeDe && 
-                  otherItem.tipoEvent === item.tipoEvento) {
+                  otherItem.tipoEvento === item.tipoEvento) {
                 otherItem.codigoPara = codigoPara;
+                otherItem.CODIGO_PARA = codigoPara;
                 otherItem.codigoParaFichaMes1 = codigoParaFichaMes1;
+                otherItem.CODIGO_PARA_FICHA_MES1 = codigoParaFichaMes1;
                 otherItem.codigoParaFichaMes2 = codigoParaFichaMes2;
+                otherItem.CODIGO_PARA_FICHA_MES2 = codigoParaFichaMes2;
                 otherItem.codigoParaVerbasFerias = codigoParaVerbasFerias;
+                otherItem.CODIGO_PARA_VERBAS_FERIAS = codigoParaVerbasFerias;
                 otherItem.observacao = observacao;
+                otherItem.OBSERVACAO = observacao;
               }
             });
           }
