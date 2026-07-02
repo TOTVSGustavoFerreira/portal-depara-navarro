@@ -1142,7 +1142,7 @@
       "nomeDe": "# partic.dos trab.nos result.emp",
       "tipoEvento": "P-PROVENTO",
       "coligadaPara": "1",
-      "codigoPara": "1127",
+      "codigoPara": "P/ ANALISE",
       "codigoParaFichaMes1": "",
       "codigoParaFichaMes2": "",
       "codigoParaVerbasFerias": "",
@@ -33441,6 +33441,6 @@
   "DADOS_RM_MOTIVOS": [],
   "DADOS_RM_SECOES": [],
   "config": {
-    "ultimo_sincronismo": "2026-07-02T13:06:29.602Z"
+    "ultimo_sincronismo": "2026-07-02T13:07:30.518Z"
   }
 }
