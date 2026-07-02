@@ -1,7 +1,7 @@
 {
   "cliente": "boalocacao",
   "config": {
-    "ultimo_sincronismo": "2026-07-02T01:10:12.398Z",
+    "ultimo_sincronismo": "2026-07-02T01:10:23.796Z",
     "originName": "TESTE -- BOALOCACAO-TESTE PASTA PESSOAL.xlsx",
     "destinationName": "TESTE -- BOALOCACAO-TESTE PASTA TOTVS.xlsx"
   },
@@ -13,7 +13,7 @@
       "nomeDe": "# 1ª via cartão hapvida",
       "tipoEvento": "D-DESCONTO",
       "coligadaPara": "1",
-      "codigoPara": "CRIAR",
+      "codigoPara": "",
       "nomeRm": "DESC. 2A VIA PASSCARD",
       "codigoParaFichaMes1": "",
       "NOMERM1": "",
