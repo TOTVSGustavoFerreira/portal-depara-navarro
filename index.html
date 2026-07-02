@@ -1819,6 +1819,9 @@
           rmEvents = response.DADOS_RM_EVENTOS || [];
           unusedCreatedEvents = [];
           
+          // Normalizar as propriedades das abas importadas/carregadas
+          normalizeDatabaseProperties(rawJsonDatabase);
+          
           // Forçar renderização do módulo ativo
           switchModule(currentModule);
           
@@ -1829,6 +1832,42 @@
           hideLoading();
           showToast("Erro ao carregar dados: " + err.message, 'error');
         });
+    }
+
+    function normalizeDatabaseProperties(db) {
+      if (!db) return;
+      if (db.ZDEPARA_EVENTOS && Array.isArray(db.ZDEPARA_EVENTOS)) {
+        db.ZDEPARA_EVENTOS.forEach(item => {
+          // Normaliza Caixa Alta (Excel) -> camelCase (Portal)
+          if (item.EMPRESA_DE !== undefined && item.empresaDe === undefined) item.empresaDe = String(item.EMPRESA_DE).trim();
+          if (item.CODIGO_DE !== undefined && item.codigoDe === undefined) item.codigoDe = String(item.CODIGO_DE).trim();
+          if (item.NOME_DE !== undefined && item.nomeDe === undefined) item.nomeDe = String(item.NOME_DE).trim();
+          if (item.TIPO_EVENTO !== undefined && item.tipoEvento === undefined) item.tipoEvento = String(item.TIPO_EVENTO).trim();
+          if (item.COLIGADA_PARA !== undefined && item.coligadaPara === undefined) item.coligadaPara = String(item.COLIGADA_PARA).trim();
+          if (item.CODIGO_PARA !== undefined && item.codigoPara === undefined) item.codigoPara = String(item.CODIGO_PARA).trim();
+          if (item.CODIGO_PARA_FICHA_MES1 !== undefined && item.codigoParaFichaMes1 === undefined) item.codigoParaFichaMes1 = String(item.CODIGO_PARA_FICHA_MES1).trim();
+          if (item.CODIGO_PARA_FICHA_MES2 !== undefined && item.codigoParaFichaMes2 === undefined) item.codigoParaFichaMes2 = String(item.CODIGO_PARA_FICHA_MES2).trim();
+          if (item.CODIGO_PARA_VERBAS_FERIAS !== undefined && item.codigoParaVerbasFerias === undefined) item.codigoParaVerbasFerias = String(item.CODIGO_PARA_VERBAS_FERIAS).trim();
+          if (item.OBSERVACAO !== undefined && item.observacao === undefined) item.observacao = String(item.OBSERVACAO).trim();
+          if (item.SUGESTOES !== undefined && item.sugestoes === undefined) item.sugestoes = String(item.SUGESTOES).trim();
+
+          // Normaliza camelCase -> Caixa Alta (para o exportador)
+          if (item.empresaDe !== undefined && item.EMPRESA_DE === undefined) item.EMPRESA_DE = item.empresaDe;
+          if (item.codigoDe !== undefined && item.CODIGO_DE === undefined) item.CODIGO_DE = item.codigoDe;
+          if (item.nomeDe !== undefined && item.NOME_DE === undefined) item.NOME_DE = item.nomeDe;
+          if (item.tipoEvento !== undefined && item.TIPO_EVENTO === undefined) item.TIPO_EVENTO = item.tipoEvento;
+          if (item.coligadaPara !== undefined && item.COLIGADA_PARA === undefined) item.COLIGADA_PARA = item.coligadaPara;
+          if (item.codigoPara !== undefined && item.CODIGO_PARA === undefined) item.CODIGO_PARA = item.codigoPara;
+          if (item.codigoParaFichaMes1 !== undefined && item.CODIGO_PARA_FICHA_MES1 === undefined) item.CODIGO_PARA_FICHA_MES1 = item.codigoParaFichaMes1;
+          if (item.codigoParaFichaMes2 !== undefined && item.CODIGO_PARA_FICHA_MES2 === undefined) item.CODIGO_PARA_FICHA_MES2 = item.codigoParaFichaMes2;
+          if (item.codigoParaVerbasFerias !== undefined && item.CODIGO_PARA_VERBAS_FERIAS === undefined) item.CODIGO_PARA_VERBAS_FERIAS = item.codigoParaVerbasFerias;
+          if (item.observacao !== undefined && item.OBSERVACAO === undefined) item.OBSERVACAO = item.observacao;
+          if (item.sugestoes !== undefined && item.SUGESTOES === undefined) item.SUGESTOES = item.sugestoes;
+
+          // Garantir que item.nomeRm seja resolvido dinamicamente
+          item.nomeRm = getRmName(item.codigoPara);
+        });
+      }
     }
 
     function switchModule(moduleName) {
@@ -2233,7 +2272,7 @@
         } 
         else if (currentModule === 'secoes') {
           const codSecao = (item.CODIGO_PARA || "").trim();
-          if (codSecao === "P/ ANALISE") {
+          if (isCodePending(codSecao)) {
             pAnalise++;
           } else if (codSecao) {
             preenchidos++;
@@ -2246,7 +2285,7 @@
           // Eventos, Funções, Sindicatos
           const codPara = ((currentModule === 'eventos' ? item.codigoPara : item.CODIGO_PARA) || "").trim();
           
-          if (codPara === "P/ ANALISE") {
+          if (isCodePending(codPara)) {
             pAnalise++;
           } else if (codPara && !isCodeIgnored(codPara) && !isCodeToCreate(codPara)) {
             preenchidos++;
@@ -3025,7 +3064,7 @@
         if (currentModule === 'eventos') {
           destCode = (item.codigoPara || "").trim();
           isMapped = destCode && !isCodeIgnored(destCode) && !isCodeToCreate(destCode);
-          isPending = destCode === "P/ ANALISE";
+          isPending = isCodePending(destCode);
         } else if (currentModule === 'coligadas') {
           destCode = (item.CODCOLIGADA || "").trim();
           isMapped = !!destCode;
@@ -3038,7 +3077,7 @@
           // Funcoes, Sindicatos, Secoes
           destCode = (item.CODIGO_PARA || "").trim();
           isMapped = destCode && !isCodeIgnored(destCode) && !isCodeToCreate(destCode);
-          isPending = destCode === "P/ ANALISE";
+          isPending = isCodePending(destCode);
         }
         
         if (activeKpiFilter === 'mapped' && !isMapped) return false;
@@ -3177,6 +3216,16 @@
       return norm === "CRIAR" || norm === "A CRIAR" || norm === "CRIAR EVENTO";
     }
 
+    function isCodePending(cod) {
+      if (!cod) return false;
+      const normalized = String(cod)
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .trim()
+        .toUpperCase();
+      return normalized === "P/ ANALISE";
+    }
+
     // Dado um código de evento RM, retorna a descrição/nome buscando na lista rmEvents
     function getRmName(cod) {
       if (!cod || isCodeIgnored(cod) || isCodeToCreate(cod)) return '';
@@ -3306,7 +3355,7 @@
 
           rmCellContent = `
             <div style="display:flex; flex-direction:column; gap:2px;">
-              <span style="font-weight:600;">${item.nomeRm}</span>
+              <span style="font-weight:600;">${getRmName(item.codigoPara) || item.nomeRm || ''}</span>
               <span style="font-size:0.75rem; color:var(--color-text-muted);">${rmTypeLabel}${mismatchSpan}</span>
             </div>
           `;
@@ -3329,7 +3378,7 @@
             </td>
             
             <td class="col-nome-rm">
-              <input type="text" id="edit-nomeRm-${item.rowNum}" class="input-field" style="padding: 6px; font-size: 0.8rem;" value="${item.nomeRm}" disabled>
+              <input type="text" id="edit-nomeRm-${item.rowNum}" class="input-field" style="padding: 6px; font-size: 0.8rem;" value="${getRmName(item.codigoPara) || item.nomeRm || ''}" disabled>
             </td>
             
             <td class="col-acoes">
