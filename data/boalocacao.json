@@ -171,7 +171,7 @@
       "NOME_DE": "# arredondamento (desconto)",
       "TIPO_EVENTO": "D-DESCONTO",
       "COLIGADA_PARA": "1",
-      "CODIGO_PARA": "NAO IMPORTAR",
+      "CODIGO_PARA": "0275",
       "NOME_RM": "",
       "CODIGO_PARA_FICHA_MES1": "",
       "NOME_RM_1": "",
@@ -185,7 +185,7 @@
       "nomeDe": "# arredondamento (desconto)",
       "tipoEvento": "D-DESCONTO",
       "coligadaPara": "1",
-      "codigoPara": "NAO IMPORTAR",
+      "codigoPara": "0275",
       "codigoParaFichaMes1": "",
       "codigoParaFichaMes2": "",
       "codigoParaVerbasFerias": "",
@@ -33440,6 +33440,6 @@
   "DADOS_RM_MOTIVOS": [],
   "DADOS_RM_SECOES": [],
   "config": {
-    "ultimo_sincronismo": "2026-07-02T21:44:47.515Z"
+    "ultimo_sincronismo": "2026-07-02T21:45:17.070Z"
   }
 }
