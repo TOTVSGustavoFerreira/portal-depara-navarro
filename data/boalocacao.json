@@ -6,7 +6,7 @@
       "NOME_DE": "# 1ª via cartão hapvida",
       "TIPO_EVENTO": "D-DESCONTO",
       "COLIGADA_PARA": "1",
-      "CODIGO_PARA": "0047",
+      "CODIGO_PARA": "",
       "NOME_RM": "DESC. 2A VIA PASSCARD",
       "CODIGO_PARA_FICHA_MES1": "",
       "NOME_RM_1": "",
@@ -33441,6 +33441,6 @@
   "DADOS_RM_MOTIVOS": [],
   "DADOS_RM_SECOES": [],
   "config": {
-    "ultimo_sincronismo": "2026-07-02T16:32:02.009Z"
+    "ultimo_sincronismo": "2026-07-02T18:14:38.567Z"
   }
 }
