@@ -2,12 +2,12 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <title>Portal De-Para - TOTVS RM v1.3</title>
+  <title>Portal De-Para - TOTVS RM v1.4</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <!-- SheetJS Library for Excel Export -->
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <!-- SheetJS Library with Style Support for Excel Export -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
   <style>
     :root {
       --bg-primary: #002233;
@@ -2743,18 +2743,26 @@
               
               const ws = XLSX.utils.aoa_to_sheet(sheetData);
               
-              // Aplicar colorização de cabeçalhos por coluna
+              // 1. Forçar todas as células (cabeçalho e dados) como texto puro para reter zeros à esquerda
+              for (let key in ws) {
+                if (key[0] === '!') continue; // Ignora chaves internas de controle
+                const cell = ws[key];
+                cell.t = 's'; // Tipo: String
+                cell.z = '@'; // Formato de exibição: Text
+              }
+              
+              // 2. Aplicar colorização de cabeçalhos por coluna (linha 0 no Excel)
               const isDadosRm = aba.name.startsWith("DADOS_RM");
               aba.headers.forEach((h, colIdx) => {
                 const cellRef = XLSX.utils.encode_cell({ r: 0, c: colIdx });
                 if (ws[cellRef]) {
-                  let colorHex = "5B95F9"; // Azul padrão
+                  let colorHex = "5B95F9"; // Azul padrão para Legados Origem
                   
                   if (isDadosRm) {
                     colorHex = "F7CB4D"; // Amarelo para DADOS_RM
                   } else {
                     // Para abas ZDEPARA:
-                    // Se a coluna é de origem, pinta de azul; se for de destino/RM, pinta de amarelo
+                    // Se a coluna é de destino/RM, pinta de amarelo; se for origem, de azul
                     const hNorm = h.toUpperCase();
                     const isParaCol = hNorm.includes("_PARA") || hNorm === "CODCOLIGADA" || hNorm === "NOME_RM" || hNorm.includes("FICHA_MES") || hNorm.includes("VERBAS_FERIAS");
                     if (isParaCol) {
@@ -2762,10 +2770,8 @@
                     }
                   }
                   
-                  // Inserir estilos se suportado pela biblioteca XLSX utilizada
                   ws[cellRef].s = {
                     fill: {
-                      patternType: 'solid',
                       fgColor: { rgb: colorHex }
                     },
                     font: {
@@ -2842,11 +2848,29 @@
           abasToImport.forEach(aba => {
             const ws = workbook.Sheets[aba.name];
             if (ws) {
-              const json = XLSX.utils.sheet_to_json(ws);
+              // raw: false faz o SheetJS ler o valor formatado (mantendo zeros à esquerda), defval: "" garante strings vazias para nulos
+              const json = XLSX.utils.sheet_to_json(ws, { raw: false, defval: "" });
               
-              // Adicionar numeração sequencial das linhas para controle interno de edição
+              // Adicionar numeração sequencial das linhas para controle interno de edição e normalizar campos de eventos
               json.forEach((item, index) => {
                 item.rowNum = index + 1;
+                
+                // Normaliza o ZDEPARA_EVENTOS de chaves em caixa alta (Excel) de volta para o padrão de propriedades em camelCase
+                if (aba.key === 'ZDEPARA_EVENTOS') {
+                  item.empresaDe = item.EMPRESA_DE !== undefined ? String(item.EMPRESA_DE).trim() : "";
+                  item.codigoDe = item.CODIGO_DE !== undefined ? String(item.CODIGO_DE).trim() : "";
+                  item.nomeDe = item.NOME_DE !== undefined ? String(item.NOME_DE).trim() : "";
+                  item.tipoEvento = item.TIPO_EVENTO !== undefined ? String(item.TIPO_EVENTO).trim() : "";
+                  item.coligadaPara = item.COLIGADA_PARA !== undefined ? String(item.COLIGADA_PARA).trim() : "";
+                  item.codigoPara = item.CODIGO_PARA !== undefined ? String(item.CODIGO_PARA).trim() : "";
+                  
+                  item.codigoParaFichaMes1 = item.CODIGO_PARA_FICHA_MES1 !== undefined ? String(item.CODIGO_PARA_FICHA_MES1).trim() : "";
+                  item.codigoParaFichaMes2 = item.CODIGO_PARA_FICHA_MES2 !== undefined ? String(item.CODIGO_PARA_FICHA_MES2).trim() : "";
+                  item.codigoParaVerbasFerias = item.CODIGO_PARA_VERBAS_FERIAS !== undefined ? String(item.CODIGO_PARA_VERBAS_FERIAS).trim() : "";
+                  
+                  item.observacao = item.OBSERVACAO !== undefined ? String(item.OBSERVACAO).trim() : "";
+                  item.sugestoes = item.SUGESTOES !== undefined ? String(item.SUGESTOES).trim() : "";
+                }
               });
               
               rawJsonDatabase[aba.key] = json;
