@@ -1836,38 +1836,79 @@
 
     function normalizeDatabaseProperties(db) {
       if (!db) return;
+      
+      // 1. Normalizar ZDEPARA_EVENTOS de forma robusta e agressiva
       if (db.ZDEPARA_EVENTOS && Array.isArray(db.ZDEPARA_EVENTOS)) {
         db.ZDEPARA_EVENTOS.forEach(item => {
-          // Normaliza Caixa Alta (Excel) -> camelCase (Portal)
-          if (item.EMPRESA_DE !== undefined && item.empresaDe === undefined) item.empresaDe = String(item.EMPRESA_DE).trim();
-          if (item.CODIGO_DE !== undefined && item.codigoDe === undefined) item.codigoDe = String(item.CODIGO_DE).trim();
-          if (item.NOME_DE !== undefined && item.nomeDe === undefined) item.nomeDe = String(item.NOME_DE).trim();
-          if (item.TIPO_EVENTO !== undefined && item.tipoEvento === undefined) item.tipoEvento = String(item.TIPO_EVENTO).trim();
-          if (item.COLIGADA_PARA !== undefined && item.coligadaPara === undefined) item.coligadaPara = String(item.COLIGADA_PARA).trim();
-          if (item.CODIGO_PARA !== undefined && item.codigoPara === undefined) item.codigoPara = String(item.CODIGO_PARA).trim();
-          if (item.CODIGO_PARA_FICHA_MES1 !== undefined && item.codigoParaFichaMes1 === undefined) item.codigoParaFichaMes1 = String(item.CODIGO_PARA_FICHA_MES1).trim();
-          if (item.CODIGO_PARA_FICHA_MES2 !== undefined && item.codigoParaFichaMes2 === undefined) item.codigoParaFichaMes2 = String(item.CODIGO_PARA_FICHA_MES2).trim();
-          if (item.CODIGO_PARA_VERBAS_FERIAS !== undefined && item.codigoParaVerbasFerias === undefined) item.codigoParaVerbasFerias = String(item.CODIGO_PARA_VERBAS_FERIAS).trim();
-          if (item.OBSERVACAO !== undefined && item.observacao === undefined) item.observacao = String(item.OBSERVACAO).trim();
-          if (item.SUGESTOES !== undefined && item.sugestoes === undefined) item.sugestoes = String(item.SUGESTOES).trim();
+          const valEmpresa = String(item.EMPRESA_DE !== undefined ? item.EMPRESA_DE : (item.empresaDe !== undefined ? item.empresaDe : "")).trim();
+          item.EMPRESA_DE = valEmpresa;
+          item.empresaDe = valEmpresa;
+          
+          const valCodigo = String(item.CODIGO_DE !== undefined ? item.CODIGO_DE : (item.codigoDe !== undefined ? item.codigoDe : "")).trim();
+          item.CODIGO_DE = valCodigo;
+          item.codigoDe = valCodigo;
+          
+          const valNomeDe = String(item.NOME_DE !== undefined ? item.NOME_DE : (item.nomeDe !== undefined ? item.nomeDe : "")).trim();
+          item.NOME_DE = valNomeDe;
+          item.nomeDe = valNomeDe;
+          
+          const valTipo = String(item.TIPO_EVENTO !== undefined ? item.TIPO_EVENTO : (item.tipoEvento !== undefined ? item.tipoEvento : "")).trim();
+          item.TIPO_EVENTO = valTipo;
+          item.tipoEvento = valTipo;
+          
+          const valColigada = String(item.COLIGADA_PARA !== undefined ? item.COLIGADA_PARA : (item.coligadaPara !== undefined ? item.coligadaPara : "")).trim();
+          item.COLIGADA_PARA = valColigada;
+          item.coligadaPara = valColigada;
+          
+          const valCodigoPara = String(item.CODIGO_PARA !== undefined ? item.CODIGO_PARA : (item.codigoPara !== undefined ? item.codigoPara : "")).trim();
+          item.CODIGO_PARA = valCodigoPara;
+          item.codigoPara = valCodigoPara;
+          
+          const valFicha1 = String(item.CODIGO_PARA_FICHA_MES1 !== undefined ? item.CODIGO_PARA_FICHA_MES1 : (item.codigoParaFichaMes1 !== undefined ? item.codigoParaFichaMes1 : "")).trim();
+          item.CODIGO_PARA_FICHA_MES1 = valFicha1;
+          item.codigoParaFichaMes1 = valFicha1;
+          
+          const valFicha2 = String(item.CODIGO_PARA_FICHA_MES2 !== undefined ? item.CODIGO_PARA_FICHA_MES2 : (item.codigoParaFichaMes2 !== undefined ? item.codigoParaFichaMes2 : "")).trim();
+          item.CODIGO_PARA_FICHA_MES2 = valFicha2;
+          item.codigoParaFichaMes2 = valFicha2;
+          
+          const valFerias = String(item.CODIGO_PARA_VERBAS_FERIAS !== undefined ? item.CODIGO_PARA_VERBAS_FERIAS : (item.codigoParaVerbasFerias !== undefined ? item.codigoParaVerbasFerias : "")).trim();
+          item.CODIGO_PARA_VERBAS_FERIAS = valFerias;
+          item.codigoParaVerbasFerias = valFerias;
+          
+          const valObs = String(item.OBSERVACAO !== undefined ? item.OBSERVACAO : (item.observacao !== undefined ? item.observacao : "")).trim();
+          item.OBSERVACAO = valObs;
+          item.observacao = valObs;
+          
+          const valSug = String(item.SUGESTOES !== undefined ? item.SUGESTOES : (item.sugestoes !== undefined ? item.sugestoes : "")).trim();
+          item.SUGESTOES = valSug;
+          item.sugestoes = valSug;
 
-          // Normaliza camelCase -> Caixa Alta (para o exportador)
-          if (item.empresaDe !== undefined && item.EMPRESA_DE === undefined) item.EMPRESA_DE = item.empresaDe;
-          if (item.codigoDe !== undefined && item.CODIGO_DE === undefined) item.CODIGO_DE = item.codigoDe;
-          if (item.nomeDe !== undefined && item.NOME_DE === undefined) item.NOME_DE = item.nomeDe;
-          if (item.tipoEvento !== undefined && item.TIPO_EVENTO === undefined) item.TIPO_EVENTO = item.tipoEvento;
-          if (item.coligadaPara !== undefined && item.COLIGADA_PARA === undefined) item.COLIGADA_PARA = item.coligadaPara;
-          if (item.codigoPara !== undefined && item.CODIGO_PARA === undefined) item.CODIGO_PARA = item.codigoPara;
-          if (item.codigoParaFichaMes1 !== undefined && item.CODIGO_PARA_FICHA_MES1 === undefined) item.CODIGO_PARA_FICHA_MES1 = item.codigoParaFichaMes1;
-          if (item.codigoParaFichaMes2 !== undefined && item.CODIGO_PARA_FICHA_MES2 === undefined) item.CODIGO_PARA_FICHA_MES2 = item.codigoParaFichaMes2;
-          if (item.codigoParaVerbasFerias !== undefined && item.CODIGO_PARA_VERBAS_FERIAS === undefined) item.CODIGO_PARA_VERBAS_FERIAS = item.codigoParaVerbasFerias;
-          if (item.observacao !== undefined && item.OBSERVACAO === undefined) item.OBSERVACAO = item.observacao;
-          if (item.sugestoes !== undefined && item.SUGESTOES === undefined) item.SUGESTOES = item.sugestoes;
-
-          // Garantir que item.nomeRm seja resolvido dinamicamente
           item.nomeRm = getRmName(item.codigoPara);
         });
       }
+
+      // 2. Normalizar outras abas de de-para para garantir chaves limpas
+      const genericTabs = [
+        'ZDEPARA_COLIGADAS', 'ZDEPARA_FUNCOES', 'ZDEPARA_SINDICATOS', 
+        'ZDEPARA_SECOES', 'ZDEPARA_BANCOS', 'ZDEPARA_SITUACAO', 
+        'ZDEPARA_HORARIO', 'ZDEPARA_PERIODO_FOLHA', 'ZDEPARA_MOTIVO_FUNCAO', 
+        'ZDEPARA_MOTIVO_SALARIO', 'ZDEPARA_MOTIVO_SECAO'
+      ];
+
+      genericTabs.forEach(key => {
+        const arr = db[key];
+        if (arr && Array.isArray(arr)) {
+          arr.forEach(item => {
+            // Converter todas as chaves existentes do item para string e limpar espaços para evitar erros de tipo
+            for (let prop in item) {
+              if (prop !== 'rowNum' && item[prop] !== undefined && item[prop] !== null) {
+                item[prop] = String(item[prop]).trim();
+              }
+            }
+          });
+        }
+      });
     }
 
     function switchModule(moduleName) {
@@ -2195,15 +2236,15 @@
         // Calcular eventos manuais não vinculados
         const usedCodesInDatabase = new Set();
         database.forEach(item => {
-          if (item.codigoPara) usedCodesInDatabase.add(item.codigoPara.trim());
-          if (item.codigoParaFichaMes1) usedCodesInDatabase.add(item.codigoParaFichaMes1.trim());
-          if (item.codigoParaFichaMes2) usedCodesInDatabase.add(item.codigoParaFichaMes2.trim());
-          if (item.codigoParaVerbasFerias) usedCodesInDatabase.add(item.codigoParaVerbasFerias.trim());
+          if (item.codigoPara) usedCodesInDatabase.add(String(item.codigoPara).trim());
+          if (item.codigoParaFichaMes1) usedCodesInDatabase.add(String(item.codigoParaFichaMes1).trim());
+          if (item.codigoParaFichaMes2) usedCodesInDatabase.add(String(item.codigoParaFichaMes2).trim());
+          if (item.codigoParaVerbasFerias) usedCodesInDatabase.add(String(item.codigoParaVerbasFerias).trim());
         });
 
         unusedCreatedEvents = rmEvents.filter(ev => {
           const isManual = ev.descricao.includes("[INCLUSAO MANUAL]") || ev.descricao.includes("INCLUSAO MANUAL");
-          const isUsed = usedCodesInDatabase.has(ev.codigo.trim());
+          const isUsed = usedCodesInDatabase.has(String(ev.codigo).trim());
           return isManual && !isUsed;
         });
       } else {
@@ -2223,8 +2264,8 @@
 
       if (currentModule === 'coligadas') {
         database.forEach(item => {
-          const cnpjLimpo = (item.CNPJ || "").replace(/\D/g, "").slice(0, 8); // Raiz de 8 dígitos
-          const coligadaDest = (item.CODCOLIGADA || "").trim();
+          const cnpjLimpo = String(item.CNPJ || "").replace(/\D/g, "").slice(0, 8); // Raiz de 8 dígitos
+          const coligadaDest = String(item.CODCOLIGADA || "").trim();
           if (cnpjLimpo && coligadaDest) {
             if (!cnpjToColigadaDest[cnpjLimpo]) cnpjToColigadaDest[cnpjLimpo] = new Set();
             cnpjToColigadaDest[cnpjLimpo].add(coligadaDest);
@@ -2232,8 +2273,8 @@
         });
       } else {
         database.forEach(item => {
-          const destCode = ((currentModule === 'situacao' ? item.CODSITUACAO_PARA : item.CODIGO_PARA) || "").trim();
-          const origName = ((item.NOME_DE || item.NOME || item.nomeDe || "")).toLowerCase().trim();
+          const destCode = String((currentModule === 'situacao' ? item.CODSITUACAO_PARA : item.CODIGO_PARA) || "").trim();
+          const origName = String(item.NOME_DE || item.NOME || item.nomeDe || "").toLowerCase().trim();
           if (destCode && !isCodeIgnored(destCode) && !isCodeToCreate(destCode) && origName) {
             if (!nameToDestCodes[origName]) nameToDestCodes[origName] = new Set();
             nameToDestCodes[origName].add(destCode);
@@ -2247,11 +2288,11 @@
         item.hasDivergenciaTipo = false;
 
         if (currentModule === 'coligadas') {
-          const codColigada = (item.CODCOLIGADA || "").trim();
+          const codColigada = String(item.CODCOLIGADA || "").trim();
           if (codColigada) {
             preenchidos++;
             // Validar divergência de CNPJ (mesma raiz para coligadas diferentes)
-            const cnpjLimpo = (item.CNPJ || "").replace(/\D/g, "").slice(0, 8);
+            const cnpjLimpo = String(item.CNPJ || "").replace(/\D/g, "").slice(0, 8);
             if (cnpjLimpo && cnpjToColigadaDest[cnpjLimpo] && cnpjToColigadaDest[cnpjLimpo].size > 1) {
               item.hasDivergencia = true;
               item.hasDivergenciaDuplicidade = true;
@@ -2262,7 +2303,7 @@
           }
         } 
         else if (currentModule === 'situacao') {
-          const codSituacao = (item.CODSITUACAO_PARA || "").trim();
+          const codSituacao = String(item.CODSITUACAO_PARA || "").trim();
           if (codSituacao) {
             preenchidos++;
           } else {
@@ -2271,7 +2312,7 @@
           // Situação não possui divergências por padrão
         } 
         else if (currentModule === 'secoes') {
-          const codSecao = (item.CODIGO_PARA || "").trim();
+          const codSecao = String(item.CODIGO_PARA || "").trim();
           if (isCodePending(codSecao)) {
             pAnalise++;
           } else if (codSecao) {
@@ -2283,7 +2324,7 @@
         } 
         else {
           // Eventos, Funções, Sindicatos
-          const codPara = ((currentModule === 'eventos' ? item.codigoPara : item.CODIGO_PARA) || "").trim();
+          const codPara = String((currentModule === 'eventos' ? item.codigoPara : item.CODIGO_PARA) || "").trim();
           
           if (isCodePending(codPara)) {
             pAnalise++;
@@ -2305,7 +2346,7 @@
             }
 
             // Divergência de Mapeamentos Duplos por Nome
-            const origName = ((item.NOME_DE || item.NOME || item.nomeDe || "")).toLowerCase().trim();
+            const origName = String(item.NOME_DE || item.NOME || item.nomeDe || "").toLowerCase().trim();
             if (origName && nameToDestCodes[origName] && nameToDestCodes[origName].size > 1) {
               item.hasDivergenciaDuplicidade = true;
               item.hasDivergencia = true;
