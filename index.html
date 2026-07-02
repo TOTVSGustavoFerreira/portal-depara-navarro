@@ -1169,6 +1169,34 @@
     </div>
   </div>
 
+  <!-- MODAL DE SELEÇÃO DE ABAS PARA IMPORTAÇÃO -->
+  <div id="importSelectionModal" class="modal-overlay" style="display: none; z-index: 11000;">
+    <div class="modal-card" style="max-width: 520px;">
+      <div class="modal-header">Selecione as Abas para Importar</div>
+      <div class="modal-body" style="padding: 20px;">
+        <p style="font-size: 0.88rem; color: var(--color-text-muted); margin-bottom: 16px; line-height: 1.4;">
+          Detectamos as seguintes abas válidas no seu arquivo Excel. Marque apenas aquelas que deseja sobrescrever no banco de dados ativo:
+        </p>
+        
+        <div style="display:flex; justify-content: space-between; align-items:center; margin-bottom:12px;">
+          <span style="font-size:0.85rem; font-weight:600; color:var(--bg-primary);">Lista de Abas</span>
+          <div style="display:flex; gap:8px;">
+            <button class="row-btn" style="padding:4px 8px; font-size:0.75rem;" onclick="toggleSelectAllImportTabs(true)">Marcar Todas</button>
+            <button class="row-btn" style="padding:4px 8px; font-size:0.75rem;" onclick="toggleSelectAllImportTabs(false)">Desmarcar Todas</button>
+          </div>
+        </div>
+        
+        <div id="importTabListContainer" style="max-height: 240px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px; display: flex; flex-direction: column; gap: 8px; background-color: #f8fafc;">
+          <!-- Injetado dinamicamente -->
+        </div>
+      </div>
+      <div class="modal-footer" style="justify-content: flex-end; gap: 12px;">
+        <button class="row-btn" style="background-color: #f1f5f9;" onclick="closeModal('importSelectionModal')">Cancelar</button>
+        <button class="row-btn row-btn-primary" onclick="proceedWithExcelImport()">Confirmar e Importar</button>
+      </div>
+    </div>
+  </div>
+
   <!-- SIDEBAR -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
@@ -1458,7 +1486,7 @@
                 <p style="font-size:0.88rem; color:var(--color-text-muted); margin-bottom:20px; line-height:1.4;">
                   Você pode exportar a base de dados completa do projeto ativo com todas as abas estruturadas ou importar uma planilha preenchida local para povoamento e sincronismo em lote.
                 </p>
-                <div style="display:flex; gap:12px;">
+                <div style="display:flex; gap:12px; margin-bottom: 24px;">
                   <button class="row-btn row-btn-primary" style="padding: 10px 20px;" onclick="triggerExport()">
                     📥 Exportar para Excel
                   </button>
@@ -1466,6 +1494,19 @@
                     📤 Importar Planilha
                   </button>
                   <input type="file" id="importExcelInput" style="display:none;" accept=".xlsx, .xls" onchange="handleExcelImport(event)">
+                </div>
+
+                <h4 style="font-weight:600; font-size:0.95rem; color:var(--bg-primary); margin-bottom:8px;">Plano de Contingência</h4>
+                <p style="font-size:0.8rem; color:var(--color-text-muted); margin-bottom:12px; line-height:1.4;">
+                  Crie pontos de restauração da base ativa ou restaure o último backup para reverter alterações incorretas no GitHub.
+                </p>
+                <div style="display:flex; gap:12px;">
+                  <button class="row-btn row-btn-success" style="padding: 8px 16px; font-size:0.85rem;" onclick="createBackupOnGitHub()">
+                    🛡️ Criar Ponto de Backup
+                  </button>
+                  <button class="row-btn row-btn-warning" style="padding: 8px 16px; font-size:0.85rem;" onclick="restoreBackupOnGitHub()">
+                    ⏪ Restaurar Backup
+                  </button>
                 </div>
               </div>
               
@@ -1741,6 +1782,10 @@
         return res.json();
       });
     }
+
+    // Variáveis de controle para a importação temporária
+    let tempImportWorkbook = null;
+    let tempImportFileName = "";
 
     // Cache em memória do banco completo carregado
     let rawJsonDatabase = {};
@@ -2894,8 +2939,8 @@
     function handleExcelImport(event) {
       const file = event.target.files[0];
       if (!file) return;
- 
-      showLoading("Processando planilha importada...");
+
+      showLoading("Analisando planilha Excel...");
       const reader = new FileReader();
       
       reader.onload = function(e) {
@@ -2903,7 +2948,8 @@
           const data = new Uint8Array(e.target.result);
           const workbook = XLSX.read(data, { type: 'array' });
           
-          if (!rawJsonDatabase) rawJsonDatabase = {};
+          tempImportWorkbook = workbook;
+          tempImportFileName = file.name;
           
           const abasToImport = [
             { name: 'ZDEPARA_EVENTOS', key: 'ZDEPARA_EVENTOS' },
@@ -2923,63 +2969,286 @@
             { name: 'DADOS_RM_MOTIVOS', key: 'DADOS_RM_MOTIVOS' },
             { name: 'DADOS_RM_SECOES', key: 'DADOS_RM_SECOES' }
           ];
- 
-          let importedSheets = 0;
+
+          const abasValidas = [];
           abasToImport.forEach(aba => {
             const ws = workbook.Sheets[aba.name];
             if (ws) {
-              // raw: false faz o SheetJS ler o valor formatado (mantendo zeros à esquerda), defval: "" garante strings vazias para nulos
-              const json = XLSX.utils.sheet_to_json(ws, { raw: false, defval: "" });
-              
-              // Adicionar numeração sequencial das linhas para controle interno de edição e normalizar campos de eventos
-              json.forEach((item, index) => {
-                item.rowNum = index + 1;
-                
-                // Normaliza o ZDEPARA_EVENTOS de chaves em caixa alta (Excel) de volta para o padrão de propriedades em camelCase
-                if (aba.key === 'ZDEPARA_EVENTOS') {
-                  item.empresaDe = item.EMPRESA_DE !== undefined ? String(item.EMPRESA_DE).trim() : "";
-                  item.codigoDe = item.CODIGO_DE !== undefined ? String(item.CODIGO_DE).trim() : "";
-                  item.nomeDe = item.NOME_DE !== undefined ? String(item.NOME_DE).trim() : "";
-                  item.tipoEvento = item.TIPO_EVENTO !== undefined ? String(item.TIPO_EVENTO).trim() : "";
-                  item.coligadaPara = item.COLIGADA_PARA !== undefined ? String(item.COLIGADA_PARA).trim() : "";
-                  item.codigoPara = item.CODIGO_PARA !== undefined ? String(item.CODIGO_PARA).trim() : "";
-                  
-                  item.codigoParaFichaMes1 = item.CODIGO_PARA_FICHA_MES1 !== undefined ? String(item.CODIGO_PARA_FICHA_MES1).trim() : "";
-                  item.codigoParaFichaMes2 = item.CODIGO_PARA_FICHA_MES2 !== undefined ? String(item.CODIGO_PARA_FICHA_MES2).trim() : "";
-                  item.codigoParaVerbasFerias = item.CODIGO_PARA_VERBAS_FERIAS !== undefined ? String(item.CODIGO_PARA_VERBAS_FERIAS).trim() : "";
-                  
-                  item.observacao = item.OBSERVACAO !== undefined ? String(item.OBSERVACAO).trim() : "";
-                  item.sugestoes = item.SUGESTOES !== undefined ? String(item.SUGESTOES).trim() : "";
-                }
-              });
-              
-              rawJsonDatabase[aba.key] = json;
-              importedSheets++;
+              const json = XLSX.utils.sheet_to_json(ws, { header: 1 });
+              const records = json.length > 1 ? json.length - 1 : 0;
+              abasValidas.push({ ...aba, records });
             }
           });
- 
-          if (importedSheets === 0) {
-            hideLoading();
+
+          hideLoading();
+
+          if (abasValidas.length === 0) {
             showToast("Nenhuma aba mapeada válida encontrada no arquivo enviado.", "error");
             return;
           }
- 
-          // Persistir no GitHub de uma só vez
-          commitChangesToGitHub(`Importação bilateral completa via arquivo local Excel - ${file.name}`, () => {
-            hideLoading();
-            showToast(`Sucesso! ${importedSheets} abas importadas e sincronizadas no GitHub.`, "success");
-            switchModule(currentModule);
-          });
+
+          // Injetar checkboxes no modal
+          const container = document.getElementById("importTabListContainer");
+          container.innerHTML = abasValidas.map(aba => `
+            <label style="display:flex; align-items:center; gap:10px; font-size:0.88rem; color:var(--color-text-dark); cursor:pointer; padding:6px; border-radius:4px; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#e2e8f0'" onmouseout="this.style.backgroundColor='transparent'">
+              <input type="checkbox" name="importTabCheckbox" value="${aba.key}" data-sheetname="${aba.name}" checked style="width:16px; height:16px; cursor:pointer;">
+              <span><strong>${aba.name}</strong> (${aba.records} registros detectados)</span>
+            </label>
+          `).join('');
+
+          // Exibir o modal de escolha
+          document.getElementById("importSelectionModal").style.display = "flex";
           
         } catch (err) {
           hideLoading();
-          showToast("Erro ao processar importação: " + err.message, "error");
+          showToast("Erro ao processar arquivo: " + err.message, "error");
         }
       };
- 
+
       reader.readAsArrayBuffer(file);
-      // Limpar input
       event.target.value = "";
+    }
+
+    function toggleSelectAllImportTabs(shouldCheck) {
+      document.querySelectorAll('input[name="importTabCheckbox"]').forEach(cb => cb.checked = shouldCheck);
+    }
+
+    function proceedWithExcelImport() {
+      // Fechar modal de seleção
+      closeModal('importSelectionModal');
+
+      const selectedCheckboxes = document.querySelectorAll('input[name="importTabCheckbox"]:checked');
+      if (selectedCheckboxes.length === 0) {
+        showToast("Você precisa selecionar pelo menos uma aba para importar.", "error");
+        return;
+      }
+
+      // Abrir modal de progresso
+      const progressModal = document.getElementById("progressModal");
+      const progressTitle = document.getElementById("progressTitle");
+      const progressLabel = document.getElementById("progressLabel");
+      const progressBarFill = document.getElementById("progressBarFill");
+      const progressPercentage = document.getElementById("progressPercentage");
+      const progressLog = document.getElementById("progressLog");
+      
+      progressLog.innerHTML = "";
+      progressTitle.innerText = "Importando Planilha Excel";
+      progressModal.style.display = "flex";
+
+      const totalAbas = selectedCheckboxes.length;
+      let abasProcessadas = 0;
+
+      if (!rawJsonDatabase) rawJsonDatabase = {};
+
+      selectedCheckboxes.forEach((cb, index) => {
+        const key = cb.value;
+        const sheetName = cb.getAttribute("data-sheetname");
+
+        progressLabel.innerText = `Processando aba ${sheetName}...`;
+        
+        try {
+          const ws = tempImportWorkbook.Sheets[sheetName];
+          if (ws) {
+            const json = XLSX.utils.sheet_to_json(ws, { raw: false, defval: "" });
+            
+            // Adicionar index sequencial de linhas
+            json.forEach((item, idx) => {
+              item.rowNum = idx + 1;
+            });
+            
+            rawJsonDatabase[key] = json;
+            progressLog.innerHTML += `Aba [${sheetName}]: ${json.length} registros lidos.\n`;
+          }
+        } catch (err) {
+          progressLog.innerHTML += `Aba [${sheetName}]: Erro de leitura - ${err.message}.\n`;
+        }
+
+        abasProcessadas++;
+        const pct = Math.round((abasProcessadas / totalAbas) * 100);
+        progressBarFill.style.width = `${pct}%`;
+        progressPercentage.innerText = `${pct}%`;
+      });
+
+      // Normalizar propriedades da base recém-carregada na memória
+      normalizeDatabaseProperties(rawJsonDatabase);
+      progressLog.innerHTML += `Propriedades e compatibilidades normalizadas com sucesso.\n`;
+
+      const pat = localStorage.getItem("gh_pat");
+      if (pat) {
+        // Enviar alterações para o GitHub
+        progressLabel.innerText = "Enviando alterações para o repositório GitHub...";
+        progressLog.innerHTML += "Iniciando commit de sincronização no GitHub...\n";
+
+        commitChangesToGitHub(`Importação bilateral seletiva via planilha Excel - ${tempImportFileName}`, () => {
+          progressModal.style.display = "none";
+          showToast(`Sucesso! ${totalAbas} abas importadas e sincronizadas com o GitHub.`, "success");
+          switchModule(currentModule);
+        });
+      } else {
+        // Modo offline (sem salvar remoto)
+        setTimeout(() => {
+          progressModal.style.display = "none";
+          showToast(`Modo Offline: ${totalAbas} abas importadas apenas localmente na memória.`, "warning");
+          switchModule(currentModule);
+        }, 1200);
+      }
+    }
+
+    function createBackupOnGitHub() {
+      const pat = localStorage.getItem("gh_pat");
+      if (!pat) {
+        showToast("Configure e salve o Token do GitHub antes de gerar backups.", "error");
+        return;
+      }
+
+      showLoading("Criando ponto de restauração (Backup)...");
+
+      let clientKey = SPREADSHEET_ID.toLowerCase();
+      if (SPREADSHEET_ID.includes("docs.google.com")) {
+        const matches = SPREADSHEET_ID.match(/\/d\/([a-zA-Z0-9-_]+)/);
+        if (matches) clientKey = matches[1].toLowerCase();
+      }
+
+      const owner = localStorage.getItem("gh_owner") || "TOTVSGustavoFerreira";
+      const repo = localStorage.getItem("gh_repo") || "portal-depara-navarro";
+      const backupPath = `data/backup_${clientKey}.json`;
+
+      // 1. Procurar SHA do backup se ele já existir
+      const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${backupPath}`;
+      
+      fetch(apiUrl, {
+        headers: {
+          "Authorization": `token ${pat}`,
+          "Accept": "application/vnd.github.v3+json"
+        }
+      })
+      .then(res => {
+        if (res.status === 404) return null;
+        if (!res.ok) throw new Error("Erro ao acessar API do GitHub.");
+        return res.json();
+      })
+      .then(fileInfo => {
+        const sha = fileInfo ? fileInfo.sha : null;
+        
+        // Clonar base de dados limpa (removendo sha antigo do objeto salvo no arquivo)
+        const cleanDb = { ...rawJsonDatabase };
+        delete cleanDb._sha;
+
+        const contentBase64 = btoa(unescape(encodeURIComponent(JSON.stringify(cleanDb, null, 2))));
+        
+        const body = {
+          message: `Ponto de Restauração - Backup Manual via Portal De-Para`,
+          content: contentBase64
+        };
+        if (sha) body.sha = sha;
+
+        return fetch(apiUrl, {
+          method: "PUT",
+          headers: {
+            "Authorization": `token ${pat}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(body)
+        });
+      })
+      .then(res => {
+        hideLoading();
+        if (!res.ok) throw new Error("Erro ao enviar arquivo ao repositório.");
+        showToast("Backup gerado com sucesso! Ponto de restauração salvo no GitHub.", "success");
+      })
+      .catch(err => {
+        hideLoading();
+        showToast("Erro ao criar backup: " + err.message, "error");
+      });
+    }
+
+    function restoreBackupOnGitHub() {
+      const pat = localStorage.getItem("gh_pat");
+      if (!pat) {
+        showToast("Configure e salve o Token do GitHub antes de restaurar.", "error");
+        return;
+      }
+
+      // Pedir senha de segurança para evitar restaurações acidentais
+      const pwd = prompt("Esta ação irá sobrescrever o banco atual pela versão do último backup. Digite a senha de segurança para confirmar:");
+      if (pwd !== "TOTVS_DEPARA_2026") {
+        if (pwd !== null) showToast("Senha de segurança incorreta. Ação abortada.", "error");
+        return;
+      }
+
+      showLoading("Restaurando banco a partir do backup...");
+
+      let clientKey = SPREADSHEET_ID.toLowerCase();
+      if (SPREADSHEET_ID.includes("docs.google.com")) {
+        const matches = SPREADSHEET_ID.match(/\/d\/([a-zA-Z0-9-_]+)/);
+        if (matches) clientKey = matches[1].toLowerCase();
+      }
+
+      const owner = localStorage.getItem("gh_owner") || "TOTVSGustavoFerreira";
+      const repo = localStorage.getItem("gh_repo") || "portal-depara-navarro";
+      const backupPath = `data/backup_${clientKey}.json`;
+      const mainPath = `data/${clientKey}.json`;
+
+      let backupContent = "";
+      let mainSha = null;
+
+      // 1. Ler o arquivo de backup
+      fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${backupPath}`, {
+        headers: {
+          "Authorization": `token ${pat}`,
+          "Accept": "application/vnd.github.v3+json"
+        }
+      })
+      .then(res => {
+        if (res.status === 404) throw new Error("Nenhum arquivo de backup encontrado. Crie um backup primeiro.");
+        if (!res.ok) throw new Error("Erro ao ler arquivo de backup.");
+        return res.json();
+      })
+      .then(fileInfo => {
+        backupContent = fileInfo.content; // Conteúdo decodificado em Base64 do backup
+        
+        // 2. Buscar o SHA do arquivo principal para poder sobrescrevê-lo
+        return fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${mainPath}`, {
+          headers: {
+            "Authorization": `token ${pat}`,
+            "Accept": "application/vnd.github.v3+json"
+          }
+        });
+      })
+      .then(res => {
+        if (!res.ok) throw new Error("Erro ao ler informações do arquivo principal.");
+        return res.json();
+      })
+      .then(mainFileInfo => {
+        mainSha = mainFileInfo.sha;
+
+        // 3. Gravar o conteúdo do backup sobre o arquivo principal
+        const body = {
+          message: `Reversão/Rollback - Restaurando para o último ponto de backup manual`,
+          content: backupContent.replace(/\n/g, ""),
+          sha: mainSha
+        };
+
+        return fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${mainPath}`, {
+          method: "PUT",
+          headers: {
+            "Authorization": `token ${pat}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(body)
+        });
+      })
+      .then(res => {
+        if (!res.ok) throw new Error("Erro ao salvar restauração no GitHub.");
+        
+        // Recarregar os dados do portal agora restaurados
+        loadPortalData();
+        showToast("Restauração concluída! O banco de dados foi revertido para o backup.", "success");
+      })
+      .catch(err => {
+        hideLoading();
+        showToast("Erro ao restaurar: " + err.message, "error");
+      });
     }
 
     function updateDashboard() {
