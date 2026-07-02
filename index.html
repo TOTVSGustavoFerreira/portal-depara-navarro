@@ -3162,7 +3162,7 @@
         progressLabel.innerText = "Enviando alterações para o repositório GitHub...";
         progressLog.innerHTML += "Iniciando commit de sincronização no GitHub...\n";
 
-        commitChangesToGitHub(`Importação bilateral seletiva via planilha Excel - ${tempImportFileName}`, () => {
+        commitChangesToGitHub(`Importação bilateral seletiva via planilha Excel - ${tempImportFileName}`, () => {}, () => {
           progressModal.style.display = "none";
           showToast(`Sucesso! ${totalAbas} abas importadas e sincronizadas com o GitHub.`, "success");
           switchModule(currentModule);
@@ -3217,7 +3217,7 @@
         const cleanDb = { ...rawJsonDatabase };
         delete cleanDb._sha;
 
-        const contentBase64 = btoa(unescape(encodeURIComponent(JSON.stringify(cleanDb, null, 2))));
+        const contentBase64 = safeBtoa(JSON.stringify(cleanDb, null, 2));
         
         const body = {
           message: `Ponto de Restauração - Backup Manual via Portal De-Para`,
@@ -3617,6 +3617,15 @@
         .trim()
         .toUpperCase();
       return normalized === "P/ ANALISE";
+    }
+
+    function safeBtoa(str) {
+      const bytes = new TextEncoder().encode(str);
+      let binString = "";
+      for (let i = 0; i < bytes.byteLength; i++) {
+        binString += String.fromCharCode(bytes[i]);
+      }
+      return btoa(binString);
     }
 
     // Dado um código de evento RM, retorna a descrição/nome buscando na lista rmEvents
@@ -4424,7 +4433,7 @@
       showToast("Configurações do GitHub salvas com sucesso!", "success");
     }
 
-    function commitChangesToGitHub(commitMessage, updatedDatabaseCallback) {
+    function commitChangesToGitHub(commitMessage, updatedDatabaseCallback, onSuccessCallback) {
       const pat = localStorage.getItem("gh_pat");
       const owner = localStorage.getItem("gh_owner") || "TOTVSGustavoFerreira";
       const repo = localStorage.getItem("gh_repo") || "portal-depara-navarro";
@@ -4449,7 +4458,9 @@
       // Função interna que faz o PUT com o SHA conhecido
       function doPut(sha) {
         // Aplicar as mudanças na memória
-        updatedDatabaseCallback();
+        if (typeof updatedDatabaseCallback === 'function') {
+          updatedDatabaseCallback();
+        }
         rawJsonDatabase.config = rawJsonDatabase.config || {};
         rawJsonDatabase.config.ultimo_sincronismo = new Date().toISOString();
         
@@ -4466,7 +4477,7 @@
           },
           body: JSON.stringify({
             message: commitMessage,
-            content: btoa(unescape(encodeURIComponent(fileContent))),
+            content: safeBtoa(fileContent),
             sha: sha
           })
         })
@@ -4487,6 +4498,10 @@
           renderWarnings();
           updateDashboard();
           applyFilters();
+          
+          if (typeof onSuccessCallback === 'function') {
+            onSuccessCallback();
+          }
         });
       }
       
